@@ -27,6 +27,8 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":core:common"))
     implementation(project(":core:database"))
+    implementation(project(":vpn"))
+    implementation(libs.room.runtime)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
