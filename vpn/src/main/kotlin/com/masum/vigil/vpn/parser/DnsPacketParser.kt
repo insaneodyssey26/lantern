@@ -12,6 +12,18 @@ object DnsPacketParser {
         parseInternal(rawPacket)
     }.getOrNull()
 
+    fun extractDnsPayload(rawPacket: ByteArray): ByteArray? {
+        if (rawPacket.size < 28) return null
+        val ipHeaderLen = (rawPacket[0].toInt() and 0x0F) * 4
+        val udpOffset = ipHeaderLen
+        if (udpOffset + 8 > rawPacket.size) return null
+        val udpLen = readUShort(rawPacket, udpOffset + 4)
+        val dnsOffset = udpOffset + 8
+        val dnsLen = udpLen - 8
+        if (dnsLen < 1 || dnsOffset + dnsLen > rawPacket.size) return null
+        return rawPacket.copyOfRange(dnsOffset, dnsOffset + dnsLen)
+    }
+
     private fun parseInternal(rawPacket: ByteArray): ParsedDnsQuery? {
         if (rawPacket.size < 28) return null
 
