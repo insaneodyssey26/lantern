@@ -49,6 +49,8 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.animation)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -3,6 +3,7 @@ package com.masum.vigil.vpn
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Intent
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
@@ -17,6 +18,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -26,6 +30,7 @@ class VigilVpnService : VpnService() {
     @Inject lateinit var blocklistRepository: BlocklistRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val queryCount = AtomicInteger(0)
 
     private var pfd: ParcelFileDescriptor? = null
     private var readLoop: PacketReadLoop? = null
@@ -42,6 +47,7 @@ class VigilVpnService : VpnService() {
     }
 
     private fun startTunnel(sessionId: Long) {
+        ensureNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
 
         val descriptor = Builder()
@@ -62,6 +68,21 @@ class VigilVpnService : VpnService() {
         readLoop = PacketReadLoop(descriptor) { packet ->
             processor.process(packet)
         }.also { it.start() }
+
+        scope.launch { countQueries() }
+        scope.launch { refreshNotificationPeriodically() }
+    }
+
+    private suspend fun countQueries() {
+        sessionBus.queries.collect { queryCount.incrementAndGet() }
+    }
+
+    private suspend fun refreshNotificationPeriodically() {
+        while (true) {
+            delay(NOTIFICATION_REFRESH_MS)
+            getSystemService(NotificationManager::class.java)
+                .notify(NOTIFICATION_ID, buildNotification())
+        }
     }
 
     private fun stopTunnel() {
@@ -69,6 +90,7 @@ class VigilVpnService : VpnService() {
         readLoop = null
         pfd?.close()
         pfd = null
+        queryCount.set(0)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -82,18 +104,35 @@ class VigilVpnService : VpnService() {
         super.onDestroy()
     }
 
-    private fun buildNotification(): Notification {
+    private fun ensureNotificationChannel() {
         val manager = getSystemService(NotificationManager::class.java)
         if (manager.getNotificationChannel(CHANNEL_ID) == null) {
             manager.createNotificationChannel(
                 NotificationChannel(CHANNEL_ID, "Vigil Monitoring", NotificationManager.IMPORTANCE_LOW)
             )
         }
+    }
+
+    private fun buildNotification(): Notification {
+        val count = queryCount.get()
+        val text = if (count == 0) "Monitoring DNS traffic" else "$count queries captured"
+
+        val stopPendingIntent = PendingIntent.getService(
+            this, 0,
+            Intent(this, VigilVpnService::class.java).apply { action = ACTION_STOP },
+            PendingIntent.FLAG_IMMUTABLE,
+        )
+
         return Notification.Builder(this, CHANNEL_ID)
-            .setContentTitle("Vigil")
-            .setContentText("Monitoring DNS traffic")
+            .setContentTitle("Vigil is active")
+            .setContentText(text)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setOngoing(true)
+            .addAction(
+                Notification.Action.Builder(
+                    null, "Stop", stopPendingIntent,
+                ).build()
+            )
             .build()
     }
 
@@ -107,5 +146,6 @@ class VigilVpnService : VpnService() {
         private const val SESSION_NAME = "Vigil"
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "vigil_monitoring"
+        private const val NOTIFICATION_REFRESH_MS = 5_000L
     }
 }
