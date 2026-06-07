@@ -19,6 +19,7 @@ navigationCompose = "2.9.3"
 datastore = "1.1.7"
 kotlinxCollectionsImmutable = "0.4.0"
 javaxInject = "1"
+androidxTestCore = "1.6.1"
 turbine = "1.2.1"
 mockk = "1.14.2"
 robolectric = "4.14.1"
@@ -67,6 +68,7 @@ kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotli
 javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
 
 # Test
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
