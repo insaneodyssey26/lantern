@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,6 +27,7 @@ class LiveFeedViewModel @Inject constructor(
     val uiState: StateFlow<LiveFeedUiState> = _uiState.asStateFlow()
 
     private val queryBuffer = ArrayDeque<DnsQueryUiModel>(MAX_ITEMS + 1)
+    private val localIdCounter = AtomicLong(0)
 
     init {
         viewModelScope.launch {
@@ -43,7 +45,7 @@ class LiveFeedViewModel @Inject constructor(
     }
 
     private fun DnsQuery.toUiModel() = DnsQueryUiModel(
-        id = id,
+        id = localIdCounter.incrementAndGet(),
         domain = domain,
         appName = appInfo.appName,
         verdict = verdict.toUiState(),
