@@ -17,10 +17,23 @@ plugins {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        google()
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         mavenCentral()
     }
 }
 
 rootProject.name = "Vigil"
 include(":app")
+include(":core:common")
+include(":core:ui")
+include(":core:database")
+include(":domain")
+include(":data")
+include(":vpn")
+include(":feature")
