@@ -15,7 +15,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
-/** Top-level navigation graph. Destinations are filled in during the feature phases. */
 @Composable
 fun VigilNavHost(
     modifier: Modifier = Modifier,

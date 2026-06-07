@@ -3,10 +3,6 @@ package com.masum.vigil.core.common.dispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
-/**
- * Abstraction over coroutine dispatchers so that business logic remains testable
- * (tests can swap in a single deterministic dispatcher).
- */
 interface DispatcherProvider {
     val main: CoroutineDispatcher
     val default: CoroutineDispatcher
