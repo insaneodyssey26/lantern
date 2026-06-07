@@ -80,6 +80,8 @@ private fun SessionCard(session: SessionSummaryUiModel) {
         colors = CardDefaults.cardColors(
             containerColor = if (session.isActive) MaterialTheme.colorScheme.primaryContainer
                              else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (session.isActive) MaterialTheme.colorScheme.onPrimaryContainer
+                           else MaterialTheme.colorScheme.onSurfaceVariant,
         ),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -92,8 +94,6 @@ private fun SessionCard(session: SessionSummaryUiModel) {
                 Text(
                     text = session.duration,
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (session.isActive) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Spacer(Modifier.height(8.dp))
@@ -105,8 +105,6 @@ private fun SessionCard(session: SessionSummaryUiModel) {
                 Text(
                     text = "${session.trackerQueries} trackers (${session.trackerPercentage}%)",
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (session.trackerQueries > 0) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
