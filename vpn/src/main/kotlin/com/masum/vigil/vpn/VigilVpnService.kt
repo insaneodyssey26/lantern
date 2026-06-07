@@ -47,6 +47,7 @@ class VigilVpnService : VpnService() {
     }
 
     private fun startTunnel(sessionId: Long) {
+        sessionBus.resetReplayCache()
         ensureNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
 

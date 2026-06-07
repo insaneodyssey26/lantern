@@ -6,6 +6,7 @@ import android.net.VpnService
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.masum.vigil.domain.model.MonitoringState
+import com.masum.vigil.domain.repository.BlocklistRepository
 import com.masum.vigil.domain.usecase.GetSummaryStatsUseCase
 import com.masum.vigil.domain.usecase.ObserveMonitoringStateUseCase
 import com.masum.vigil.domain.usecase.StartMonitoringUseCase
@@ -26,9 +27,10 @@ class ControlViewModel @Inject constructor(
     private val stopMonitoring: StopMonitoringUseCase,
     private val observeMonitoringState: ObserveMonitoringStateUseCase,
     private val getSummaryStats: GetSummaryStatsUseCase,
+    private val blocklistRepository: BlocklistRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ControlUiState())
+    private val _uiState = MutableStateFlow(ControlUiState(blocklistCount = blocklistRepository.domainCount()))
     val uiState: StateFlow<ControlUiState> = _uiState.asStateFlow()
 
     init {

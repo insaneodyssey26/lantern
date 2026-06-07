@@ -2,6 +2,7 @@ package com.masum.vigil.navigation
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -67,7 +68,9 @@ fun VigilNavHost(
         NavHost(
             navController = navController,
             startDestination = VigilDestination.Home.route,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = innerPadding.calculateBottomPadding()),
         ) {
             composable(VigilDestination.Home.route) {
                 ControlScreen()

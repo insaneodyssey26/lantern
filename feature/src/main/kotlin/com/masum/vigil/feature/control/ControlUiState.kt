@@ -9,4 +9,5 @@ data class ControlUiState(
     val trackerQueries: Int = 0,
     val isPrivateDnsActive: Boolean = false,
     val pendingConsentIntent: Intent? = null,
+    val blocklistCount: Int = 0,
 )
