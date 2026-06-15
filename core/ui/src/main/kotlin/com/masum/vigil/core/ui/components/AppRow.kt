@@ -1,5 +1,6 @@
 package com.masum.vigil.core.ui.components
 
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,9 +24,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlin.math.abs
@@ -36,9 +42,25 @@ fun AppRow(
     queryCount: Int,
     trackerCount: Int,
     modifier: Modifier = Modifier,
+    packageName: String? = null,
     icon: Painter? = null,
 ) {
     val trackerFraction = if (queryCount > 0) trackerCount.toFloat() / queryCount else 0f
+    val context = LocalContext.current
+    val resolvedIcon = remember(packageName, icon) {
+        if (icon != null) {
+            icon
+        } else if (packageName != null) {
+            try {
+                val drawable = context.packageManager.getApplicationIcon(packageName)
+                DrawablePainter(drawable)
+            } catch (e: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+    }
 
     Card(
         modifier = modifier
@@ -56,7 +78,7 @@ fun AppRow(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AppIcon(appName = appName, icon = icon)
+            AppIcon(appName = appName, icon = resolvedIcon)
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -135,6 +157,21 @@ private fun AppIcon(appName: String, icon: Painter?) {
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )
+        }
+    }
+}
+
+class DrawablePainter(private val drawable: Drawable) : Painter() {
+    override val intrinsicSize: Size
+        get() = Size(
+            if (drawable.intrinsicWidth >= 0) drawable.intrinsicWidth.toFloat() else 0f,
+            if (drawable.intrinsicHeight >= 0) drawable.intrinsicHeight.toFloat() else 0f
+        )
+
+    override fun DrawScope.onDraw() {
+        drawIntoCanvas { canvas ->
+            drawable.setBounds(0, 0, size.width.toInt(), size.height.toInt())
+            drawable.draw(canvas.nativeCanvas)
         }
     }
 }

@@ -90,6 +90,7 @@ fun PerAppScreen(viewModel: PerAppViewModel = hiltViewModel()) {
                     items(filteredApps, key = { it.packageName }) { app ->
                         AppRow(
                             appName = app.appName,
+                            packageName = app.packageName,
                             queryCount = app.totalQueries,
                             trackerCount = app.trackerQueries,
                         )
