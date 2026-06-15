@@ -35,6 +35,7 @@ import com.masum.vigil.feature.history.HistoryScreen
 import com.masum.vigil.feature.livefeed.LiveFeedScreen
 import com.masum.vigil.feature.perapp.PerAppScreen
 import com.masum.vigil.feature.stats.StatsScreen
+import com.masum.vigil.feature.settings.SettingsScreen
 
 @Composable
 fun VigilNavHost(
@@ -77,64 +78,123 @@ fun VigilNavHost(
                 .fillMaxSize()
                 .padding(bottom = innerPadding.calculateBottomPadding()),
             enterTransition = {
-                val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
-                val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
-                val direction = if (targetIndex > initialIndex) {
-                    AnimatedContentTransitionScope.SlideDirection.Start
+                val isSettingsTransition = targetState.destination.route == "settings" || initialState.destination.route == "settings"
+                if (isSettingsTransition) {
+                    val direction = if (targetState.destination.route == "settings") {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                    slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                            fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
                 } else {
-                    AnimatedContentTransitionScope.SlideDirection.End
+                    val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
+                    val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
+                    val direction = if (targetIndex > initialIndex) {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                    slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                            fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
                 }
-                slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                        fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
             },
             exitTransition = {
-                val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
-                val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
-                val direction = if (targetIndex > initialIndex) {
-                    AnimatedContentTransitionScope.SlideDirection.Start
+                val isSettingsTransition = targetState.destination.route == "settings" || initialState.destination.route == "settings"
+                if (isSettingsTransition) {
+                    val direction = if (targetState.destination.route == "settings") {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                    slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                            fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
                 } else {
-                    AnimatedContentTransitionScope.SlideDirection.End
+                    val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
+                    val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
+                    val direction = if (targetIndex > initialIndex) {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                    slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                            fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
                 }
-                slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                        fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
             },
             popEnterTransition = {
-                val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
-                val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
-                val direction = if (targetIndex > initialIndex) {
-                    AnimatedContentTransitionScope.SlideDirection.Start
+                val isSettingsTransition = targetState.destination.route == "settings" || initialState.destination.route == "settings"
+                if (isSettingsTransition) {
+                    val direction = if (targetState.destination.route == "settings") {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                    slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                            fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
                 } else {
-                    AnimatedContentTransitionScope.SlideDirection.End
+                    val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
+                    val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
+                    val direction = if (targetIndex > initialIndex) {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                    slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                            fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
                 }
-                slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                        fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
             },
             popExitTransition = {
-                val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
-                val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
-                val direction = if (targetIndex > initialIndex) {
-                    AnimatedContentTransitionScope.SlideDirection.Start
+                val isSettingsTransition = targetState.destination.route == "settings" || initialState.destination.route == "settings"
+                if (isSettingsTransition) {
+                    val direction = if (targetState.destination.route == "settings") {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                    slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                            fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
                 } else {
-                    AnimatedContentTransitionScope.SlideDirection.End
+                    val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
+                    val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
+                    val direction = if (targetIndex > initialIndex) {
+                        AnimatedContentTransitionScope.SlideDirection.Start
+                    } else {
+                        AnimatedContentTransitionScope.SlideDirection.End
+                    }
+                    slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                            fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
                 }
-                slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                        fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
             }
         ) {
             composable(VigilDestination.Home.route) {
-                ControlScreen()
+                ControlScreen(
+                    onSettingsClick = { navController.navigate("settings") }
+                )
             }
             composable(VigilDestination.LiveFeed.route) {
-                LiveFeedScreen()
+                LiveFeedScreen(
+                    onSettingsClick = { navController.navigate("settings") }
+                )
             }
             composable(VigilDestination.PerApp.route) {
-                PerAppScreen()
+                PerAppScreen(
+                    onSettingsClick = { navController.navigate("settings") }
+                )
             }
             composable(VigilDestination.History.route) {
-                HistoryScreen()
+                HistoryScreen(
+                    onSettingsClick = { navController.navigate("settings") }
+                )
             }
             composable(VigilDestination.Stats.route) {
-                StatsScreen()
+                StatsScreen(
+                    onSettingsClick = { navController.navigate("settings") }
+                )
+            }
+            composable("settings") {
+                SettingsScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
             }
         }
     }

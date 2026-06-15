@@ -72,9 +72,17 @@ import com.masum.vigil.domain.model.MonitoringState
 import com.masum.vigil.feature.util.formatDuration
 import kotlinx.coroutines.delay
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ControlScreen(viewModel: ControlViewModel = hiltViewModel()) {
+fun ControlScreen(
+    onSettingsClick: () -> Unit,
+    viewModel: ControlViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isActive = uiState.monitoringState is MonitoringState.Active
 
@@ -105,6 +113,15 @@ fun ControlScreen(viewModel: ControlViewModel = hiltViewModel()) {
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             letterSpacing = androidx.compose.ui.unit.TextUnit.Unspecified
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },

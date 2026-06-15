@@ -3,6 +3,7 @@ package com.masum.vigil.vpn.engine
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import com.masum.vigil.core.common.config.ResolverConfig
+import com.masum.vigil.domain.repository.SettingsRepository
 import com.masum.vigil.vpn.parser.DnsPacketBuilder
 import com.masum.vigil.vpn.parser.ParsedDnsQuery
 import kotlinx.coroutines.CoroutineScope
@@ -17,8 +18,18 @@ class DnsForwarder(
     private val service: VpnService,
     pfd: ParcelFileDescriptor,
     private val scope: CoroutineScope,
+    private val settingsRepository: SettingsRepository,
 ) {
     private val output = FileOutputStream(pfd.fileDescriptor)
+    @Volatile private var upstreamDns: String = ResolverConfig.PRIMARY_DNS
+
+    init {
+        scope.launch {
+            settingsRepository.getUpstreamDns().collect { dns ->
+                upstreamDns = dns
+            }
+        }
+    }
 
     fun forward(query: ParsedDnsQuery, rawDns: ByteArray) {
         scope.launch(Dispatchers.IO) {
@@ -31,7 +42,7 @@ class DnsForwarder(
             service.protect(socket)
             socket.soTimeout = ResolverConfig.QUERY_TIMEOUT_MS.toInt()
 
-            val upstream = InetAddress.getByName(ResolverConfig.PRIMARY_DNS)
+            val upstream = InetAddress.getByName(upstreamDns)
             socket.send(DatagramPacket(rawDns, rawDns.size, upstream, ResolverConfig.DNS_PORT))
 
             val buf = ByteArray(4096)

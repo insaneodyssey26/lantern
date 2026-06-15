@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import com.masum.vigil.domain.repository.BlocklistRepository
+import com.masum.vigil.domain.repository.SettingsRepository
 import com.masum.vigil.vpn.attribution.ConnectionOwnerResolver
 import com.masum.vigil.vpn.engine.DnsForwarder
 import com.masum.vigil.vpn.engine.PacketProcessor
@@ -28,6 +29,7 @@ class VigilVpnService : VpnService() {
 
     @Inject lateinit var sessionBus: MonitoringSessionBus
     @Inject lateinit var blocklistRepository: BlocklistRepository
+    @Inject lateinit var settingsRepository: SettingsRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val queryCount = AtomicInteger(0)
@@ -62,7 +64,7 @@ class VigilVpnService : VpnService() {
 
         pfd = descriptor
 
-        val forwarder = DnsForwarder(this, descriptor, scope)
+        val forwarder = DnsForwarder(this, descriptor, scope, settingsRepository)
         val resolver = ConnectionOwnerResolver(this)
         val processor = PacketProcessor(blocklistRepository, sessionBus, forwarder, resolver, sessionId)
 

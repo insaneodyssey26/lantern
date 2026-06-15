@@ -36,6 +36,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,7 +64,10 @@ enum class FeedFilter { All, Trackers, Clean }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LiveFeedScreen(viewModel: LiveFeedViewModel = hiltViewModel()) {
+fun LiveFeedScreen(
+    onSettingsClick: () -> Unit,
+    viewModel: LiveFeedViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var searchQuery by remember { mutableStateOf("") }
@@ -93,7 +100,7 @@ fun LiveFeedScreen(viewModel: LiveFeedViewModel = hiltViewModel()) {
                             color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
                             shape = RoundedCornerShape(50),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
-                            modifier = Modifier.padding(end = 16.dp)
+                            modifier = Modifier.padding(end = 8.dp)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -113,6 +120,13 @@ fun LiveFeedScreen(viewModel: LiveFeedViewModel = hiltViewModel()) {
                                 )
                             }
                         }
+                    }
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 },
             )
