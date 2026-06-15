@@ -48,6 +48,7 @@ class LiveFeedViewModel @Inject constructor(
         id = localIdCounter.incrementAndGet(),
         domain = domain,
         appName = appInfo.appName,
+        packageName = appInfo.packageName,
         verdict = verdict.toUiState(),
         time = timestamp.formatTime(),
     )

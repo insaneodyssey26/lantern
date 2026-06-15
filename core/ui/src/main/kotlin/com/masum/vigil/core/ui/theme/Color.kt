@@ -36,3 +36,19 @@ val NeutralVariant40 = Color(0xFF6F797A)
 val NeutralVariant50 = Color(0xFF899294)
 val NeutralVariant80 = Color(0xFFBFC8CA)
 val NeutralVariant90 = Color(0xFFDBE4E6)
+
+val GlowGreen = Color(0xFF00FFC2)
+val GlowBlue = Color(0xFF00D2FF)
+val GlowRed = Color(0xFFFF3366)
+val GlowOrange = Color(0xFFFF9900)
+
+val CyberDarkBg = Color(0xFF0C1013)
+val CardDarkBg = Color(0xFF131A1F)
+val BorderDark = Color(0xFF1E2930)
+
+val SafeGreen = Color(0xFF10B981)
+val SafeGreenContainer = Color(0xFF047857)
+
+val TrackerRed = Color(0xFFEF4444)
+val TrackerRedContainer = Color(0xFF7F1D1D)
+

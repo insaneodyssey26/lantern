@@ -25,6 +25,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.AnimatedContentTransitionScope
 import com.masum.vigil.feature.control.ControlScreen
 import com.masum.vigil.feature.history.HistoryScreen
 import com.masum.vigil.feature.livefeed.LiveFeedScreen
@@ -71,6 +76,50 @@ fun VigilNavHost(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = innerPadding.calculateBottomPadding()),
+            enterTransition = {
+                val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
+                val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
+                val direction = if (targetIndex > initialIndex) {
+                    AnimatedContentTransitionScope.SlideDirection.Start
+                } else {
+                    AnimatedContentTransitionScope.SlideDirection.End
+                }
+                slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                        fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+            },
+            exitTransition = {
+                val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
+                val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
+                val direction = if (targetIndex > initialIndex) {
+                    AnimatedContentTransitionScope.SlideDirection.Start
+                } else {
+                    AnimatedContentTransitionScope.SlideDirection.End
+                }
+                slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                        fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+            },
+            popEnterTransition = {
+                val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
+                val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
+                val direction = if (targetIndex > initialIndex) {
+                    AnimatedContentTransitionScope.SlideDirection.Start
+                } else {
+                    AnimatedContentTransitionScope.SlideDirection.End
+                }
+                slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                        fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+            },
+            popExitTransition = {
+                val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
+                val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
+                val direction = if (targetIndex > initialIndex) {
+                    AnimatedContentTransitionScope.SlideDirection.Start
+                } else {
+                    AnimatedContentTransitionScope.SlideDirection.End
+                }
+                slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                        fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+            }
         ) {
             composable(VigilDestination.Home.route) {
                 ControlScreen()

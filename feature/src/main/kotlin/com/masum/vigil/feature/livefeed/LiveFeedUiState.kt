@@ -11,6 +11,8 @@ data class DnsQueryUiModel(
     val id: Long,
     val domain: String,
     val appName: String,
+    val packageName: String,
     val verdict: VerdictUiState,
     val time: String,
 )
+

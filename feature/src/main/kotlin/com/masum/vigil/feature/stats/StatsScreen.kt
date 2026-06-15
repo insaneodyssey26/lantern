@@ -3,6 +3,7 @@ package com.masum.vigil.feature.stats
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,9 +36,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,7 +52,11 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Stats") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Network Analytics", fontWeight = FontWeight.Bold) }
+            )
+        },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -64,54 +73,81 @@ fun StatsScreen(viewModel: StatsViewModel = hiltViewModel()) {
                 modifier = Modifier.size(220.dp),
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(28.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatPill(
-                    label = "Total",
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                StatCard(
+                    label = "Total Logs",
                     value = uiState.totalQueries.formatCount(),
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                    modifier = Modifier.weight(1f)
                 )
-                StatPill(
+                StatCard(
                     label = "Trackers",
                     value = uiState.trackerQueries.formatCount(),
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                    contentColor = MaterialTheme.colorScheme.error,
+                    borderColor = MaterialTheme.colorScheme.error.copy(alpha = 0.3f),
+                    modifier = Modifier.weight(1f)
                 )
-                StatPill(
-                    label = "Clean",
+                StatCard(
+                    label = "Safe Logs",
                     value = (uiState.totalQueries - uiState.trackerQueries).formatCount(),
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.2f),
+                    contentColor = MaterialTheme.colorScheme.tertiary,
+                    borderColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
+                    modifier = Modifier.weight(1f)
                 )
             }
 
             if (uiState.topDomains.isNotEmpty()) {
-                Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(32.dp))
 
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    Text("Top domains", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        "Top Domains Requested",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
                 Spacer(Modifier.height(16.dp))
 
-                val maxCount = uiState.topDomains.maxOf { it.count }
-                uiState.topDomains.forEachIndexed { i, domain ->
-                    DomainBar(domain = domain, maxCount = maxCount)
-                    if (i < uiState.topDomains.lastIndex) Spacer(Modifier.height(14.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        val maxCount = uiState.topDomains.maxOf { it.count }
+                        uiState.topDomains.forEach { domain ->
+                            DomainBar(domain = domain, maxCount = maxCount)
+                        }
+                    }
                 }
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(32.dp))
 
             Text(
-                text = "Blocklist · ${uiState.blocklistCount.formatCount()} domains",
+                text = "Blocklist Engine · ${uiState.blocklistCount.formatCount()} active domains",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.SemiBold
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
         }
     }
 }
@@ -129,17 +165,17 @@ private fun TrackerDonutChart(trackerPercentage: Int, modifier: Modifier = Modif
     val primary = MaterialTheme.colorScheme.primary
     val error = MaterialTheme.colorScheme.error
     val tertiary = MaterialTheme.colorScheme.tertiary
-    val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+    val surfaceVariant = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
 
     Box(contentAlignment = Alignment.Center, modifier = modifier) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 30.dp.toPx()
-            val r = (size.minDimension - strokeWidth) / 2f
+            val strokeWidth = 24.dp.toPx()
+            val r = (size.minDimension - strokeWidth * 2) / 2f
             val tl = Offset((size.width - r * 2) / 2f, (size.height - r * 2) / 2f)
             val arcSize = Size(r * 2, r * 2)
-            val strokeStyle = Stroke(strokeWidth, cap = StrokeCap.Butt)
+            val strokeStyle = Stroke(strokeWidth, cap = StrokeCap.Round)
 
-            drawArc(surfaceVariant, 0f, 360f, false, tl, arcSize, style = strokeStyle)
+            drawArc(surfaceVariant, 0f, 360f, false, tl, arcSize, style = Stroke(strokeWidth / 2f))
 
             if (trackerFraction > 0f) {
                 drawArc(error, -90f, trackerFraction * 360f, false, tl, arcSize, style = strokeStyle)
@@ -153,32 +189,51 @@ private fun TrackerDonutChart(trackerPercentage: Int, modifier: Modifier = Modif
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "$trackerPercentage%",
-                style = MaterialTheme.typography.displaySmall,
+                style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
                 color = if (trackerPercentage > 0) error else primary,
             )
             Text(
-                text = if (trackerPercentage > 0) "trackers" else "all clean",
+                text = if (trackerPercentage > 0) "trackers" else "clean",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
 
 @Composable
-private fun StatPill(
+private fun StatCard(
     label: String,
     value: String,
     containerColor: Color,
     contentColor: Color,
+    borderColor: Color,
+    modifier: Modifier = Modifier
 ) {
-    Surface(shape = RoundedCornerShape(12.dp), color = containerColor) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 6.dp, bottomStart = 6.dp),
+        color = containerColor,
+        border = BorderStroke(1.dp, borderColor)
+    ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(value, style = MaterialTheme.typography.titleMedium, color = contentColor)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = contentColor)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = contentColor
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }
@@ -207,28 +262,38 @@ private fun DomainBar(domain: DomainStatUiModel, maxCount: Int) {
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.width(12.dp))
             Text(
                 text = domain.count.toString(),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold
             )
         }
         Spacer(Modifier.height(5.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp))
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp))
                 .background(barBg),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(animatedFraction)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(barColor),
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = if (domain.isTracker) {
+                                listOf(Color(0xFFEF4444), Color(0xFFB91C1C))
+                            } else {
+                                listOf(Color(0xFF00E5FF), Color(0xFF00838F))
+                            }
+                        )
+                    ),
             )
         }
     }
