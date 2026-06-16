@@ -252,7 +252,7 @@ private fun QueryCard(query: DnsQueryUiModel, onClick: () -> Unit) {
 }
 
 @Composable
-private fun QueryDetailsDialog(query: DnsQueryUiModel, onDismiss: () -> Unit) {
+fun QueryDetailsDialog(query: DnsQueryUiModel, onDismiss: () -> Unit) {
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
 

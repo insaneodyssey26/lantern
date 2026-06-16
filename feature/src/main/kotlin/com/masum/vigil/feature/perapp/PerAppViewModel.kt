@@ -9,12 +9,19 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import com.masum.vigil.domain.model.DnsQuery
+import com.masum.vigil.domain.repository.DnsLogRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 @HiltViewModel
 class PerAppViewModel @Inject constructor(
     getPerAppStats: GetPerAppStatsUseCase,
+    private val dnsLogRepository: DnsLogRepository,
 ) : ViewModel() {
+
+    fun getAppQueries(packageName: String): Flow<List<DnsQuery>> =
+        dnsLogRepository.observeAppQueries(packageName)
 
     val uiState: StateFlow<PerAppUiState> = getPerAppStats()
         .map { list -> PerAppUiState(apps = list.map { it.toUiModel() }) }

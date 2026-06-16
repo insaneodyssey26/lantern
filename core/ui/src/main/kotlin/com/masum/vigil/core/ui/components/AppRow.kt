@@ -4,6 +4,7 @@ import android.graphics.drawable.Drawable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,6 +45,7 @@ fun AppRow(
     modifier: Modifier = Modifier,
     packageName: String? = null,
     icon: Painter? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     val trackerFraction = if (queryCount > 0) trackerCount.toFloat() / queryCount else 0f
     val context = LocalContext.current
@@ -65,7 +67,15 @@ fun AppRow(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .let {
+                if (onClick != null) {
+                    it.clickable(onClick = onClick)
+                } else {
+                    it
+                }
+            },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),

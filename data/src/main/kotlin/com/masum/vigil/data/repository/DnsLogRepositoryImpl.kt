@@ -4,6 +4,7 @@ import com.masum.vigil.core.common.dispatcher.DispatcherProvider
 import com.masum.vigil.core.database.dao.DnsQueryDao
 import com.masum.vigil.core.database.dao.SessionDao
 import com.masum.vigil.core.database.entity.DnsQueryEntity
+import com.masum.vigil.data.mapper.toDomain
 import com.masum.vigil.data.mapper.toEntity
 import com.masum.vigil.data.mapper.toPerAppStat
 import com.masum.vigil.data.mapper.toSessionSummary
@@ -92,6 +93,11 @@ class DnsLogRepositoryImpl @Inject constructor(
         }
 
     override fun observeTotalCount(): Flow<Int> = dnsQueryDao.observeCount()
+
+    override fun observeAppQueries(packageName: String): Flow<List<DnsQuery>> =
+        dnsQueryDao.observeByPackage(packageName).map { list ->
+            list.map { it.toDomain() }
+        }
 
     override suspend fun clearHistory(): Unit = withContext(dispatchers.io) {
         dnsQueryDao.deleteAll()

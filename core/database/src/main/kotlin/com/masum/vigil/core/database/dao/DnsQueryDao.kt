@@ -59,6 +59,9 @@ interface DnsQueryDao {
     @Query("DELETE FROM dns_queries")
     suspend fun deleteAll()
 
+    @Query("SELECT * FROM dns_queries WHERE appPackageName = :packageName ORDER BY timestamp DESC")
+    fun observeByPackage(packageName: String): Flow<List<DnsQueryEntity>>
+
     @Query("SELECT COUNT(*) FROM dns_queries")
     suspend fun count(): Int
 
