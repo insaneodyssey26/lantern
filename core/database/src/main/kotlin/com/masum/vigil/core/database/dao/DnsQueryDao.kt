@@ -61,4 +61,7 @@ interface DnsQueryDao {
 
     @Query("SELECT COUNT(*) FROM dns_queries")
     suspend fun count(): Int
+
+    @Query("SELECT COUNT(*) FROM dns_queries")
+    fun observeCount(): Flow<Int>
 }

@@ -91,6 +91,8 @@ class DnsLogRepositoryImpl @Inject constructor(
             totals.toSummaryStats(domains)
         }
 
+    override fun observeTotalCount(): Flow<Int> = dnsQueryDao.observeCount()
+
     override suspend fun clearHistory(): Unit = withContext(dispatchers.io) {
         dnsQueryDao.deleteAll()
         sessionDao.deleteAll()

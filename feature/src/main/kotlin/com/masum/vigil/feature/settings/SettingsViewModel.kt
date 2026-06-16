@@ -6,10 +6,12 @@ import com.masum.vigil.domain.repository.BlocklistRepository
 import com.masum.vigil.domain.repository.DnsLogRepository
 import com.masum.vigil.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,18 +35,26 @@ class SettingsViewModel @Inject constructor(
         SettingsTuple(theme, dns, maxAge, maxRows)
     }
 
+    private val totalLogCountFlow = flow {
+        emit(0L)
+        delay(400)
+        dnsLogRepository.observeTotalCount().collect { count ->
+            emit(count.toLong())
+        }
+    }
+
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsFlow,
-        dnsLogRepository.observeSummaryStats(),
+        totalLogCountFlow,
         isClearingLogs,
         isUpdatingBlocklist
-    ) { settings, summaryStats, clearing, updating ->
+    ) { settings, logCount, clearing, updating ->
         SettingsUiState(
             themeMode = settings.themeMode,
             upstreamDns = settings.upstreamDns,
             maxAgeDays = settings.maxAgeDays,
             maxRows = settings.maxRows,
-            totalLogCount = summaryStats.totalQueries.toLong(),
+            totalLogCount = logCount,
             blocklistCount = blocklistRepository.domainCount(),
             isClearingLogs = clearing,
             isUpdatingBlocklist = updating

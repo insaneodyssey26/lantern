@@ -30,7 +30,11 @@ class ConnectionOwnerResolver(context: Context) {
     fun resolveAppInfo(uid: Int): AppInfo {
         if (uid == Process.INVALID_UID || uid < 0) return AppInfo.UNKNOWN
         cache.get(uid)?.let { return it }
-        val packages = pm.getPackagesForUid(uid) ?: return AppInfo.UNKNOWN
+        val packages = try {
+            pm.getPackagesForUid(uid)
+        } catch (e: Exception) {
+            null
+        } ?: return AppInfo.UNKNOWN
         val packageName = packages.firstOrNull() ?: return AppInfo.UNKNOWN
         val label = try {
             pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()

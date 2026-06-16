@@ -11,5 +11,6 @@ interface DnsLogRepository {
     fun observeSessionHistory(): Flow<List<SessionSummary>>
     fun observePerAppStats(sessionId: Long? = null): Flow<List<PerAppStat>>
     fun observeSummaryStats(): Flow<SummaryStats>
+    fun observeTotalCount(): Flow<Int>
     suspend fun clearHistory()
 }

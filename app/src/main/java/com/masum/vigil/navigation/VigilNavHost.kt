@@ -25,8 +25,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -85,8 +85,8 @@ fun VigilNavHost(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.End
                     }
-                    slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                            fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                    slideIntoContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                            fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing))
                 } else {
                     val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
                     val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
@@ -95,8 +95,8 @@ fun VigilNavHost(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.End
                     }
-                    slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                            fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                    slideIntoContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                            fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing))
                 }
             },
             exitTransition = {
@@ -107,8 +107,8 @@ fun VigilNavHost(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.End
                     }
-                    slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                            fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                    slideOutOfContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                            fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing))
                 } else {
                     val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
                     val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
@@ -117,8 +117,8 @@ fun VigilNavHost(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.End
                     }
-                    slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                            fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                    slideOutOfContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                            fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing))
                 }
             },
             popEnterTransition = {
@@ -129,8 +129,8 @@ fun VigilNavHost(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.End
                     }
-                    slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                            fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                    slideIntoContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                            fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing))
                 } else {
                     val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
                     val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
@@ -139,8 +139,8 @@ fun VigilNavHost(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.End
                     }
-                    slideIntoContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                            fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                    slideIntoContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                            fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing))
                 }
             },
             popExitTransition = {
@@ -151,8 +151,8 @@ fun VigilNavHost(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.End
                     }
-                    slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                            fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                    slideOutOfContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                            fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing))
                 } else {
                     val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
                     val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
@@ -161,8 +161,8 @@ fun VigilNavHost(
                     } else {
                         AnimatedContentTransitionScope.SlideDirection.End
                     }
-                    slideOutOfContainer(direction, animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                            fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                    slideOutOfContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                            fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing))
                 }
             }
         ) {
