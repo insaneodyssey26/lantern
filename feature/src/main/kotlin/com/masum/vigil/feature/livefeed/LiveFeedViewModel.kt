@@ -9,6 +9,9 @@ import com.masum.vigil.domain.usecase.ObserveMonitoringStateUseCase
 import com.masum.vigil.feature.util.formatTime
 import com.masum.vigil.feature.util.toUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +29,7 @@ class LiveFeedViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(LiveFeedUiState())
     val uiState: StateFlow<LiveFeedUiState> = _uiState.asStateFlow()
 
+    // Plain mutable buffer; we convert to ImmutableList before exposing to UI
     private val queryBuffer = ArrayDeque<DnsQueryUiModel>(MAX_ITEMS + 1)
     private val localIdCounter = AtomicLong(0)
 
@@ -39,7 +43,10 @@ class LiveFeedViewModel @Inject constructor(
             observeLiveFeed().collect { query ->
                 queryBuffer.addFirst(query.toUiModel())
                 if (queryBuffer.size > MAX_ITEMS) queryBuffer.removeLast()
-                _uiState.update { it.copy(queries = queryBuffer.toList()) }
+                // toPersistentList() gives Compose a Stable reference — the LazyColumn can
+                // skip recomposing items that haven't changed rather than redrawing everything.
+                val snapshot: ImmutableList<DnsQueryUiModel> = queryBuffer.toPersistentList()
+                _uiState.update { it.copy(queries = snapshot) }
             }
         }
     }

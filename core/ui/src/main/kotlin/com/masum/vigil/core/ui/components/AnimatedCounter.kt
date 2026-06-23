@@ -1,8 +1,8 @@
 package com.masum.vigil.core.ui.components
 
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,7 +20,7 @@ fun AnimatedCounter(
 ) {
     val animatedCount by animateIntAsState(
         targetValue = count,
-        animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow),
+        animationSpec = tween(durationMillis = 350, easing = EaseOutCubic),
         label = "counter",
     )
     Text(

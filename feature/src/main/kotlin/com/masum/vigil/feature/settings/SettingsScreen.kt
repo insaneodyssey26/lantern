@@ -17,8 +17,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Info
@@ -39,7 +42,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.background
 import androidx.compose.ui.Modifier
@@ -76,6 +83,128 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Color Palette",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f),
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Palette,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    "Accent color theme",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                                    Text(
+                                        "System uses your wallpaper colors (Android 12+)",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+
+                        var expanded by remember { mutableStateOf(false) }
+                        val paletteKeys = listOf("system", "vigil", "catppuccin", "dracula", "nord", "gruvbox", "ember", "storm", "orchid")
+                        val paletteLabels = listOf("System", "Vigil", "Catppuccin", "Dracula", "Nord", "Gruvbox", "Ember", "Storm", "Orchid")
+                        val paletteColors = listOf(Color(0xFF4285F4), Color(0xFF00E5FF), Color(0xFFCBA6F7), Color(0xFFBD93F9), Color(0xFF88C0D0), Color(0xFFFABD2F), Color(0xFFFBBF24), Color(0xFF818CF8), Color(0xFFE879F9))
+                        val selectedIndex = paletteKeys.indexOf(uiState.colorTheme).coerceAtLeast(0)
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { expanded = !expanded }
+                        ) {
+                            androidx.compose.material3.OutlinedTextField(
+                                value = paletteLabels[selectedIndex],
+                                onValueChange = {},
+                                readOnly = true,
+                                enabled = false,
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = if (expanded) Icons.Default.Check else Icons.Default.Palette,
+                                        contentDescription = null
+                                    )
+                                },
+                                leadingIcon = {
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(start = 12.dp)
+                                            .size(20.dp)
+                                            .clip(CircleShape)
+                                            .background(paletteColors[selectedIndex])
+                                    )
+                                },
+                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    disabledContainerColor = Color.Transparent
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            androidx.compose.material3.DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier.fillMaxWidth(0.9f)
+                            ) {
+                                for (i in paletteKeys.indices) {
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text(paletteLabels[i]) },
+                                        onClick = {
+                                            viewModel.setColorTheme(paletteKeys[i])
+                                            expanded = false
+                                        },
+                                        leadingIcon = {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(16.dp)
+                                                    .clip(CircleShape)
+                                                    .background(paletteColors[i])
+                                            )
+                                        },
+                                        trailingIcon = {
+                                            if (uiState.colorTheme == paletteKeys[i]) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = "App Theme",

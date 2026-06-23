@@ -28,11 +28,12 @@ class SettingsViewModel @Inject constructor(
 
     private val settingsFlow = combine(
         settingsRepository.getThemeMode(),
+        settingsRepository.getColorTheme(),
         settingsRepository.getUpstreamDns(),
         settingsRepository.getMaxAgeDays(),
         settingsRepository.getMaxRows()
-    ) { theme, dns, maxAge, maxRows ->
-        SettingsTuple(theme, dns, maxAge, maxRows)
+    ) { theme, color, dns, maxAge, maxRows ->
+        SettingsTuple(theme, color, dns, maxAge, maxRows)
     }
 
     private val totalLogCountFlow = flow {
@@ -51,6 +52,7 @@ class SettingsViewModel @Inject constructor(
     ) { settings, logCount, clearing, updating ->
         SettingsUiState(
             themeMode = settings.themeMode,
+            colorTheme = settings.colorTheme,
             upstreamDns = settings.upstreamDns,
             maxAgeDays = settings.maxAgeDays,
             maxRows = settings.maxRows,
@@ -68,6 +70,12 @@ class SettingsViewModel @Inject constructor(
     fun setThemeMode(mode: String) {
         viewModelScope.launch {
             settingsRepository.setThemeMode(mode)
+        }
+    }
+
+    fun setColorTheme(theme: String) {
+        viewModelScope.launch {
+            settingsRepository.setColorTheme(theme)
         }
     }
 
@@ -100,6 +108,7 @@ class SettingsViewModel @Inject constructor(
 
 data class SettingsTuple(
     val themeMode: String,
+    val colorTheme: String,
     val upstreamDns: String,
     val maxAgeDays: Int,
     val maxRows: Int,

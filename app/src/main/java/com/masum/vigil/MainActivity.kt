@@ -22,13 +22,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val themeMode by settingsRepository.getThemeMode().collectAsStateWithLifecycle(initialValue = "system")
+            val themeMode  by settingsRepository.getThemeMode().collectAsStateWithLifecycle(initialValue = "system")
+            val colorTheme by settingsRepository.getColorTheme().collectAsStateWithLifecycle(initialValue = "system")
+
             val darkTheme = when (themeMode) {
-                "dark" -> true
+                "dark"  -> true
                 "light" -> false
-                else -> isSystemInDarkTheme()
+                else    -> isSystemInDarkTheme()
             }
-            VigilTheme(darkTheme = darkTheme) {
+
+            VigilTheme(darkTheme = darkTheme, colorTheme = colorTheme) {
                 VigilNavHost()
             }
         }

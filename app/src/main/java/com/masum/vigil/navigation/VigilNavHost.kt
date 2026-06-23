@@ -1,5 +1,15 @@
 package com.masum.vigil.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideOut
+import androidx.navigation.NavBackStackEntry
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -25,17 +36,64 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.AnimatedContentTransitionScope
 import com.masum.vigil.feature.control.ControlScreen
 import com.masum.vigil.feature.history.HistoryScreen
 import com.masum.vigil.feature.livefeed.LiveFeedScreen
 import com.masum.vigil.feature.perapp.PerAppScreen
-import com.masum.vigil.feature.stats.StatsScreen
 import com.masum.vigil.feature.settings.SettingsScreen
+import com.masum.vigil.feature.stats.StatsScreen
+
+private val NavEasing = CubicBezierEasing(0.4f, 0.0f, 0.2f, 1.0f)
+private const val NAV_DURATION = 280
+private const val SLIDE_FRACTION = 0.08f
+
+private fun tabEnter(toRight: Boolean): EnterTransition {
+    val sign = if (toRight) 1 else -1
+    return fadeIn(tween(NAV_DURATION, easing = NavEasing)) +
+        slideIn(tween(NAV_DURATION, easing = NavEasing)) { fullSize ->
+            IntOffset(x = (fullSize.width * SLIDE_FRACTION * sign).toInt(), y = 0)
+        }
+}
+
+private fun tabExit(toRight: Boolean): ExitTransition {
+    val sign = if (toRight) -1 else 1
+    return fadeOut(tween(NAV_DURATION, easing = NavEasing)) +
+        slideOut(tween(NAV_DURATION, easing = NavEasing)) { fullSize ->
+            IntOffset(x = (fullSize.width * SLIDE_FRACTION * sign).toInt(), y = 0)
+        }
+}
+
+private fun settingsEnter(): EnterTransition =
+    fadeIn(tween(NAV_DURATION, easing = NavEasing)) +
+        slideIn(tween(NAV_DURATION, easing = NavEasing)) { fullSize ->
+            IntOffset(x = (fullSize.width * 0.25f).toInt(), y = 0)
+        }
+
+private fun settingsExit(): ExitTransition =
+    fadeOut(tween(NAV_DURATION, easing = NavEasing)) +
+        slideOut(tween(NAV_DURATION, easing = NavEasing)) { fullSize ->
+            IntOffset(x = (fullSize.width * 0.25f).toInt(), y = 0)
+        }
+
+private fun settingsPopEnter(): EnterTransition =
+    fadeIn(tween(NAV_DURATION, easing = NavEasing)) +
+        slideIn(tween(NAV_DURATION, easing = NavEasing)) { fullSize ->
+            IntOffset(x = -(fullSize.width * 0.08f).toInt(), y = 0)
+        }
+
+private fun settingsPopExit(): ExitTransition =
+    fadeOut(tween(NAV_DURATION, easing = NavEasing)) +
+        slideOut(tween(NAV_DURATION, easing = NavEasing)) { fullSize ->
+            IntOffset(x = (fullSize.width * 0.12f).toInt(), y = 0)
+        }
+
+private val tabRoutes = VigilDestination.entries.map { it.route }
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.isGoingRight(): Boolean {
+    val fromIndex = tabRoutes.indexOf(initialState.destination.route)
+    val toIndex = tabRoutes.indexOf(targetState.destination.route)
+    return toIndex > fromIndex
+}
 
 @Composable
 fun VigilNavHost(
@@ -56,6 +114,9 @@ fun VigilNavHost(
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
+                            if (currentDestination?.route == "settings") {
+                                navController.popBackStack()
+                            }
                             navController.navigate(destination.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
@@ -78,93 +139,29 @@ fun VigilNavHost(
                 .fillMaxSize()
                 .padding(bottom = innerPadding.calculateBottomPadding()),
             enterTransition = {
-                val isSettingsTransition = targetState.destination.route == "settings" || initialState.destination.route == "settings"
-                if (isSettingsTransition) {
-                    val direction = if (targetState.destination.route == "settings") {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                    slideIntoContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
-                            fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing))
-                } else {
-                    val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
-                    val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
-                    val direction = if (targetIndex > initialIndex) {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                    slideIntoContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
-                            fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing))
+                when {
+                    targetState.destination.route == "settings" -> settingsEnter()
+                    else -> tabEnter(toRight = isGoingRight())
                 }
             },
             exitTransition = {
-                val isSettingsTransition = targetState.destination.route == "settings" || initialState.destination.route == "settings"
-                if (isSettingsTransition) {
-                    val direction = if (targetState.destination.route == "settings") {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                    slideOutOfContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
-                            fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing))
-                } else {
-                    val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
-                    val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
-                    val direction = if (targetIndex > initialIndex) {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                    slideOutOfContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
-                            fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing))
+                when {
+                    targetState.destination.route == "settings" -> fadeOut(tween(NAV_DURATION, easing = NavEasing))
+                    else -> tabExit(toRight = isGoingRight())
                 }
             },
             popEnterTransition = {
-                val isSettingsTransition = targetState.destination.route == "settings" || initialState.destination.route == "settings"
-                if (isSettingsTransition) {
-                    val direction = if (targetState.destination.route == "settings") {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                    slideIntoContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
-                            fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing))
-                } else {
-                    val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
-                    val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
-                    val direction = if (targetIndex > initialIndex) {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                    slideIntoContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
-                            fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing))
+                when {
+                    initialState.destination.route == "settings" -> settingsPopEnter()
+                    else -> tabEnter(toRight = !isGoingRight())
                 }
             },
             popExitTransition = {
-                val isSettingsTransition = targetState.destination.route == "settings" || initialState.destination.route == "settings"
-                if (isSettingsTransition) {
-                    val direction = if (targetState.destination.route == "settings") {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                    slideOutOfContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
-                            fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing))
-                } else {
-                    val initialIndex = VigilDestination.entries.indexOfFirst { it.route == initialState.destination.route }.coerceAtLeast(0)
-                    val targetIndex = VigilDestination.entries.indexOfFirst { it.route == targetState.destination.route }.coerceAtLeast(0)
-                    val direction = if (targetIndex > initialIndex) {
-                        AnimatedContentTransitionScope.SlideDirection.Start
-                    } else {
-                        AnimatedContentTransitionScope.SlideDirection.End
-                    }
-                    slideOutOfContainer(direction, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
-                            fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing))
+                when {
+                    initialState.destination.route == "settings" -> settingsPopExit()
+                    else -> tabExit(toRight = !isGoingRight())
                 }
-            }
+            },
         ) {
             composable(VigilDestination.Home.route) {
                 ControlScreen(

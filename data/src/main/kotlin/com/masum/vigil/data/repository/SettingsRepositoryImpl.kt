@@ -32,6 +32,21 @@ class SettingsRepositoryImpl @Inject constructor(
         prefs.edit().putString(KEY_THEME_MODE, mode).apply()
     }
 
+    override fun getColorTheme(): Flow<String> = callbackFlow {
+        trySend(prefs.getString(KEY_COLOR_THEME, "system") ?: "system")
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_COLOR_THEME) {
+                trySend(prefs.getString(KEY_COLOR_THEME, "system") ?: "system")
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override suspend fun setColorTheme(theme: String) {
+        prefs.edit().putString(KEY_COLOR_THEME, theme).apply()
+    }
+
     override fun getUpstreamDns(): Flow<String> = callbackFlow {
         trySend(prefs.getString(KEY_UPSTREAM_DNS, "1.1.1.1") ?: "1.1.1.1")
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
@@ -78,9 +93,10 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     companion object {
-        private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_THEME_MODE   = "theme_mode"
+        private const val KEY_COLOR_THEME  = "color_theme"
         private const val KEY_UPSTREAM_DNS = "upstream_dns"
         private const val KEY_MAX_AGE_DAYS = "max_age_days"
-        private const val KEY_MAX_ROWS = "max_rows"
+        private const val KEY_MAX_ROWS     = "max_rows"
     }
 }

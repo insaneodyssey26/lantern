@@ -6,6 +6,12 @@ import com.masum.vigil.core.ui.theme.VigilTheme as CoreVigilTheme
 @Composable
 fun VigilTheme(
     darkTheme: Boolean = androidx.compose.foundation.isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
+    colorTheme: String = "system",
     content: @Composable () -> Unit,
-) = CoreVigilTheme(darkTheme = darkTheme, dynamicColor = dynamicColor, content = content)
+) = CoreVigilTheme(
+    darkTheme    = darkTheme,
+    dynamicColor = dynamicColor,
+    colorTheme   = colorTheme,
+    content      = content,
+)

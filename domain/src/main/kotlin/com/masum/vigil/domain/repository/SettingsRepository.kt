@@ -6,6 +6,10 @@ interface SettingsRepository {
     fun getThemeMode(): Flow<String>
     suspend fun setThemeMode(mode: String)
 
+    // Color palette key: "system" | "vigil" | "storm" | "ember" | "orchid"
+    fun getColorTheme(): Flow<String>
+    suspend fun setColorTheme(theme: String)
+
     fun getUpstreamDns(): Flow<String>
     suspend fun setUpstreamDns(dns: String)
 

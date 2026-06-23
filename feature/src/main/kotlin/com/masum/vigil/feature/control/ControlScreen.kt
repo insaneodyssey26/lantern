@@ -296,12 +296,12 @@ private fun ActiveContent(uiState: ControlUiState) {
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                 ) {
-                    val infiniteTransition = rememberInfiniteTransition(label = "active_dot")
-                    val dotAlpha by infiniteTransition.animateFloat(
+                    val dotTransition = rememberInfiniteTransition(label = "active_dot")
+                    val dotAlpha by dotTransition.animateFloat(
                         initialValue = 0.3f,
                         targetValue = 1f,
                         animationSpec = infiniteRepeatable(
-                            animation = tween(1000),
+                            animation = tween(900),
                             repeatMode = RepeatMode.Reverse
                         ),
                         label = "dot_alpha"
@@ -309,7 +309,7 @@ private fun ActiveContent(uiState: ControlUiState) {
                     Box(
                         modifier = Modifier
                             .size(8.dp)
-                            .graphicsLayer(alpha = dotAlpha)
+                            .graphicsLayer { alpha = dotAlpha }
                             .background(Color(0xFF00FFC2), shape = CircleShape)
                     )
                     Spacer(Modifier.width(8.dp))
@@ -405,13 +405,13 @@ private fun ActiveContent(uiState: ControlUiState) {
 
 @Composable
 private fun PulsingCounter(count: Int) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulse1 by infiniteTransition.animateFloat(
+    val pulseTransition = rememberInfiniteTransition(label = "pulse")
+    val pulse1 by pulseTransition.animateFloat(
         initialValue = 0f, targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(2500, easing = LinearEasing), RepeatMode.Restart),
         label = "p1",
     )
-    val pulse2 by infiniteTransition.animateFloat(
+    val pulse2 by pulseTransition.animateFloat(
         initialValue = 0f, targetValue = 1f,
         animationSpec = infiniteRepeatable(
             tween(2500, easing = LinearEasing),
@@ -420,7 +420,7 @@ private fun PulsingCounter(count: Int) {
         ),
         label = "p2",
     )
-    val rotation by infiniteTransition.animateFloat(
+    val rotation by pulseTransition.animateFloat(
         initialValue = 0f, targetValue = 360f,
         animationSpec = infiniteRepeatable(tween(8000, easing = LinearEasing), RepeatMode.Restart),
         label = "rotation"
@@ -429,44 +429,45 @@ private fun PulsingCounter(count: Int) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
 
+    val angleRad = remember(rotation) { Math.toRadians(rotation.toDouble()) }
+
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(220.dp)) {
+            val halfMin = size.minDimension / 2f
+
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(primaryColor.copy(alpha = 0.1f), Color.Transparent),
-                    radius = size.minDimension / 2f
+                    colors = listOf(primaryColor.copy(alpha = 0.08f), Color.Transparent),
+                    radius = halfMin
                 )
             )
 
-            listOf(pulse1, pulse2).forEach { frac ->
-                drawCircle(
-                    color = primaryColor,
-                    radius = size.minDimension / 2f * frac,
-                    alpha = (1f - frac) * 0.15f,
-                    style = Stroke(width = 2.dp.toPx())
-                )
-            }
+            drawCircle(
+                color = primaryColor,
+                radius = halfMin * pulse1,
+                alpha = (1f - pulse1) * 0.15f,
+                style = Stroke(width = 2.dp.toPx())
+            )
+            drawCircle(
+                color = primaryColor,
+                radius = halfMin * pulse2,
+                alpha = (1f - pulse2) * 0.15f,
+                style = Stroke(width = 2.dp.toPx())
+            )
 
             drawCircle(
                 color = secondaryColor.copy(alpha = 0.2f),
-                radius = size.minDimension / 2f * 0.8f,
+                radius = halfMin * 0.8f,
                 style = Stroke(width = 1.dp.toPx())
             )
 
-            val angleRad = Math.toRadians(rotation.toDouble())
-            val r = size.minDimension / 2f * 0.8f
-            val cx = size.width / 2f + r * Math.cos(angleRad).toFloat()
-            val cy = size.height / 2f + r * Math.sin(angleRad).toFloat()
-            drawCircle(
-                color = primaryColor,
-                radius = 6.dp.toPx(),
-                center = Offset(cx, cy)
+            val r = halfMin * 0.8f
+            val orbitCenter = Offset(
+                x = size.width / 2f + r * Math.cos(angleRad).toFloat(),
+                y = size.height / 2f + r * Math.sin(angleRad).toFloat()
             )
-            drawCircle(
-                color = Color.White,
-                radius = 2.dp.toPx(),
-                center = Offset(cx, cy)
-            )
+            drawCircle(color = primaryColor, radius = 6.dp.toPx(), center = orbitCenter)
+            drawCircle(color = Color.White, radius = 2.dp.toPx(), center = orbitCenter)
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             AnimatedCounter(
