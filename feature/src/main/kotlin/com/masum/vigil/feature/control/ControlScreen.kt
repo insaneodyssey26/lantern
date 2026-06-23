@@ -288,36 +288,20 @@ private fun ActiveContent(uiState: ControlUiState) {
     ) {
         if (elapsed.isNotEmpty()) {
             Surface(
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(50),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    val dotTransition = rememberInfiniteTransition(label = "active_dot")
-                    val dotAlpha by dotTransition.animateFloat(
-                        initialValue = 0.3f,
-                        targetValue = 1f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(900),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "dot_alpha"
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .graphicsLayer { alpha = dotAlpha }
-                            .background(Color(0xFF00FFC2), shape = CircleShape)
-                    )
-                    Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Active · $elapsed",
-                        style = MaterialTheme.typography.labelMedium,
+                        text = "MONITOR ACTIVE  •  $elapsed".uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = androidx.compose.ui.unit.TextUnit.Unspecified
                     )
                 }
             }

@@ -42,6 +42,9 @@ class DnsLogRepositoryImpl @Inject constructor(
     private val pendingBatch = ArrayList<DnsQueryEntity>(BATCH_SIZE)
 
     init {
+        scope.launch {
+            sessionDao.closeAllActiveSessions(System.currentTimeMillis())
+        }
         scope.launch { collectAndBatchWrite() }
         scope.launch { periodicFlush() }
         retentionScheduler.start(scope)

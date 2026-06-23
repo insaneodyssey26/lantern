@@ -13,6 +13,9 @@ interface SessionDao {
     @Insert
     suspend fun insert(session: SessionEntity): Long
 
+    @Query("UPDATE sessions SET endedAt = :endedAt WHERE endedAt IS NULL")
+    suspend fun closeAllActiveSessions(endedAt: Long)
+
     @Query("UPDATE sessions SET endedAt = :endedAt WHERE id = :sessionId")
     suspend fun updateEndTime(sessionId: Long, endedAt: Long)
 
