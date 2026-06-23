@@ -136,45 +136,67 @@ fun SettingsScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { expanded = !expanded }
                         ) {
-                            androidx.compose.material3.OutlinedTextField(
-                                value = paletteLabels[selectedIndex],
-                                onValueChange = {},
-                                readOnly = true,
-                                enabled = false,
-                                trailingIcon = {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { expanded = !expanded },
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                                border = BorderStroke(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(22.dp)
+                                                .clip(CircleShape)
+                                                .background(paletteColors[selectedIndex])
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                        Text(
+                                            text = paletteLabels[selectedIndex],
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
                                     Icon(
                                         imageVector = if (expanded) Icons.Default.Check else Icons.Default.Palette,
-                                        contentDescription = null
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
                                     )
-                                },
-                                leadingIcon = {
-                                    Box(
-                                        modifier = Modifier
-                                            .padding(start = 12.dp)
-                                            .size(20.dp)
-                                            .clip(CircleShape)
-                                            .background(paletteColors[selectedIndex])
-                                    )
-                                },
-                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                                    disabledBorderColor = MaterialTheme.colorScheme.outline,
-                                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    disabledContainerColor = Color.Transparent
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                                }
+                            }
                             androidx.compose.material3.DropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false },
-                                modifier = Modifier.fillMaxWidth(0.9f)
+                                modifier = Modifier
+                                    .fillMaxWidth(0.85f)
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .padding(vertical = 6.dp)
                             ) {
                                 for (i in paletteKeys.indices) {
+                                    val isSelected = uiState.colorTheme == paletteKeys[i]
                                     androidx.compose.material3.DropdownMenuItem(
-                                        text = { Text(paletteLabels[i]) },
+                                        text = {
+                                            Text(
+                                                text = paletteLabels[i],
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                            )
+                                        },
                                         onClick = {
                                             viewModel.setColorTheme(paletteKeys[i])
                                             expanded = false
@@ -188,7 +210,7 @@ fun SettingsScreen(
                                             )
                                         },
                                         trailingIcon = {
-                                            if (uiState.colorTheme == paletteKeys[i]) {
+                                            if (isSelected) {
                                                 Icon(
                                                     imageVector = Icons.Default.Check,
                                                     contentDescription = null,
@@ -196,7 +218,13 @@ fun SettingsScreen(
                                                     modifier = Modifier.size(16.dp)
                                                 )
                                             }
-                                        }
+                                        },
+                                        colors = androidx.compose.material3.MenuDefaults.itemColors(
+                                            textColor = MaterialTheme.colorScheme.onSurface,
+                                            leadingIconColor = Color.Unspecified,
+                                            trailingIconColor = MaterialTheme.colorScheme.primary
+                                        ),
+                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                                     )
                                 }
                             }
