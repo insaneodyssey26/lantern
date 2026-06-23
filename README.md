@@ -93,14 +93,14 @@ Vigil uses a multi-module architecture structured into seven discrete Gradle mod
 
 ## Screenshots
 
-To display interface snapshots directly in this documentation, add your screenshots to the `/metadata/screenshots/` directory using these file names:
+To display interface snapshots directly in this documentation, add your screenshots to the `/screenshots/` directory using these file names:
 
 | Screen / Section | Target Filename | Markdown Reference |
 |---|---|---|
-| **Dashboard** (Monitor status, query counts) | `dashboard.png` | `![Vigil Dashboard](metadata/screenshots/dashboard.png)` |
-| **Live Logs** (Real-time captured feeds) | `live_feed.png` | `![Vigil Live Feed](metadata/screenshots/live_feed.png)` |
-| **App Statistics** (Per-app tracker metrics) | `app_stats.png` | `![App Statistics](metadata/screenshots/app_stats.png)` |
-| **Settings** (Theme selection, DNS upstream) | `settings.png` | `![Vigil Settings](metadata/screenshots/settings.png)` |
+| **Dashboard** (Monitor status, query counts) | `dashboard.png` | `![Vigil Dashboard](screenshots/dashboard.png)` |
+| **Live Logs** (Real-time captured feeds) | `live_feed.png` | `![Vigil Live Feed](screenshots/live_feed.png)` |
+| **App Statistics** (Per-app tracker metrics) | `app_stats.png` | `![App Statistics](screenshots/app_stats.png)` |
+| **Settings** (Theme selection, DNS upstream) | `settings.png` | `![Vigil Settings](screenshots/settings.png)` |
 
 ---
 
