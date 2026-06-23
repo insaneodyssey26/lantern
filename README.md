@@ -91,19 +91,11 @@ Vigil uses a multi-module architecture structured into seven discrete Gradle mod
 
 ---
 
-Here are the interface snapshots from the Vigil application:
+## Screenshots
 
-### Dashboard & Analytics
-![Vigil Dashboard](screenshots/dashboard.png)
-
-### Real-Time Live Feed Logs
-![Vigil Live Feed](screenshots/live_feed.png)
-
-### App Tracker Statistics
-![App Statistics](screenshots/app_stats.png)
-
-### Configuration Settings
-![Vigil Settings](screenshots/settings.png)
+| Dashboard | Live Logs | App Statistics | Settings |
+|:---------:|:---------:|:--------------:|:--------:|
+| ![Dashboard](screenshots/dashboard.png) | ![Live Logs](screenshots/live_feed.png) | ![App Statistics](screenshots/app_stats.png) | ![Settings](screenshots/settings.png) |
 
 ---
 
