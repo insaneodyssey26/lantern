@@ -62,11 +62,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
-import com.masum.lantern.core.ui.theme.LanternAmber
-import com.masum.lantern.core.ui.theme.LanternAmberBright
-import kotlin.math.cos
 import kotlin.math.roundToInt
-import kotlin.math.sin
 
 @Composable
 fun LanternHero(
@@ -167,48 +163,41 @@ private fun HeroGuardianVisualizer(
     isBlockingEnabled: Boolean,
     onClick: () -> Unit
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pulseTransition")
+    val infiniteTransition = rememberInfiniteTransition(label = "breatheTransition")
 
-    val pulseScale by infiniteTransition.animateFloat(
+    val breatheScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = if (isActive) 1.15f else 1f,
+        targetValue = if (isActive) 1.08f else 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2400, easing = FastOutSlowInEasing),
+            animation = tween(3000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "pulseScale"
+        label = "breatheScale"
     )
 
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = if (isActive) 0.35f else 0.0f,
-        targetValue = if (isActive) 0.05f else 0.0f,
+    val breatheAlpha by infiniteTransition.animateFloat(
+        initialValue = if (isActive) 0.25f else 0f,
+        targetValue = if (isActive) 0.08f else 0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2400, easing = FastOutSlowInEasing),
+            animation = tween(3000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "pulseAlpha"
+        label = "breatheAlpha"
     )
 
-    val radarRotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3800, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "radarRotation"
-    )
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
+    val outlineVariant = MaterialTheme.colorScheme.outlineVariant
 
-    val coreColor by animateColorAsState(
-        targetValue = if (isActive) {
-            if (isBlockingEnabled) LanternAmber else MaterialTheme.colorScheme.primary
-        } else MaterialTheme.colorScheme.surfaceContainerHighest,
+    val coreBgColor by animateColorAsState(
+        targetValue = if (isActive) primaryColor else MaterialTheme.colorScheme.surfaceContainerHighest,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "coreColor"
+        label = "coreBgColor"
     )
 
     val iconTint by animateColorAsState(
-        targetValue = if (isActive) Color(0xFF1E1300) else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (isActive) onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
         label = "iconTint"
     )
@@ -226,49 +215,25 @@ private fun HeroGuardianVisualizer(
         if (isActive) {
             Canvas(modifier = Modifier.size(164.dp)) {
                 val center = Offset(size.width / 2f, size.height / 2f)
-                val baseRadius = size.minDimension / 2.3f
+                val haloRadius = (size.minDimension / 2f) * breatheScale
 
                 drawCircle(
-                    color = coreColor.copy(alpha = pulseAlpha),
-                    radius = (size.minDimension / 2f) * pulseScale,
+                    color = primaryColor.copy(alpha = breatheAlpha),
+                    radius = haloRadius,
                     center = center
                 )
 
                 drawCircle(
-                    color = coreColor.copy(alpha = 0.2f),
-                    radius = baseRadius,
+                    color = primaryColor.copy(alpha = 0.22f),
+                    radius = size.minDimension / 2.3f,
                     center = center,
                     style = Stroke(width = 1.5.dp.toPx())
-                )
-
-                val angleRad = Math.toRadians(radarRotation.toDouble())
-                val arcLength = 70f
-                drawArc(
-                    brush = Brush.sweepGradient(
-                        0.0f to Color.Transparent,
-                        0.7f to Color.Transparent,
-                        1.0f to coreColor.copy(alpha = 0.65f),
-                        center = center
-                    ),
-                    startAngle = radarRotation,
-                    sweepAngle = arcLength,
-                    useCenter = false,
-                    style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round)
-                )
-
-                val orbitDistance = baseRadius
-                val dotX = (center.x + orbitDistance * cos(angleRad)).toFloat()
-                val dotY = (center.y + orbitDistance * sin(angleRad)).toFloat()
-                drawCircle(
-                    color = LanternAmberBright,
-                    radius = 3.dp.toPx(),
-                    center = Offset(dotX, dotY)
                 )
             }
         } else {
             Canvas(modifier = Modifier.size(136.dp)) {
                 drawCircle(
-                    color = coreColor.copy(alpha = 0.35f),
+                    color = outlineVariant.copy(alpha = 0.5f),
                     radius = size.minDimension / 2f,
                     style = Stroke(width = 1.5.dp.toPx())
                 )
@@ -280,13 +245,18 @@ private fun HeroGuardianVisualizer(
                 .size(108.dp)
                 .clip(CircleShape)
                 .background(
-                    Brush.radialGradient(
-                        colors = if (isActive) listOf(LanternAmberBright, coreColor)
-                        else listOf(
-                            MaterialTheme.colorScheme.surfaceContainerHighest,
-                            MaterialTheme.colorScheme.surfaceContainerHigh
+                    if (isActive) {
+                        Brush.radialGradient(
+                            colors = listOf(primaryColor, primaryColor.copy(alpha = 0.9f))
                         )
-                    )
+                    } else {
+                        Brush.radialGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            )
+                        )
+                    }
                 ),
             contentAlignment = Alignment.Center
         ) {

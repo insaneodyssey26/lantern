@@ -46,6 +46,9 @@ class SettingsRepositoryImpl @Inject constructor(
         awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 
+    override fun getColorThemeSync(): String =
+        prefs.getString(KEY_COLOR_THEME, "system") ?: "system"
+
     override suspend fun setColorTheme(theme: String) {
         prefs.edit().putString(KEY_COLOR_THEME, theme).apply()
     }

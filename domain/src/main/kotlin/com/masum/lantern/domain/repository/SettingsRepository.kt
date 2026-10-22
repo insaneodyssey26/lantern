@@ -8,6 +8,7 @@ interface SettingsRepository {
     suspend fun setThemeMode(mode: String)
 
     fun getColorTheme(): Flow<String>
+    fun getColorThemeSync(): String
     suspend fun setColorTheme(theme: String)
 
     fun getUpstreamDns(): Flow<String>

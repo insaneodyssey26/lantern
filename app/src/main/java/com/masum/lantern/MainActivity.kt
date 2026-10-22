@@ -27,11 +27,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val initialThemeMode = settingsRepository.getThemeModeSync()
+        val initialColorTheme = settingsRepository.getColorThemeSync()
         val initialPureBlack = settingsRepository.isPureBlackSync()
         val initialUseSystemFont = settingsRepository.isUseSystemFontSync()
 
         setContent {
             val themeMode by settingsRepository.getThemeMode().collectAsStateWithLifecycle(initialValue = initialThemeMode)
+            val colorTheme by settingsRepository.getColorTheme().collectAsStateWithLifecycle(initialValue = initialColorTheme)
             val pureBlack by settingsRepository.isPureBlack().collectAsStateWithLifecycle(initialValue = initialPureBlack)
             val useSystemFont by settingsRepository.isUseSystemFont().collectAsStateWithLifecycle(initialValue = initialUseSystemFont)
 
@@ -57,6 +59,7 @@ class MainActivity : ComponentActivity() {
 
             LanternTheme(
                 darkTheme = darkTheme,
+                colorTheme = colorTheme,
                 pureBlack = pureBlack,
                 useSystemFont = useSystemFont
             ) {

@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 
 private val LanternDark = darkColorScheme(
     primary = LanternAmber,
-    onPrimary = Color(0xFF261900),
+    onPrimary = Color(0xFF4A2800),
     primaryContainer = LanternContainerDark,
     onPrimaryContainer = LanternAmberBright,
     secondary = Color(0xFFE2C08D),
@@ -48,7 +48,7 @@ private val LanternDark = darkColorScheme(
 
 private val LanternAmoled = darkColorScheme(
     primary = LanternAmber,
-    onPrimary = Color(0xFF261900),
+    onPrimary = Color(0xFF4A2800),
     primaryContainer = LanternContainerDark,
     onPrimaryContainer = LanternAmberBright,
     secondary = Color(0xFFE2C08D),
@@ -81,8 +81,8 @@ private val LanternAmoled = darkColorScheme(
 private val LanternLight = lightColorScheme(
     primary = LanternGold,
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFFFE082),
-    onPrimaryContainer = Color(0xFF241A00),
+    primaryContainer = LanternAmberBright,
+    onPrimaryContainer = Color(0xFF2E1500),
     secondary = Color(0xFF6D5B39),
     onSecondary = Color(0xFFFFFFFF),
     secondaryContainer = Color(0xFFF7DFBB),
@@ -110,23 +110,162 @@ private val LanternLight = lightColorScheme(
     outlineVariant = Color(0xFFE2E8F0)
 )
 
+private val EmberDark = LanternDark.copy(
+    primary = EmberDarkPrimary,
+    onPrimary = EmberDarkOnPrimary,
+    primaryContainer = EmberDarkPrimaryContainer,
+    onPrimaryContainer = EmberDarkOnPrimaryContainer
+)
+
+private val EmberAmoled = LanternAmoled.copy(
+    primary = EmberDarkPrimary,
+    onPrimary = EmberDarkOnPrimary,
+    primaryContainer = EmberDarkPrimaryContainer,
+    onPrimaryContainer = EmberDarkOnPrimaryContainer
+)
+
+private val EmberLight = LanternLight.copy(
+    primary = EmberLightPrimary,
+    onPrimary = EmberLightOnPrimary,
+    primaryContainer = EmberLightPrimaryContainer,
+    onPrimaryContainer = EmberLightOnPrimaryContainer
+)
+
+private val OceanDark = LanternDark.copy(
+    primary = OceanDarkPrimary,
+    onPrimary = OceanDarkOnPrimary,
+    primaryContainer = OceanDarkPrimaryContainer,
+    onPrimaryContainer = OceanDarkOnPrimaryContainer
+)
+
+private val OceanAmoled = LanternAmoled.copy(
+    primary = OceanDarkPrimary,
+    onPrimary = OceanDarkOnPrimary,
+    primaryContainer = OceanDarkPrimaryContainer,
+    onPrimaryContainer = OceanDarkOnPrimaryContainer
+)
+
+private val OceanLight = LanternLight.copy(
+    primary = OceanLightPrimary,
+    onPrimary = OceanLightOnPrimary,
+    primaryContainer = OceanLightPrimaryContainer,
+    onPrimaryContainer = OceanLightOnPrimaryContainer
+)
+
+private val EmeraldDark = LanternDark.copy(
+    primary = EmeraldDarkPrimary,
+    onPrimary = EmeraldDarkOnPrimary,
+    primaryContainer = EmeraldDarkPrimaryContainer,
+    onPrimaryContainer = EmeraldDarkOnPrimaryContainer
+)
+
+private val EmeraldAmoled = LanternAmoled.copy(
+    primary = EmeraldDarkPrimary,
+    onPrimary = EmeraldDarkOnPrimary,
+    primaryContainer = EmeraldDarkPrimaryContainer,
+    onPrimaryContainer = EmeraldDarkOnPrimaryContainer
+)
+
+private val EmeraldLight = LanternLight.copy(
+    primary = EmeraldLightPrimary,
+    onPrimary = EmeraldLightOnPrimary,
+    primaryContainer = EmeraldLightPrimaryContainer,
+    onPrimaryContainer = EmeraldLightOnPrimaryContainer
+)
+
+private val OrchidDark = LanternDark.copy(
+    primary = OrchidDarkPrimary,
+    onPrimary = OrchidDarkOnPrimary,
+    primaryContainer = OrchidDarkPrimaryContainer,
+    onPrimaryContainer = OrchidDarkOnPrimaryContainer
+)
+
+private val OrchidAmoled = LanternAmoled.copy(
+    primary = OrchidDarkPrimary,
+    onPrimary = OrchidDarkOnPrimary,
+    primaryContainer = OrchidDarkPrimaryContainer,
+    onPrimaryContainer = OrchidDarkOnPrimaryContainer
+)
+
+private val OrchidLight = LanternLight.copy(
+    primary = OrchidLightPrimary,
+    onPrimary = OrchidLightOnPrimary,
+    primaryContainer = OrchidLightPrimaryContainer,
+    onPrimaryContainer = OrchidLightOnPrimaryContainer
+)
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LanternTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    colorTheme: String = "system",
     pureBlack: Boolean = false,
     useSystemFont: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        darkTheme && pureBlack -> LanternAmoled
-        darkTheme -> LanternDark
-        else -> LanternLight
+    val context = LocalContext.current
+    val supportsDynamic = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+    val baseScheme = when (colorTheme) {
+        "ember" -> when {
+            darkTheme && pureBlack -> EmberAmoled
+            darkTheme -> EmberDark
+            else -> EmberLight
+        }
+        "ocean" -> when {
+            darkTheme && pureBlack -> OceanAmoled
+            darkTheme -> OceanDark
+            else -> OceanLight
+        }
+        "emerald" -> when {
+            darkTheme && pureBlack -> EmeraldAmoled
+            darkTheme -> EmeraldDark
+            else -> EmeraldLight
+        }
+        "orchid" -> when {
+            darkTheme && pureBlack -> OrchidAmoled
+            darkTheme -> OrchidDark
+            else -> OrchidLight
+        }
+        "amber" -> when {
+            darkTheme && pureBlack -> LanternAmoled
+            darkTheme -> LanternDark
+            else -> LanternLight
+        }
+        else -> {
+            if (supportsDynamic) {
+                if (darkTheme) {
+                    val dynamicDark = dynamicDarkColorScheme(context)
+                    if (pureBlack) {
+                        dynamicDark.copy(
+                            background = PureBlackLowest,
+                            surface = PureBlackLowest,
+                            surfaceContainerLowest = PureBlackLowest,
+                            surfaceContainerLow = PureBlackLow,
+                            surfaceContainer = PureBlack,
+                            surfaceContainerHigh = PureBlackHigh,
+                            surfaceContainerHighest = PureBlackHighest
+                        )
+                    } else {
+                        dynamicDark
+                    }
+                } else {
+                    dynamicLightColorScheme(context)
+                }
+            } else {
+                when {
+                    darkTheme && pureBlack -> LanternAmoled
+                    darkTheme -> LanternDark
+                    else -> LanternLight
+                }
+            }
+        }
     }
+
     val typography = remember(useSystemFont) { getLanternTypography(useSystemFont) }
 
     MaterialExpressiveTheme(
-        colorScheme = colorScheme,
+        colorScheme = baseScheme,
         motionScheme = MotionScheme.expressive(),
         shapes = LanternShapes,
         typography = typography,

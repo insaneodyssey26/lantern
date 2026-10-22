@@ -10,14 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.masum.lantern.core.ui.theme.VerdictBypassed
-import com.masum.lantern.core.ui.theme.VerdictBypassedContainer
-import com.masum.lantern.core.ui.theme.VerdictSafe
-import com.masum.lantern.core.ui.theme.VerdictSafeContainer
-import com.masum.lantern.core.ui.theme.VerdictTracker
-import com.masum.lantern.core.ui.theme.VerdictTrackerContainer
 
 enum class ExpressiveVerdict {
     SAFE,
@@ -32,17 +25,33 @@ fun ExpressiveVerdictBadge(
     modifier: Modifier = Modifier
 ) {
     val (bgColor, textColor, label) = when (verdict) {
-        ExpressiveVerdict.SAFE -> Triple(VerdictSafeContainer, VerdictSafe, "Safe")
-        ExpressiveVerdict.BLOCKED -> Triple(VerdictTrackerContainer, VerdictTracker, "Blocked")
-        ExpressiveVerdict.AUDITED -> Triple(VerdictBypassedContainer, VerdictBypassed, "Audited")
-        ExpressiveVerdict.BYPASSED -> Triple(VerdictBypassedContainer, VerdictBypassed, "Bypassed")
+        ExpressiveVerdict.SAFE -> Triple(
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer,
+            "Safe"
+        )
+        ExpressiveVerdict.BLOCKED -> Triple(
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.onErrorContainer,
+            "Blocked"
+        )
+        ExpressiveVerdict.AUDITED -> Triple(
+            MaterialTheme.colorScheme.surfaceContainerHigh,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+            "Audited"
+        )
+        ExpressiveVerdict.BYPASSED -> Triple(
+            MaterialTheme.colorScheme.surfaceContainerHigh,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+            "Bypassed"
+        )
     }
 
     Box(
         modifier = modifier
             .clip(CircleShape)
             .background(bgColor)
-            .border(1.dp, textColor.copy(alpha = 0.3f), CircleShape)
+            .border(1.dp, textColor.copy(alpha = 0.2f), CircleShape)
             .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(

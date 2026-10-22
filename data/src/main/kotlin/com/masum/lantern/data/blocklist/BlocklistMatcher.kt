@@ -9,6 +9,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.zip.GZIPInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,7 +26,12 @@ class BlocklistMatcher @Inject constructor(
         val inputStream = if (downloadedFile.exists() && downloadedFile.length() > 0) {
             FileInputStream(downloadedFile)
         } else {
-            context.assets.open("blocklist/hosts.txt")
+            val assetNames = context.assets.list("blocklist") ?: emptyArray()
+            if ("hosts.txt.gz" in assetNames) {
+                GZIPInputStream(context.assets.open("blocklist/hosts.txt.gz"))
+            } else {
+                context.assets.open("blocklist/hosts.txt")
+            }
         }
         val loaded = inputStream.use { BlocklistLoader.load(it) }
         trie = loaded
