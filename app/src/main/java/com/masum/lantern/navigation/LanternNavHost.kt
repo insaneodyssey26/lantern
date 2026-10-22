@@ -9,26 +9,25 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideOut
-import androidx.navigation.NavBackStackEntry
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AltRoute
+import androidx.compose.material.icons.rounded.Insights
+import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -37,9 +36,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.masum.lantern.feature.control.ControlScreen
-import com.masum.lantern.feature.history.HistoryScreen
 import com.masum.lantern.feature.livefeed.LiveFeedScreen
-import com.masum.lantern.feature.perapp.PerAppScreen
 import com.masum.lantern.feature.settings.SettingsScreen
 import com.masum.lantern.feature.stats.StatsScreen
 
@@ -106,7 +103,10 @@ fun LanternNavHost(
     Scaffold(
         modifier = modifier,
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                windowInsets = NavigationBarDefaults.windowInsets
+            ) {
                 LanternDestination.entries.forEach { destination ->
                     val selected = currentDestination?.hierarchy?.any {
                         it.route == destination.route
@@ -125,8 +125,29 @@ fun LanternNavHost(
                                 restoreState = true
                             }
                         },
-                        icon = { NavIcon(destination = destination, selected = selected) },
-                        label = { Text(destination.label) },
+                        icon = {
+                            Icon(
+                                imageVector = when (destination) {
+                                    LanternDestination.Shield -> Icons.Rounded.Shield
+                                    LanternDestination.Traffic -> Icons.Rounded.AltRoute
+                                    LanternDestination.Insights -> Icons.Rounded.Insights
+                                },
+                                contentDescription = destination.label
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = destination.label,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                 }
             }
@@ -134,7 +155,7 @@ fun LanternNavHost(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = LanternDestination.Home.route,
+            startDestination = LanternDestination.Shield.route,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = innerPadding.calculateBottomPadding()),
@@ -163,27 +184,17 @@ fun LanternNavHost(
                 }
             },
         ) {
-            composable(LanternDestination.Home.route) {
+            composable(LanternDestination.Shield.route) {
                 ControlScreen(
                     onSettingsClick = { navController.navigate("settings") }
                 )
             }
-            composable(LanternDestination.LiveFeed.route) {
+            composable(LanternDestination.Traffic.route) {
                 LiveFeedScreen(
                     onSettingsClick = { navController.navigate("settings") }
                 )
             }
-            composable(LanternDestination.PerApp.route) {
-                PerAppScreen(
-                    onSettingsClick = { navController.navigate("settings") }
-                )
-            }
-            composable(LanternDestination.History.route) {
-                HistoryScreen(
-                    onSettingsClick = { navController.navigate("settings") }
-                )
-            }
-            composable(LanternDestination.Stats.route) {
+            composable(LanternDestination.Insights.route) {
                 StatsScreen(
                     onSettingsClick = { navController.navigate("settings") }
                 )
@@ -192,66 +203,6 @@ fun LanternNavHost(
                 SettingsScreen(
                     onBackClick = { navController.popBackStack() }
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun NavIcon(destination: LanternDestination, selected: Boolean) {
-    val color = if (selected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant
-    Canvas(modifier = Modifier.size(24.dp)) {
-        val w = size.width
-        val h = size.height
-        val stroke = Stroke(width = 2.dp.toPx())
-        when (destination) {
-            LanternDestination.Home -> {
-                val shield = Path().apply {
-                    moveTo(w * 0.5f, h * 0.05f)
-                    lineTo(w * 0.92f, h * 0.28f)
-                    lineTo(w * 0.92f, h * 0.6f)
-                    cubicTo(w * 0.92f, h * 0.82f, w * 0.5f, h * 0.96f, w * 0.5f, h * 0.96f)
-                    cubicTo(w * 0.5f, h * 0.96f, w * 0.08f, h * 0.82f, w * 0.08f, h * 0.6f)
-                    lineTo(w * 0.08f, h * 0.28f)
-                    close()
-                }
-                if (selected) drawPath(shield, color) else drawPath(shield, color, style = stroke)
-            }
-            LanternDestination.LiveFeed -> {
-                drawCircle(color, radius = w * 0.08f, center = Offset(w * 0.2f, h * 0.5f))
-                listOf(0.35f, 0.5f, 0.65f).forEach { y ->
-                    drawLine(color, Offset(w * 0.32f, h * y), Offset(w * 0.82f, h * y), strokeWidth = 2.dp.toPx())
-                }
-            }
-            LanternDestination.PerApp -> {
-                val gap = w * 0.12f
-                val cellSize = (w - gap * 3) / 2
-                listOf(gap to gap, gap * 2 + cellSize to gap, gap to gap * 2 + cellSize, gap * 2 + cellSize to gap * 2 + cellSize).forEach { (x, y) ->
-                    if (selected) {
-                        drawRoundRect(color, topLeft = Offset(x, y), size = Size(cellSize, cellSize), cornerRadius = CornerRadius(2.dp.toPx()))
-                    } else {
-                        drawRoundRect(color, topLeft = Offset(x, y), size = Size(cellSize, cellSize), cornerRadius = CornerRadius(2.dp.toPx()), style = stroke)
-                    }
-                }
-            }
-            LanternDestination.History -> {
-                drawCircle(color, radius = w * 0.42f, center = Offset(w * 0.5f, h * 0.5f), style = stroke)
-                drawLine(color, Offset(w * 0.5f, h * 0.5f), Offset(w * 0.5f, h * 0.22f), strokeWidth = 2.dp.toPx())
-                drawLine(color, Offset(w * 0.5f, h * 0.5f), Offset(w * 0.7f, h * 0.5f), strokeWidth = 2.dp.toPx())
-            }
-            LanternDestination.Stats -> {
-                val barWidth = w * 0.18f
-                val bars = listOf(0.15f to 0.6f, 0.4f to 0.35f, 0.65f to 0.75f)
-                bars.forEach { (xRatio, heightRatio) ->
-                    val barH = h * heightRatio
-                    val topY = h - barH - h * 0.08f
-                    if (selected) {
-                        drawRoundRect(color, topLeft = Offset(w * xRatio, topY), size = Size(barWidth, barH), cornerRadius = CornerRadius(2.dp.toPx()))
-                    } else {
-                        drawRoundRect(color, topLeft = Offset(w * xRatio, topY), size = Size(barWidth, barH), cornerRadius = CornerRadius(2.dp.toPx()), style = stroke)
-                    }
-                }
             }
         }
     }

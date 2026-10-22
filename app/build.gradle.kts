@@ -7,11 +7,7 @@ plugins {
 
 android {
     namespace = "com.masum.lantern"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.masum.lantern"

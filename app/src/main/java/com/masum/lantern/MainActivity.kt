@@ -22,8 +22,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val themeMode  by settingsRepository.getThemeMode().collectAsStateWithLifecycle(initialValue = "system")
-            val colorTheme by settingsRepository.getColorTheme().collectAsStateWithLifecycle(initialValue = "system")
+            val themeMode by settingsRepository.getThemeMode().collectAsStateWithLifecycle(initialValue = "system")
 
             val darkTheme = when (themeMode) {
                 "dark"  -> true
@@ -31,7 +30,7 @@ class MainActivity : ComponentActivity() {
                 else    -> isSystemInDarkTheme()
             }
 
-            LanternTheme(darkTheme = darkTheme, colorTheme = colorTheme) {
+            LanternTheme(darkTheme = darkTheme) {
                 LanternNavHost()
             }
         }

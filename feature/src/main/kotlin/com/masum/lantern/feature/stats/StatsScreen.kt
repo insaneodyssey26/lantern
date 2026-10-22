@@ -1,16 +1,19 @@
 package com.masum.lantern.feature.stats
 
+import android.content.Context
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,37 +21,60 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Layers
+import androidx.compose.material.icons.rounded.PieChart
+import androidx.compose.material.icons.rounded.QueryStats
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.masum.lantern.core.ui.components.VerdictUiState
+import com.masum.lantern.core.ui.components.EmptyState
+import com.masum.lantern.core.ui.components.ExpressiveVerdict
+import com.masum.lantern.core.ui.components.ExpressiveVerdictBadge
+import com.masum.lantern.domain.model.DnsQuery
+import com.masum.lantern.domain.model.Verdict
+import com.masum.lantern.feature.livefeed.DnsQueryUiModel
+import com.masum.lantern.feature.livefeed.QueryDetailSheet
+import com.masum.lantern.feature.util.toUiState
+import com.masum.lantern.feature.util.formatDate
+import com.masum.lantern.feature.util.formatTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,113 +83,460 @@ fun StatsScreen(
     viewModel: StatsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedAppForInspection by remember { mutableStateOf<AppStatUiModel?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Network Analytics", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Insights",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
                 actions = {
+                    if (selectedTab == 2 && uiState.sessions.isNotEmpty()) {
+                        IconButton(onClick = viewModel::onClearHistory) {
+                            Icon(
+                                imageVector = Icons.Rounded.DeleteOutline,
+                                contentDescription = "Clear Session History",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                     IconButton(onClick = onSettingsClick) {
                         Icon(
-                            imageVector = Icons.Default.Settings,
+                            imageVector = Icons.Rounded.Settings,
                             contentDescription = "Settings",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
-        },
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .consumeWindowInsets(innerPadding)
         ) {
-            Spacer(Modifier.height(8.dp))
-
-            TrackerDonutChart(
-                trackerPercentage = uiState.trackerPercentage,
-                modifier = Modifier.size(220.dp),
-            )
-
-            Spacer(Modifier.height(28.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            SecondaryTabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
             ) {
-                StatCard(
-                    label = "Total Logs",
-                    value = uiState.totalQueries.formatCount(),
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                    modifier = Modifier.weight(1f)
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = { Text("Overview") },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Rounded.PieChart,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 )
-                StatCard(
-                    label = "Trackers",
-                    value = uiState.trackerQueries.formatCount(),
-                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
-                    contentColor = MaterialTheme.colorScheme.error,
-                    borderColor = MaterialTheme.colorScheme.error.copy(alpha = 0.3f),
-                    modifier = Modifier.weight(1f)
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = { Text("Apps") },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Rounded.Layers,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 )
-                StatCard(
-                    label = "Safe Logs",
-                    value = (uiState.totalQueries - uiState.trackerQueries).formatCount(),
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.2f),
-                    contentColor = MaterialTheme.colorScheme.tertiary,
-                    borderColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
-                    modifier = Modifier.weight(1f)
+                Tab(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    text = { Text("Sessions") },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Rounded.QueryStats,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 )
             }
 
-            if (uiState.topDomains.isNotEmpty()) {
-                Spacer(Modifier.height(32.dp))
+            when (selectedTab) {
+                0 -> OverviewTabContent(uiState = uiState)
+                1 -> AppsTabContent(
+                    apps = uiState.apps,
+                    onAppClick = { selectedAppForInspection = it }
+                )
+                2 -> SessionsTabContent(sessions = uiState.sessions)
+            }
+        }
+    }
 
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        "Top Domains Requested",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+    selectedAppForInspection?.let { app ->
+        AppQueriesBottomSheet(
+            app = app,
+            viewModel = viewModel,
+            onDismiss = { selectedAppForInspection = null }
+        )
+    }
+}
 
-                Spacer(Modifier.height(16.dp))
+@Composable
+private fun OverviewTabContent(uiState: StatsUiState) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        item {
+            TrackerDonutChart(
+                trackerPercentage = uiState.trackerPercentage,
+                modifier = Modifier
+                    .size(200.dp)
+                    .padding(vertical = 8.dp)
+            )
+        }
 
-                Card(
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                ExpressiveMetricTile(
+                    label = "Total Logs",
+                    value = uiState.totalQueries.formatCount(),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                ExpressiveMetricTile(
+                    label = "Trackers",
+                    value = uiState.trackerQueries.formatCount(),
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.weight(1f)
+                )
+                ExpressiveMetricTile(
+                    label = "Clean Traffic",
+                    value = (uiState.totalQueries - uiState.trackerQueries).formatCount(),
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        if (uiState.topDomains.isNotEmpty()) {
+            item {
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    Text(
+                        text = "Most Requested Domains",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        )
                     ) {
-                        val maxCount = uiState.topDomains.maxOf { it.count }
-                        uiState.topDomains.forEach { domain ->
-                            DomainBar(domain = domain, maxCount = maxCount)
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            val maxCount = uiState.topDomains.maxOf { it.count }
+                            uiState.topDomains.forEach { domain ->
+                                ExpressiveDomainBar(domain = domain, maxCount = maxCount)
+                            }
                         }
                     }
                 }
             }
+        }
 
-            Spacer(Modifier.height(32.dp))
-
+        item {
             Text(
-                text = "Blocklist Engine · ${uiState.blocklistCount.formatCount()} active domains",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = "Blocklist Engine Active · ${uiState.blocklistCount.formatCount()} rules loaded",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun AppsTabContent(
+    apps: List<AppStatUiModel>,
+    onAppClick: (AppStatUiModel) -> Unit
+) {
+    if (apps.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            EmptyState(
+                title = "No Apps Captured",
+                subtitle = "Active background and foreground network calls will appear here."
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(items = apps, key = { it.packageName }) { app ->
+                ElevatedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.medium)
+                        .clickable { onAppClick(app) },
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = app.appName.take(1).uppercase(),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = app.appName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "${app.totalQueries} requests · ${app.trackerQueries} trackers",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        val verdict = if (app.trackerQueries > 0) ExpressiveVerdict.TRACKER else ExpressiveVerdict.SAFE
+                        ExpressiveVerdictBadge(verdict = verdict)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionsTabContent(sessions: List<SessionUiModel>) {
+    if (sessions.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            EmptyState(
+                title = "No Past Sessions",
+                subtitle = "Completed protection sessions will be recorded here."
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(items = sessions, key = { it.sessionId }) { session ->
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = if (session.isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                        else MaterialTheme.colorScheme.surfaceContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = session.startedAt,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = session.duration,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (session.isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "${session.totalQueries} Total Queries",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${session.trackerQueries} Blocked (${session.trackerPercentage}%)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (session.trackerQueries > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppQueriesBottomSheet(
+    app: AppStatUiModel,
+    viewModel: StatsViewModel,
+    onDismiss: () -> Unit
+) {
+    val queries by viewModel.getAppQueries(app.packageName).collectAsStateWithLifecycle(initialValue = emptyList())
+    var selectedQueryDetail by remember { mutableStateOf<DnsQueryUiModel?>(null) }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp)
+        ) {
+            Text(
+                text = app.appName,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold
             )
+            Text(
+                text = app.packageName,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(Modifier.height(24.dp))
+            if (queries.isEmpty()) {
+                EmptyState(
+                    title = "No Queries",
+                    subtitle = "No queries recorded yet for this app."
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(380.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(items = queries) { query ->
+                        ElevatedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.small)
+                                .clickable {
+                                    selectedQueryDetail = DnsQueryUiModel(
+                                        id = query.id,
+                                        domain = query.domain,
+                                        packageName = query.appInfo.packageName,
+                                        appName = app.appName,
+                                        time = query.timestamp.formatTime(),
+                                        verdict = query.verdict.toUiState()
+                                    )
+                                },
+                            shape = MaterialTheme.shapes.small,
+                            colors = CardDefaults.elevatedCardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = query.domain,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = query.timestamp.formatDate(),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                val verdict = when (query.verdict) {
+                                    is Verdict.Tracker -> ExpressiveVerdict.TRACKER
+                                    Verdict.Clean -> ExpressiveVerdict.SAFE
+                                    Verdict.Unknown -> ExpressiveVerdict.BYPASSED
+                                }
+                                ExpressiveVerdictBadge(verdict = verdict)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    selectedQueryDetail?.let { queryUi ->
+        ModalBottomSheet(
+            onDismissRequest = { selectedQueryDetail = null },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
+            QueryDetailSheet(
+                query = queryUi,
+                onDismiss = { selectedQueryDetail = null }
+            )
         }
     }
 }
@@ -173,104 +546,100 @@ private fun TrackerDonutChart(trackerPercentage: Int, modifier: Modifier = Modif
     val animatedPct by animateFloatAsState(
         targetValue = trackerPercentage.toFloat(),
         animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "donut_pct",
+        label = "donut_pct"
     )
     val trackerFraction = (animatedPct / 100f).coerceIn(0f, 1f)
     val cleanFraction = 1f - trackerFraction
 
     val primary = MaterialTheme.colorScheme.primary
     val error = MaterialTheme.colorScheme.error
-    val tertiary = MaterialTheme.colorScheme.tertiary
-    val surfaceVariant = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+    val outline = MaterialTheme.colorScheme.surfaceContainerHighest
 
     Box(contentAlignment = Alignment.Center, modifier = modifier) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 24.dp.toPx()
+            val strokeWidth = 20.dp.toPx()
             val r = (size.minDimension - strokeWidth * 2) / 2f
             val tl = Offset((size.width - r * 2) / 2f, (size.height - r * 2) / 2f)
             val arcSize = Size(r * 2, r * 2)
             val strokeStyle = Stroke(strokeWidth, cap = StrokeCap.Round)
 
-            drawArc(surfaceVariant, 0f, 360f, false, tl, arcSize, style = Stroke(strokeWidth / 2f))
+            drawArc(outline, 0f, 360f, false, tl, arcSize, style = Stroke(strokeWidth))
 
             if (trackerFraction > 0f) {
                 drawArc(error, -90f, trackerFraction * 360f, false, tl, arcSize, style = strokeStyle)
             }
             if (cleanFraction > 0f) {
-                val cleanColor = if (trackerFraction > 0f) tertiary else primary
-                drawArc(cleanColor, -90f + trackerFraction * 360f, cleanFraction * 360f, false, tl, arcSize, style = strokeStyle)
+                drawArc(primary, -90f + trackerFraction * 360f, cleanFraction * 360f, false, tl, arcSize, style = strokeStyle)
             }
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "$trackerPercentage%",
-                style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
-                color = if (trackerPercentage > 0) error else primary,
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (trackerPercentage > 0) error else primary
             )
             Text(
-                text = if (trackerPercentage > 0) "trackers" else "clean",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold
+                text = if (trackerPercentage > 0) "Telemetry Ratio" else "Fully Clean",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
 @Composable
-private fun StatCard(
+private fun ExpressiveMetricTile(
     label: String,
     value: String,
     containerColor: Color,
     contentColor: Color,
-    borderColor: Color,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    ElevatedCard(
         modifier = modifier,
-        shape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 6.dp, bottomStart = 6.dp),
-        color = containerColor,
-        border = BorderStroke(1.dp, borderColor)
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.elevatedCardColors(containerColor = containerColor)
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 14.dp, horizontal = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = contentColor
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold
+                color = contentColor.copy(alpha = 0.8f),
+                fontWeight = FontWeight.Medium
             )
         }
     }
 }
 
 @Composable
-private fun DomainBar(domain: DomainStatUiModel, maxCount: Int) {
+private fun ExpressiveDomainBar(domain: DomainStatUiModel, maxCount: Int) {
     val fraction = if (maxCount > 0) domain.count.toFloat() / maxCount else 0f
     val animatedFraction by animateFloatAsState(
         targetValue = fraction,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "bar_frac",
+        label = "bar_frac"
     )
-    val barColor = if (domain.isTracker) MaterialTheme.colorScheme.error
-                   else MaterialTheme.colorScheme.primary
-    val barBg = MaterialTheme.colorScheme.surfaceVariant
+    val barColor = if (domain.isTracker) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = domain.domain,
@@ -278,38 +647,30 @@ private fun DomainBar(domain: DomainStatUiModel, maxCount: Int) {
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.width(12.dp))
             Text(
                 text = domain.count.toString(),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
         }
-        Spacer(Modifier.height(5.dp))
+        Spacer(Modifier.height(6.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(barBg),
+                .height(6.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(animatedFraction)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = if (domain.isTracker) {
-                                listOf(Color(0xFFEF4444), Color(0xFFB91C1C))
-                            } else {
-                                listOf(Color(0xFF00E5FF), Color(0xFF00838F))
-                            }
-                        )
-                    ),
+                    .clip(CircleShape)
+                    .background(barColor)
             )
         }
     }

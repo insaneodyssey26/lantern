@@ -2,16 +2,13 @@ package com.masum.lantern.feature.livefeed
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,46 +16,52 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.OpenInBrowser
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.masum.lantern.core.ui.components.EmptyState
-import com.masum.lantern.core.ui.components.VerdictChip
+import com.masum.lantern.core.ui.components.ExpressiveVerdict
+import com.masum.lantern.core.ui.components.ExpressiveVerdictBadge
 import com.masum.lantern.core.ui.components.VerdictUiState
+import com.masum.lantern.core.ui.theme.VerdictSafe
+import com.masum.lantern.core.ui.theme.VerdictTracker
+import kotlinx.coroutines.launch
 
 enum class FeedFilter { All, Trackers, Clean }
 
@@ -73,6 +76,8 @@ fun LiveFeedScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(FeedFilter.All) }
     var selectedQuery by remember { mutableStateOf<DnsQueryUiModel?>(null) }
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
 
     val filteredQueries = remember(uiState.queries, searchQuery, selectedFilter) {
         uiState.queries.filter { query ->
@@ -93,328 +98,357 @@ fun LiveFeedScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Live Feed", fontWeight = FontWeight.Bold) },
+                title = { Text("Traffic Stream", style = MaterialTheme.typography.titleLarge) },
                 actions = {
-                    if (uiState.isMonitoring) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(50),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
-                            modifier = Modifier.padding(end = 8.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .background(MaterialTheme.colorScheme.error, shape = CircleShape)
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    text = "LIVE",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
                     IconButton(onClick = onSettingsClick) {
                         Icon(
-                            imageVector = Icons.Default.Settings,
+                            imageVector = Icons.Rounded.Settings,
                             contentDescription = "Settings",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
         },
-    ) { innerPadding ->
+        containerColor = MaterialTheme.colorScheme.background
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(paddingValues)
         ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text("Search domain, app, package...") },
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                )
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
-                FeedFilter.entries.forEach { filter ->
-                    val selected = selectedFilter == filter
-                    FilterChip(
-                        selected = selected,
-                        onClick = { selectedFilter = filter },
-                        label = {
-                            Text(
-                                when (filter) {
-                                    FeedFilter.All -> "All Logs"
-                                    FeedFilter.Trackers -> "Trackers Only"
-                                    FeedFilter.Clean -> "Safe Only"
-                                }
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search by domain or app name…") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.large,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        ElevatedFilterChip(
+                            selected = selectedFilter == FeedFilter.All,
+                            onClick = { selectedFilter = FeedFilter.All },
+                            label = { Text("All (${uiState.queries.size})") },
+                            shape = CircleShape,
+                            colors = FilterChipDefaults.elevatedFilterChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
                             )
-                        },
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier.padding(start = if (filter == FeedFilter.All) 16.dp else 0.dp)
-                    )
+                        )
+                    }
+                    item {
+                        val trackerCount = uiState.queries.count { it.verdict == VerdictUiState.Tracker }
+                        ElevatedFilterChip(
+                            selected = selectedFilter == FeedFilter.Trackers,
+                            onClick = { selectedFilter = FeedFilter.Trackers },
+                            label = { Text("Trackers ($trackerCount)") },
+                            shape = CircleShape,
+                            leadingIcon = {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(VerdictTracker)
+                                )
+                            },
+                            colors = FilterChipDefaults.elevatedFilterChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        )
+                    }
+                    item {
+                        val cleanCount = uiState.queries.count { it.verdict == VerdictUiState.Clean }
+                        ElevatedFilterChip(
+                            selected = selectedFilter == FeedFilter.Clean,
+                            onClick = { selectedFilter = FeedFilter.Clean },
+                            label = { Text("Clean ($cleanCount)") },
+                            shape = CircleShape,
+                            leadingIcon = {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(VerdictSafe)
+                                )
+                            },
+                            colors = FilterChipDefaults.elevatedFilterChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        )
+                    }
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (filteredQueries.isEmpty()) {
-                EmptyState(
-                    title = if (uiState.isMonitoring) "No matching logs" else "Not monitoring",
-                    subtitle = if (uiState.isMonitoring) "Try clearing search filter or wait for DNS traffic"
-                               else "Start monitoring on the home screen",
-                    modifier = Modifier.weight(1f),
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EmptyState(
+                        title = if (searchQuery.isNotEmpty()) "No matching queries" else "No DNS traffic captured yet",
+                        subtitle = if (searchQuery.isNotEmpty()) "Try adjusting your search query or filter" else "Traffic will stream here in real-time as device apps make network calls"
+                    )
+                }
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(filteredQueries, key = { it.id }) { query ->
-                        QueryCard(query, onClick = { selectedQuery = query })
+                        QueryCard(
+                            query = query,
+                            onClick = { selectedQuery = query }
+                        )
                     }
-                    item { Spacer(Modifier.height(16.dp)) }
                 }
             }
         }
     }
 
     selectedQuery?.let { query ->
-        QueryDetailsDialog(
-            query = query,
-            onDismiss = { selectedQuery = null }
-        )
-    }
-}
-
-@Composable
-private fun QueryCard(query: DnsQueryUiModel, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+        ModalBottomSheet(
+            onDismissRequest = { selectedQuery = null },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = query.domain,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "${query.appName} · ${query.time}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-            VerdictChip(verdict = query.verdict)
+            QueryDetailSheet(
+                query = query,
+                onDismiss = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        selectedQuery = null
+                    }
+                }
+            )
         }
     }
 }
 
 @Composable
-fun QueryDetailsDialog(query: DnsQueryUiModel, onDismiss: () -> Unit) {
-    val clipboardManager = LocalClipboardManager.current
-    val context = LocalContext.current
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
+private fun QueryCard(
+    query: DnsQueryUiModel,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        ),
+        onClick = onClick
+    ) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-            ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(24.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "DNS Query Log",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = query.domain,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-
-                Column {
-                    Text(
-                        text = "Target Domain",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = query.domain,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                Column {
-                    Text(
-                        text = "Requesting App",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = query.appName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = query.packageName,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                    )
-                }
-
-                Column {
-                    Text(
-                        text = "Timestamp",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = query.time,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
 
-                val containerColor = when (query.verdict) {
-                    VerdictUiState.Tracker -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)
-                    VerdictUiState.Clean -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.2f)
-                    VerdictUiState.Unknown -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                }
-                val borderColors = when (query.verdict) {
-                    VerdictUiState.Tracker -> MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
-                    VerdictUiState.Clean -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
-                    VerdictUiState.Unknown -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                }
-                val verdictLabel = when (query.verdict) {
-                    VerdictUiState.Tracker -> "Flagged Tracker"
-                    VerdictUiState.Clean -> "Safe Request"
-                    VerdictUiState.Unknown -> "Unknown Destination"
-                }
-                val verdictDesc = when (query.verdict) {
-                    VerdictUiState.Tracker -> "Vigil flagged this request as a tracker or advertising endpoint matching StevenBlack's filter list. Vigil allowed the query to resolve locally to prevent app crashes."
-                    VerdictUiState.Clean -> "This domain did not match any known tracker or adware blocklists. Vigil classified it as a safe query."
-                    VerdictUiState.Unknown -> "This query has not been matching any filters in the database yet."
-                }
+            Spacer(modifier = Modifier.width(12.dp))
 
-                Card(
+            val verdict = when (query.verdict) {
+                VerdictUiState.Tracker -> ExpressiveVerdict.TRACKER
+                VerdictUiState.Clean -> ExpressiveVerdict.SAFE
+                VerdictUiState.Unknown -> ExpressiveVerdict.BYPASSED
+            }
+            ExpressiveVerdictBadge(verdict = verdict)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun QueryDetailSheet(
+    query: DnsQueryUiModel,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = query.appName,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = query.packageName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            val verdict = when (query.verdict) {
+                VerdictUiState.Tracker -> ExpressiveVerdict.TRACKER
+                VerdictUiState.Clean -> ExpressiveVerdict.SAFE
+                VerdictUiState.Unknown -> ExpressiveVerdict.BYPASSED
+            }
+            ExpressiveVerdictBadge(verdict = verdict)
+        }
+
+        ElevatedCard(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Queried Domain",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = query.domain,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = containerColor),
-                    border = BorderStroke(1.dp, borderColors)
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column {
                         Text(
-                            text = verdictLabel,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = when (query.verdict) {
-                                VerdictUiState.Tracker -> MaterialTheme.colorScheme.error
-                                VerdictUiState.Clean -> MaterialTheme.colorScheme.tertiary
-                                VerdictUiState.Unknown -> MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = verdictDesc,
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "Timestamp",
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Text(
+                            text = query.time,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "Category",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = if (query.verdict == VerdictUiState.Tracker) "Telemetry / Ad" else "Standard DNS",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (query.verdict == VerdictUiState.Tracker) VerdictTracker else VerdictSafe
+                        )
                     }
                 }
+            }
+        }
 
-                Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://who.is/whois/${query.domain}"))
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.weight(1f),
+                shape = CircleShape
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.OpenInBrowser,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("WHOIS")
+            }
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = {
-                                clipboardManager.setText(AnnotatedString(query.domain))
-                            },
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(vertical = 10.dp)
-                        ) {
-                            Text("Copy")
-                        }
-                        OutlinedButton(
-                            onClick = {
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://www.google.com/search?q=${query.domain}")
-                                )
-                                context.startActivity(intent)
-                            },
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(vertical = 10.dp)
-                        ) {
-                            Text("Web Search")
-                        }
-                    }
-                    Button(
-                        onClick = onDismiss,
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(vertical = 10.dp)
-                    ) {
-                        Text("Close")
-                    }
-                }
+            FilledTonalButton(
+                onClick = {
+                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    val clip = android.content.ClipData.newPlainText("domain", query.domain)
+                    clipboard.setPrimaryClip(clip)
+                    onDismiss()
+                },
+                modifier = Modifier.weight(1f),
+                shape = CircleShape
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.ContentCopy,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Copy Domain")
             }
         }
     }

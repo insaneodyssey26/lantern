@@ -53,7 +53,7 @@ import com.masum.lantern.core.ui.components.AppRow
 import com.masum.lantern.core.ui.components.EmptyState
 import com.masum.lantern.core.ui.components.VerdictChip
 import com.masum.lantern.feature.livefeed.DnsQueryUiModel
-import com.masum.lantern.feature.livefeed.QueryDetailsDialog
+import com.masum.lantern.feature.livefeed.QueryDetailSheet
 import com.masum.lantern.feature.util.formatDate
 import com.masum.lantern.feature.util.toUiState
 
@@ -393,9 +393,13 @@ fun AppQueriesDialog(
     }
 
     selectedDetailQuery?.let { uiModel ->
-        QueryDetailsDialog(
-            query = uiModel,
-            onDismiss = { selectedDetailQuery = null }
-        )
+        androidx.compose.material3.ModalBottomSheet(
+            onDismissRequest = { selectedDetailQuery = null }
+        ) {
+            QueryDetailSheet(
+                query = uiModel,
+                onDismiss = { selectedDetailQuery = null }
+            )
+        }
     }
 }

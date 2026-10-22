@@ -9,93 +9,83 @@ import androidx.compose.ui.unit.sp
 import com.masum.lantern.core.ui.R
 
 val GeistFontFamily = FontFamily(
-    Font(R.font.geist_variablefont_weight, FontWeight.Normal)
+    Font(R.font.geist_variablefont_weight)
 )
 
-val VigilTypography = Typography(
+const val TabularNumbers = "tnum"
+
+val LanternTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = GeistFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
-        letterSpacing = (-0.25).sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 52.sp,
+        lineHeight = 60.sp,
+        letterSpacing = (-0.5).sp,
+        fontFeatureSettings = TabularNumbers
     ),
     displayMedium = TextStyle(
         fontFamily = GeistFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
-        letterSpacing = 0.sp,
-    ),
-    displaySmall = TextStyle(
-        fontFamily = GeistFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
-        letterSpacing = 0.sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 42.sp,
+        lineHeight = 48.sp,
+        letterSpacing = (-0.5).sp,
+        fontFeatureSettings = TabularNumbers
     ),
     headlineLarge = TextStyle(
         fontFamily = GeistFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 32.sp,
-        lineHeight = 40.sp,
-        letterSpacing = 0.sp,
+        lineHeight = 38.sp,
+        letterSpacing = (-0.2).sp
     ),
     headlineMedium = TextStyle(
         fontFamily = GeistFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp,
-        letterSpacing = 0.sp,
+        fontSize = 26.sp,
+        lineHeight = 32.sp,
+        letterSpacing = (-0.2).sp
     ),
     headlineSmall = TextStyle(
         fontFamily = GeistFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 32.sp,
-        letterSpacing = 0.sp,
+        fontWeight = FontWeight.Medium,
+        fontSize = 22.sp,
+        lineHeight = 28.sp
     ),
     titleLarge = TextStyle(
         fontFamily = GeistFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 19.sp,
+        lineHeight = 25.sp
     ),
     titleMedium = TextStyle(
         fontFamily = GeistFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.15.sp,
+        lineHeight = 22.sp
     ),
     titleSmall = TextStyle(
         fontFamily = GeistFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp,
+        lineHeight = 20.sp
     ),
     bodyLarge = TextStyle(
         fontFamily = GeistFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp,
+        lineHeight = 24.sp
     ),
     bodyMedium = TextStyle(
         fontFamily = GeistFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.25.sp,
+        lineHeight = 20.sp
     ),
     bodySmall = TextStyle(
         fontFamily = GeistFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp,
+        lineHeight = 16.sp
     ),
     labelLarge = TextStyle(
         fontFamily = GeistFontFamily,
@@ -103,19 +93,22 @@ val VigilTypography = Typography(
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp,
+        fontFeatureSettings = TabularNumbers
     ),
     labelMedium = TextStyle(
         fontFamily = GeistFontFamily,
-        fontWeight = GeistFontFamily.let { FontWeight.Medium },
+        fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.5.sp,
+        letterSpacing = 0.2.sp,
+        fontFeatureSettings = TabularNumbers
     ),
     labelSmall = TextStyle(
         fontFamily = GeistFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp,
-    ),
+        lineHeight = 14.sp,
+        letterSpacing = 0.3.sp,
+        fontFeatureSettings = TabularNumbers
+    )
 )
