@@ -51,6 +51,11 @@ class ControlViewModel @Inject constructor(
                 _uiState.update { it.copy(isBlockingEnabled = enabled) }
             }
         }
+        viewModelScope.launch {
+            settingsRepository.getUpstreamDns().collect { dns ->
+                _uiState.update { it.copy(upstreamDns = dns) }
+            }
+        }
         refreshPrivateDnsStatus()
     }
 

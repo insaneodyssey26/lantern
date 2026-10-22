@@ -11,4 +11,5 @@ data class ControlUiState(
     val pendingConsentIntent: Intent? = null,
     val blocklistCount: Int = 0,
     val isBlockingEnabled: Boolean = true,
+    val upstreamDns: String = "1.1.1.1",
 )
