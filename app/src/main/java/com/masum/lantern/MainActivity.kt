@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val themeMode by settingsRepository.getThemeMode().collectAsStateWithLifecycle(initialValue = "system")
+            val useSystemFont by settingsRepository.isUseSystemFont().collectAsStateWithLifecycle(initialValue = false)
 
             val darkTheme = when (themeMode) {
                 "dark"  -> true
@@ -30,7 +31,10 @@ class MainActivity : ComponentActivity() {
                 else    -> isSystemInDarkTheme()
             }
 
-            LanternTheme(darkTheme = darkTheme) {
+            LanternTheme(
+                darkTheme = darkTheme,
+                useSystemFont = useSystemFont
+            ) {
                 LanternNavHost()
             }
         }

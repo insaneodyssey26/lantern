@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
@@ -81,15 +82,17 @@ private val LanternLight = lightColorScheme(
 @Composable
 fun LanternTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    useSystemFont: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) LanternDark else LanternLight
+    val typography = remember(useSystemFont) { getLanternTypography(useSystemFont) }
 
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
         motionScheme = MotionScheme.expressive(),
         shapes = LanternShapes,
-        typography = LanternTypography,
+        typography = typography,
         content = content
     )
 }

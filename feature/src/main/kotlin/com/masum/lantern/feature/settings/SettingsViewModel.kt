@@ -31,11 +31,19 @@ class SettingsViewModel @Inject constructor(
     private val settingsFlow = combine(
         settingsRepository.getThemeMode(),
         settingsRepository.getColorTheme(),
+        settingsRepository.isUseSystemFont(),
         settingsRepository.getUpstreamDns(),
         settingsRepository.getMaxAgeDays(),
         settingsRepository.getMaxRows()
-    ) { theme, color, dns, maxAge, maxRows ->
-        SettingsTuple(theme, color, dns, maxAge, maxRows)
+    ) { args: Array<Any> ->
+        SettingsTuple(
+            themeMode = args[0] as String,
+            colorTheme = args[1] as String,
+            useSystemFont = args[2] as Boolean,
+            upstreamDns = args[3] as String,
+            maxAgeDays = args[4] as Int,
+            maxRows = args[5] as Int
+        )
     }
 
     private val totalLogCountFlow = flow {
@@ -63,6 +71,7 @@ class SettingsViewModel @Inject constructor(
         SettingsUiState(
             themeMode = settings.themeMode,
             colorTheme = settings.colorTheme,
+            useSystemFont = settings.useSystemFont,
             upstreamDns = settings.upstreamDns,
             maxAgeDays = settings.maxAgeDays,
             maxRows = settings.maxRows,
@@ -109,6 +118,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setUseSystemFont(useSystem: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setUseSystemFont(useSystem)
+        }
+    }
+
     fun clearAllLogs() {
         viewModelScope.launch {
             isClearingLogs.value = true
@@ -148,6 +163,7 @@ class SettingsViewModel @Inject constructor(
 data class SettingsTuple(
     val themeMode: String,
     val colorTheme: String,
+    val useSystemFont: Boolean,
     val upstreamDns: String,
     val maxAgeDays: Int,
     val maxRows: Int,

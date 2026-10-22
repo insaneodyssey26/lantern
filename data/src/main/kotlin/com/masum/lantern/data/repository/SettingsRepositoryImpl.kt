@@ -107,6 +107,21 @@ class SettingsRepositoryImpl @Inject constructor(
         prefs.edit().putBoolean(KEY_BLOCKING_ENABLED, enabled).apply()
     }
 
+    override fun isUseSystemFont(): Flow<Boolean> = callbackFlow {
+        trySend(prefs.getBoolean(KEY_USE_SYSTEM_FONT, false))
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_USE_SYSTEM_FONT) {
+                trySend(prefs.getBoolean(KEY_USE_SYSTEM_FONT, false))
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override suspend fun setUseSystemFont(useSystem: Boolean) {
+        prefs.edit().putBoolean(KEY_USE_SYSTEM_FONT, useSystem).apply()
+    }
+
     companion object {
         private const val KEY_THEME_MODE   = "theme_mode"
         private const val KEY_COLOR_THEME  = "color_theme"
@@ -114,5 +129,6 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_MAX_AGE_DAYS = "max_age_days"
         private const val KEY_MAX_ROWS     = "max_rows"
         private const val KEY_BLOCKING_ENABLED = "blocking_enabled"
+        private const val KEY_USE_SYSTEM_FONT  = "use_system_font"
     }
 }
