@@ -6,4 +6,6 @@ interface BlocklistRepository {
     fun classify(domain: String): Verdict
     fun domainCount(): Int
     fun isReady(): Boolean
+    suspend fun updateBlocklist(): Result<Boolean>
+    fun getLastUpdatedTimestamp(): Long
 }

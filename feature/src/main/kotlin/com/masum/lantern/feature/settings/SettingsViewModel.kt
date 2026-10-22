@@ -25,6 +25,8 @@ class SettingsViewModel @Inject constructor(
 
     private val isClearingLogs = MutableStateFlow(false)
     private val isUpdatingBlocklist = MutableStateFlow(false)
+    private val blocklistUpdateMessage = MutableStateFlow<String?>(null)
+    private val blocklistRefreshTrigger = MutableStateFlow(0)
 
     private val settingsFlow = combine(
         settingsRepository.getThemeMode(),
@@ -44,12 +46,20 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    private val blocklistStateFlow = combine(
+        isUpdatingBlocklist,
+        blocklistUpdateMessage,
+        blocklistRefreshTrigger
+    ) { updating, message, _ ->
+        Triple(updating, message, blocklistRepository.getLastUpdatedTimestamp())
+    }
+
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsFlow,
         totalLogCountFlow,
         isClearingLogs,
-        isUpdatingBlocklist
-    ) { settings, logCount, clearing, updating ->
+        blocklistStateFlow
+    ) { settings, logCount, clearing, blocklistState ->
         SettingsUiState(
             themeMode = settings.themeMode,
             colorTheme = settings.colorTheme,
@@ -58,8 +68,10 @@ class SettingsViewModel @Inject constructor(
             maxRows = settings.maxRows,
             totalLogCount = logCount,
             blocklistCount = blocklistRepository.domainCount(),
+            blocklistLastUpdated = blocklistState.third,
             isClearingLogs = clearing,
-            isUpdatingBlocklist = updating
+            isUpdatingBlocklist = blocklistState.first,
+            blocklistUpdateMessage = blocklistState.second
         )
     }.stateIn(
         scope = viewModelScope,
@@ -103,6 +115,33 @@ class SettingsViewModel @Inject constructor(
             dnsLogRepository.clearHistory()
             isClearingLogs.value = false
         }
+    }
+
+    fun updateBlocklist() {
+        viewModelScope.launch {
+            if (isUpdatingBlocklist.value) return@launch
+            isUpdatingBlocklist.value = true
+            blocklistUpdateMessage.value = null
+            val result = blocklistRepository.updateBlocklist()
+            isUpdatingBlocklist.value = false
+            result.fold(
+                onSuccess = { updated ->
+                    blocklistRefreshTrigger.value += 1
+                    blocklistUpdateMessage.value = if (updated) {
+                        "Successfully updated threat database to latest rules"
+                    } else {
+                        "Database is already up to date"
+                    }
+                },
+                onFailure = {
+                    blocklistUpdateMessage.value = "Failed to update: Check internet connection"
+                }
+            )
+        }
+    }
+
+    fun clearBlocklistMessage() {
+        blocklistUpdateMessage.value = null
     }
 }
 

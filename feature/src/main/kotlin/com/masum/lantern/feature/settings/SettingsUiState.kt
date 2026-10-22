@@ -8,7 +8,9 @@ data class SettingsUiState(
     val maxRows: Int = 50_000,
     val totalLogCount: Long = 0,
     val blocklistCount: Int = 0,
+    val blocklistLastUpdated: Long = 0L,
     val isClearingLogs: Boolean = false,
     val isUpdatingBlocklist: Boolean = false,
+    val blocklistUpdateMessage: String? = null,
 )
 

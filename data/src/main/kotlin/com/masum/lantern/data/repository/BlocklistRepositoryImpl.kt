@@ -22,4 +22,6 @@ class BlocklistRepositoryImpl @Inject constructor(
     override fun classify(domain: String): Verdict = matcher.classify(domain)
     override fun domainCount(): Int = matcher.domainCount()
     override fun isReady(): Boolean = matcher.isReady()
+    override suspend fun updateBlocklist(): Result<Boolean> = matcher.updateFromRemote()
+    override fun getLastUpdatedTimestamp(): Long = matcher.getLastUpdatedTimestamp()
 }
