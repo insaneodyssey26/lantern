@@ -7,4 +7,5 @@ data class DnsQuery(
     val timestamp: Long,
     val verdict: Verdict,
     val appInfo: AppInfo,
+    val isBlocked: Boolean = false,
 )

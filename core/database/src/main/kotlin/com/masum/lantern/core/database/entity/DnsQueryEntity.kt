@@ -21,6 +21,7 @@ data class DnsQueryEntity(
     val appUid: Int,
     val appPackageName: String,
     val appName: String,
+    val isBlocked: Boolean = false,
 ) {
     companion object {
         const val VERDICT_CLEAN = 0

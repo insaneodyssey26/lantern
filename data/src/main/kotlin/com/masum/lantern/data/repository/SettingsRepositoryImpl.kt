@@ -92,11 +92,27 @@ class SettingsRepositoryImpl @Inject constructor(
         prefs.edit().putInt(KEY_MAX_ROWS, rows).apply()
     }
 
+    override fun isBlockingEnabled(): Flow<Boolean> = callbackFlow {
+        trySend(prefs.getBoolean(KEY_BLOCKING_ENABLED, true))
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_BLOCKING_ENABLED) {
+                trySend(prefs.getBoolean(KEY_BLOCKING_ENABLED, true))
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override suspend fun setBlockingEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_BLOCKING_ENABLED, enabled).apply()
+    }
+
     companion object {
         private const val KEY_THEME_MODE   = "theme_mode"
         private const val KEY_COLOR_THEME  = "color_theme"
         private const val KEY_UPSTREAM_DNS = "upstream_dns"
         private const val KEY_MAX_AGE_DAYS = "max_age_days"
         private const val KEY_MAX_ROWS     = "max_rows"
+        private const val KEY_BLOCKING_ENABLED = "blocking_enabled"
     }
 }

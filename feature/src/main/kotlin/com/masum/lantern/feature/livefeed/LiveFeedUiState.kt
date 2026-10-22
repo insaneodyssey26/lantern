@@ -16,4 +16,5 @@ data class DnsQueryUiModel(
     val packageName: String,
     val verdict: VerdictUiState,
     val time: String,
+    val isBlocked: Boolean = false,
 )

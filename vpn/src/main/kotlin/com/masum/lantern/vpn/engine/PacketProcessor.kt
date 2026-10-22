@@ -1,18 +1,35 @@
 package com.masum.lantern.vpn.engine
 
 import com.masum.lantern.domain.model.DnsQuery
+import com.masum.lantern.domain.model.Verdict
 import com.masum.lantern.domain.repository.BlocklistRepository
+import com.masum.lantern.domain.repository.SettingsRepository
 import com.masum.lantern.vpn.attribution.ConnectionOwnerResolver
+import com.masum.lantern.vpn.parser.DnsPacketBuilder
 import com.masum.lantern.vpn.parser.DnsPacketParser
 import com.masum.lantern.vpn.session.MonitoringSessionBus
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class PacketProcessor(
     private val blocklistRepository: BlocklistRepository,
     private val sessionBus: MonitoringSessionBus,
     private val forwarder: DnsForwarder,
     private val resolver: ConnectionOwnerResolver,
+    private val settingsRepository: SettingsRepository,
+    private val scope: CoroutineScope,
     private val sessionId: Long,
 ) {
+    @Volatile private var isBlockingEnabled: Boolean = true
+
+    init {
+        scope.launch {
+            settingsRepository.isBlockingEnabled().collect { enabled ->
+                isBlockingEnabled = enabled
+            }
+        }
+    }
+
     fun process(rawPacket: ByteArray) {
         val parsed = DnsPacketParser.parse(rawPacket) ?: return
         val rawDns = DnsPacketParser.extractDnsPayload(rawPacket) ?: return
@@ -21,15 +38,31 @@ class PacketProcessor(
         val uid = resolver.getUid(parsed)
         val appInfo = resolver.resolveAppInfo(uid)
 
+        val isBlockedNow = verdict is Verdict.Tracker && isBlockingEnabled
+
         val query = DnsQuery(
             sessionId = sessionId,
             domain = parsed.domain,
             timestamp = System.currentTimeMillis(),
             verdict = verdict,
             appInfo = appInfo,
+            isBlocked = isBlockedNow,
         )
 
         sessionBus.tryEmit(query)
-        forwarder.forward(parsed, rawDns)
+
+        if (isBlockedNow) {
+            val sinkPacket = DnsPacketBuilder.buildNxDomainResponse(
+                rawDnsQuery = rawDns,
+                transactionId = parsed.transactionId,
+                sourceIp = parsed.destIp,
+                destIp = parsed.sourceIp,
+                sourcePort = 53,
+                destPort = parsed.sourcePort
+            )
+            forwarder.writePacket(sinkPacket)
+        } else {
+            forwarder.forward(parsed, rawDns)
+        }
     }
 }

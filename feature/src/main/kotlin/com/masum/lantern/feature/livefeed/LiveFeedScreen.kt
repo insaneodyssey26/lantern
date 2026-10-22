@@ -311,10 +311,11 @@ private fun QueryCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            val verdict = when (query.verdict) {
-                VerdictUiState.Tracker -> ExpressiveVerdict.TRACKER
-                VerdictUiState.Clean -> ExpressiveVerdict.SAFE
-                VerdictUiState.Unknown -> ExpressiveVerdict.BYPASSED
+            val verdict = when {
+                query.verdict == VerdictUiState.Tracker && query.isBlocked -> ExpressiveVerdict.BLOCKED
+                query.verdict == VerdictUiState.Tracker && !query.isBlocked -> ExpressiveVerdict.AUDITED
+                query.verdict == VerdictUiState.Clean -> ExpressiveVerdict.SAFE
+                else -> ExpressiveVerdict.BYPASSED
             }
             ExpressiveVerdictBadge(verdict = verdict)
         }
@@ -352,10 +353,11 @@ fun QueryDetailSheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            val verdict = when (query.verdict) {
-                VerdictUiState.Tracker -> ExpressiveVerdict.TRACKER
-                VerdictUiState.Clean -> ExpressiveVerdict.SAFE
-                VerdictUiState.Unknown -> ExpressiveVerdict.BYPASSED
+            val verdict = when {
+                query.verdict == VerdictUiState.Tracker && query.isBlocked -> ExpressiveVerdict.BLOCKED
+                query.verdict == VerdictUiState.Tracker && !query.isBlocked -> ExpressiveVerdict.AUDITED
+                query.verdict == VerdictUiState.Clean -> ExpressiveVerdict.SAFE
+                else -> ExpressiveVerdict.BYPASSED
             }
             ExpressiveVerdictBadge(verdict = verdict)
         }
@@ -397,12 +399,16 @@ fun QueryDetailSheet(
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "Category",
+                            text = "Action / Status",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = if (query.verdict == VerdictUiState.Tracker) "Telemetry / Ad" else "Standard DNS",
+                            text = when {
+                                query.isBlocked -> "Blocked (Synthetic NXDOMAIN)"
+                                query.verdict == VerdictUiState.Tracker -> "Audited (Forwarded)"
+                                else -> "Clean (Resolved Safely)"
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = if (query.verdict == VerdictUiState.Tracker) VerdictTracker else VerdictSafe
                         )

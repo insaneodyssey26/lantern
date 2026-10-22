@@ -19,7 +19,9 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideLanternDatabase(@ApplicationContext context: Context): LanternDatabase =
-        Room.databaseBuilder(context, LanternDatabase::class.java, "lantern.db").build()
+        Room.databaseBuilder(context, LanternDatabase::class.java, "lantern.db")
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
 
     @Provides
     fun provideDnsQueryDao(db: LanternDatabase): DnsQueryDao = db.dnsQueryDao()

@@ -66,7 +66,15 @@ class LanternVpnService : VpnService() {
 
         val forwarder = DnsForwarder(this, descriptor, scope, settingsRepository)
         val resolver = ConnectionOwnerResolver(this)
-        val processor = PacketProcessor(blocklistRepository, sessionBus, forwarder, resolver, sessionId)
+        val processor = PacketProcessor(
+            blocklistRepository = blocklistRepository,
+            sessionBus = sessionBus,
+            forwarder = forwarder,
+            resolver = resolver,
+            settingsRepository = settingsRepository,
+            scope = scope,
+            sessionId = sessionId
+        )
 
         readLoop = PacketReadLoop(descriptor) { packet ->
             processor.process(packet)

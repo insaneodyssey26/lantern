@@ -29,6 +29,7 @@ fun DnsQuery.toEntity(): DnsQueryEntity = DnsQueryEntity(
     appUid = appInfo.uid,
     appPackageName = appInfo.packageName,
     appName = appInfo.appName,
+    isBlocked = isBlocked,
 )
 
 fun DnsQueryEntity.toDomain(): DnsQuery = DnsQuery(
@@ -42,6 +43,7 @@ fun DnsQueryEntity.toDomain(): DnsQuery = DnsQuery(
         else -> Verdict.Unknown
     },
     appInfo = AppInfo(uid = appUid, packageName = appPackageName, appName = appName),
+    isBlocked = isBlocked,
 )
 
 fun SessionWithCountsTuple.toSessionSummary(): SessionSummary = SessionSummary(

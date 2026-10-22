@@ -346,7 +346,7 @@ private fun AppsTabContent(
                             )
                         }
 
-                        val verdict = if (app.trackerQueries > 0) ExpressiveVerdict.TRACKER else ExpressiveVerdict.SAFE
+                        val verdict = if (app.trackerQueries > 0) ExpressiveVerdict.BLOCKED else ExpressiveVerdict.SAFE
                         ExpressiveVerdictBadge(verdict = verdict)
                     }
                 }
@@ -515,7 +515,7 @@ private fun AppQueriesBottomSheet(
                                     )
                                 }
                                 val verdict = when (query.verdict) {
-                                    is Verdict.Tracker -> ExpressiveVerdict.TRACKER
+                                    is Verdict.Tracker -> ExpressiveVerdict.BLOCKED
                                     Verdict.Clean -> ExpressiveVerdict.SAFE
                                     Verdict.Unknown -> ExpressiveVerdict.BYPASSED
                                 }

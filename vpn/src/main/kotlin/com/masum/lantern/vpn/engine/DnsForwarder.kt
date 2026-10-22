@@ -31,6 +31,12 @@ class DnsForwarder(
         }
     }
 
+    fun writePacket(rawPacket: ByteArray) {
+        synchronized(output) {
+            runCatching { output.write(rawPacket) }
+        }
+    }
+
     fun forward(query: ParsedDnsQuery, rawDns: ByteArray) {
         scope.launch(Dispatchers.IO) {
             runCatching { sendAndReply(query, rawDns) }

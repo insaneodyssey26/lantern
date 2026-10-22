@@ -10,4 +10,5 @@ data class ControlUiState(
     val isPrivateDnsActive: Boolean = false,
     val pendingConsentIntent: Intent? = null,
     val blocklistCount: Int = 0,
+    val isBlockingEnabled: Boolean = true,
 )

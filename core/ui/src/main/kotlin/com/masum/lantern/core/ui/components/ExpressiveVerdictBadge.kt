@@ -21,7 +21,8 @@ import com.masum.lantern.core.ui.theme.VerdictTrackerContainer
 
 enum class ExpressiveVerdict {
     SAFE,
-    TRACKER,
+    BLOCKED,
+    AUDITED,
     BYPASSED
 }
 
@@ -32,7 +33,8 @@ fun ExpressiveVerdictBadge(
 ) {
     val (bgColor, textColor, label) = when (verdict) {
         ExpressiveVerdict.SAFE -> Triple(VerdictSafeContainer, VerdictSafe, "Safe")
-        ExpressiveVerdict.TRACKER -> Triple(VerdictTrackerContainer, VerdictTracker, "Tracker")
+        ExpressiveVerdict.BLOCKED -> Triple(VerdictTrackerContainer, VerdictTracker, "Blocked")
+        ExpressiveVerdict.AUDITED -> Triple(VerdictBypassedContainer, VerdictBypassed, "Audited")
         ExpressiveVerdict.BYPASSED -> Triple(VerdictBypassedContainer, VerdictBypassed, "Bypassed")
     }
 

@@ -58,6 +58,7 @@ class LiveFeedViewModel @Inject constructor(
         packageName = appInfo.packageName,
         verdict = verdict.toUiState(),
         time = timestamp.formatTime(),
+        isBlocked = isBlocked,
     )
 
     companion object {

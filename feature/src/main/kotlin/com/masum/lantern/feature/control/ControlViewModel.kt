@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.masum.lantern.domain.model.MonitoringState
 import com.masum.lantern.domain.repository.BlocklistRepository
+import com.masum.lantern.domain.repository.SettingsRepository
 import com.masum.lantern.domain.usecase.GetSummaryStatsUseCase
 import com.masum.lantern.domain.usecase.ObserveMonitoringStateUseCase
 import com.masum.lantern.domain.usecase.StartMonitoringUseCase
@@ -28,6 +29,7 @@ class ControlViewModel @Inject constructor(
     private val observeMonitoringState: ObserveMonitoringStateUseCase,
     private val getSummaryStats: GetSummaryStatsUseCase,
     private val blocklistRepository: BlocklistRepository,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ControlUiState(blocklistCount = blocklistRepository.domainCount()))
@@ -44,7 +46,18 @@ class ControlViewModel @Inject constructor(
                 _uiState.update { it.copy(totalQueries = stats.totalQueries, trackerQueries = stats.trackerQueries) }
             }
         }
+        viewModelScope.launch {
+            settingsRepository.isBlockingEnabled().collect { enabled ->
+                _uiState.update { it.copy(isBlockingEnabled = enabled) }
+            }
+        }
         refreshPrivateDnsStatus()
+    }
+
+    fun setBlockingEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setBlockingEnabled(enabled)
+        }
     }
 
     fun onToggleClick() {

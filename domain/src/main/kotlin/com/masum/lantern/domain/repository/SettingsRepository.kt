@@ -18,4 +18,7 @@ interface SettingsRepository {
 
     fun getMaxRows(): Flow<Int>
     suspend fun setMaxRows(rows: Int)
+
+    fun isBlockingEnabled(): Flow<Boolean>
+    suspend fun setBlockingEnabled(enabled: Boolean)
 }

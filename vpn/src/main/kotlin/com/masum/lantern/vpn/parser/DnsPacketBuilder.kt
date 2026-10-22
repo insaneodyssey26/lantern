@@ -39,6 +39,42 @@ object DnsPacketBuilder {
         return packet
     }
 
+    fun buildNxDomainResponse(
+        rawDnsQuery: ByteArray,
+        transactionId: Int,
+        sourceIp: Int,
+        destIp: Int,
+        sourcePort: Int,
+        destPort: Int,
+    ): ByteArray {
+        val qdCount = if (rawDnsQuery.size >= 6) {
+            ((rawDnsQuery[4].toInt() and 0xFF) shl 8) or (rawDnsQuery[5].toInt() and 0xFF)
+        } else 1
+        val questionSection = if (rawDnsQuery.size > 12) {
+            rawDnsQuery.copyOfRange(12, rawDnsQuery.size)
+        } else ByteArray(0)
+
+        val dnsResponse = ByteArray(12 + questionSection.size)
+        writeUShort(dnsResponse, 0, transactionId)
+        writeUShort(dnsResponse, 2, 0x8183)
+        writeUShort(dnsResponse, 4, qdCount)
+        writeUShort(dnsResponse, 6, 0x0000)
+        writeUShort(dnsResponse, 8, 0x0000)
+        writeUShort(dnsResponse, 10, 0x0000)
+
+        if (questionSection.isNotEmpty()) {
+            questionSection.copyInto(dnsResponse, 12)
+        }
+
+        return wrapResponse(
+            dnsResponse = dnsResponse,
+            sourceIp = sourceIp,
+            destIp = destIp,
+            sourcePort = sourcePort,
+            destPort = destPort,
+        )
+    }
+
     private fun ipChecksum(data: ByteArray, offset: Int, length: Int): Int {
         var sum = 0
         var i = offset
