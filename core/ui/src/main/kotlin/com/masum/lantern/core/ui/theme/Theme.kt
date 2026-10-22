@@ -31,17 +31,49 @@ private val LanternDark = darkColorScheme(
     onError = Color(0xFF4C0519),
     errorContainer = VerdictTrackerContainer,
     onErrorContainer = Color(0xFFFFD9DF),
-    background = BasaltLowest,
+    background = SurfaceDarkLowest,
     onBackground = TextPrimaryDark,
-    surface = BasaltLow,
+    surface = SurfaceDarkLow,
     onSurface = TextPrimaryDark,
-    surfaceVariant = BasaltHigh,
+    surfaceVariant = SurfaceDarkHigh,
     onSurfaceVariant = TextSecondaryDark,
-    surfaceContainerLowest = BasaltLowest,
-    surfaceContainerLow = BasaltLow,
-    surfaceContainer = BasaltBase,
-    surfaceContainerHigh = BasaltHigh,
-    surfaceContainerHighest = BasaltHighest,
+    surfaceContainerLowest = SurfaceDarkLowest,
+    surfaceContainerLow = SurfaceDarkLow,
+    surfaceContainer = SurfaceDark,
+    surfaceContainerHigh = SurfaceDarkHigh,
+    surfaceContainerHighest = SurfaceDarkHighest,
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark
+)
+
+private val LanternAmoled = darkColorScheme(
+    primary = LanternAmber,
+    onPrimary = Color(0xFF261900),
+    primaryContainer = LanternContainerDark,
+    onPrimaryContainer = LanternAmberBright,
+    secondary = Color(0xFFE2C08D),
+    onSecondary = Color(0xFF3F2D04),
+    secondaryContainer = Color(0xFF584319),
+    onSecondaryContainer = Color(0xFFFFDF9E),
+    tertiary = VerdictSafe,
+    onTertiary = Color(0xFF003822),
+    tertiaryContainer = VerdictSafeContainer,
+    onTertiaryContainer = Color(0xFFA7F3D0),
+    error = VerdictTracker,
+    onError = Color(0xFF4C0519),
+    errorContainer = VerdictTrackerContainer,
+    onErrorContainer = Color(0xFFFFD9DF),
+    background = PureBlackLowest,
+    onBackground = TextPrimaryDark,
+    surface = PureBlackLowest,
+    onSurface = TextPrimaryDark,
+    surfaceVariant = PureBlackHigh,
+    onSurfaceVariant = TextSecondaryDark,
+    surfaceContainerLowest = PureBlackLowest,
+    surfaceContainerLow = PureBlackLow,
+    surfaceContainer = PureBlack,
+    surfaceContainerHigh = PureBlackHigh,
+    surfaceContainerHighest = PureBlackHighest,
     outline = OutlineDark,
     outlineVariant = OutlineVariantDark
 )
@@ -82,10 +114,15 @@ private val LanternLight = lightColorScheme(
 @Composable
 fun LanternTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    pureBlack: Boolean = false,
     useSystemFont: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) LanternDark else LanternLight
+    val colorScheme = when {
+        darkTheme && pureBlack -> LanternAmoled
+        darkTheme -> LanternDark
+        else -> LanternLight
+    }
     val typography = remember(useSystemFont) { getLanternTypography(useSystemFont) }
 
     MaterialExpressiveTheme(

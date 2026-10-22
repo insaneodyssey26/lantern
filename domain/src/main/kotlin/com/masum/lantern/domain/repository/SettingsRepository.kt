@@ -22,6 +22,9 @@ interface SettingsRepository {
     fun isBlockingEnabled(): Flow<Boolean>
     suspend fun setBlockingEnabled(enabled: Boolean)
 
+    fun isPureBlack(): Flow<Boolean>
+    suspend fun setPureBlack(enabled: Boolean)
+
     fun isUseSystemFont(): Flow<Boolean>
     suspend fun setUseSystemFont(useSystem: Boolean)
 }

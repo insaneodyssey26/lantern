@@ -31,6 +31,7 @@ class SettingsViewModel @Inject constructor(
     private val settingsFlow = combine(
         settingsRepository.getThemeMode(),
         settingsRepository.getColorTheme(),
+        settingsRepository.isPureBlack(),
         settingsRepository.isUseSystemFont(),
         settingsRepository.getUpstreamDns(),
         settingsRepository.getMaxAgeDays(),
@@ -39,10 +40,11 @@ class SettingsViewModel @Inject constructor(
         SettingsTuple(
             themeMode = args[0] as String,
             colorTheme = args[1] as String,
-            useSystemFont = args[2] as Boolean,
-            upstreamDns = args[3] as String,
-            maxAgeDays = args[4] as Int,
-            maxRows = args[5] as Int
+            pureBlack = args[2] as Boolean,
+            useSystemFont = args[3] as Boolean,
+            upstreamDns = args[4] as String,
+            maxAgeDays = args[5] as Int,
+            maxRows = args[6] as Int
         )
     }
 
@@ -71,6 +73,7 @@ class SettingsViewModel @Inject constructor(
         SettingsUiState(
             themeMode = settings.themeMode,
             colorTheme = settings.colorTheme,
+            pureBlack = settings.pureBlack,
             useSystemFont = settings.useSystemFont,
             upstreamDns = settings.upstreamDns,
             maxAgeDays = settings.maxAgeDays,
@@ -115,6 +118,12 @@ class SettingsViewModel @Inject constructor(
     fun setMaxRows(rows: Int) {
         viewModelScope.launch {
             settingsRepository.setMaxRows(rows)
+        }
+    }
+
+    fun setPureBlack(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setPureBlack(enabled)
         }
     }
 
@@ -163,6 +172,7 @@ class SettingsViewModel @Inject constructor(
 data class SettingsTuple(
     val themeMode: String,
     val colorTheme: String,
+    val pureBlack: Boolean,
     val useSystemFont: Boolean,
     val upstreamDns: String,
     val maxAgeDays: Int,
