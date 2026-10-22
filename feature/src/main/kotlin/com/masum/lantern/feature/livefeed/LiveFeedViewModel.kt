@@ -41,14 +41,22 @@ class LiveFeedViewModel @Inject constructor(
         }
         viewModelScope.launch {
             observeLiveFeed().collect { query ->
+                if (_uiState.value.isPaused) return@collect
                 queryBuffer.addFirst(query.toUiModel())
                 if (queryBuffer.size > MAX_ITEMS) queryBuffer.removeLast()
-                // toPersistentList() gives Compose a Stable reference — the LazyColumn can
-                // skip recomposing items that haven't changed rather than redrawing everything.
                 val snapshot: ImmutableList<DnsQueryUiModel> = queryBuffer.toPersistentList()
                 _uiState.update { it.copy(queries = snapshot) }
             }
         }
+    }
+
+    fun togglePauseStream() {
+        _uiState.update { it.copy(isPaused = !it.isPaused) }
+    }
+
+    fun clearFeed() {
+        queryBuffer.clear()
+        _uiState.update { it.copy(queries = persistentListOf()) }
     }
 
     private fun DnsQuery.toUiModel() = DnsQueryUiModel(

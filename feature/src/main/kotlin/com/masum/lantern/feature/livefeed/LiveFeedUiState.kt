@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.persistentListOf
 data class LiveFeedUiState(
     val queries: ImmutableList<DnsQueryUiModel> = persistentListOf(),
     val isMonitoring: Boolean = false,
+    val isPaused: Boolean = false,
 )
 
 data class DnsQueryUiModel(
