@@ -1,10 +1,18 @@
 package com.masum.lantern.feature.stats
 
 import app.cash.turbine.test
+import com.masum.lantern.domain.model.AppInfo
 import com.masum.lantern.domain.model.DomainStat
+import com.masum.lantern.domain.model.PerAppStat
+import com.masum.lantern.domain.model.SessionSummary
 import com.masum.lantern.domain.model.SummaryStats
 import com.masum.lantern.domain.repository.BlocklistRepository
+import com.masum.lantern.domain.repository.DnsLogRepository
+import com.masum.lantern.domain.usecase.ClearHistoryUseCase
+import com.masum.lantern.domain.usecase.GetPerAppStatsUseCase
+import com.masum.lantern.domain.usecase.GetSessionHistoryUseCase
 import com.masum.lantern.domain.usecase.GetSummaryStatsUseCase
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -23,9 +31,15 @@ class StatsViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private val statsFlow = MutableStateFlow(SummaryStats.EMPTY)
+    private val perAppFlow = MutableStateFlow(emptyList<PerAppStat>())
+    private val sessionFlow = MutableStateFlow(emptyList<SessionSummary>())
 
     private val getSummaryStats: GetSummaryStatsUseCase = mockk()
+    private val getPerAppStats: GetPerAppStatsUseCase = mockk()
+    private val getSessionHistory: GetSessionHistoryUseCase = mockk()
     private val blocklistRepository: BlocklistRepository = mockk()
+    private val dnsLogRepository: DnsLogRepository = mockk()
+    private val clearHistoryUseCase: ClearHistoryUseCase = mockk(relaxed = true)
 
     private lateinit var viewModel: StatsViewModel
 
@@ -33,8 +47,18 @@ class StatsViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         every { getSummaryStats() } returns statsFlow
+        every { getPerAppStats() } returns perAppFlow
+        every { getSessionHistory() } returns sessionFlow
         every { blocklistRepository.domainCount() } returns 150_000
-        viewModel = StatsViewModel(getSummaryStats, blocklistRepository)
+
+        viewModel = StatsViewModel(
+            getSummaryStats = getSummaryStats,
+            getPerAppStats = getPerAppStats,
+            getSessionHistory = getSessionHistory,
+            blocklistRepository = blocklistRepository,
+            dnsLogRepository = dnsLogRepository,
+            clearHistoryUseCase = clearHistoryUseCase
+        )
     }
 
     @After
@@ -47,6 +71,8 @@ class StatsViewModelTest {
         assertEquals(0, state.trackerQueries)
         assertEquals(0, state.trackerPercentage)
         assertEquals(emptyList<DomainStatUiModel>(), state.topDomains)
+        assertEquals(emptyList<AppStatUiModel>(), state.apps)
+        assertEquals(emptyList<SessionUiModel>(), state.sessions)
     }
 
     @Test
@@ -86,5 +112,42 @@ class StatsViewModelTest {
             val state = awaitItem()
             assertEquals(33, state.trackerPercentage)
         }
+    }
+
+    @Test
+    fun `apps and sessions are mapped correctly`() = runTest {
+        viewModel.uiState.test {
+            awaitItem()
+            perAppFlow.value = listOf(
+                PerAppStat(
+                    appInfo = AppInfo(uid = 10001, appName = "Camera", packageName = "com.android.camera"),
+                    totalQueries = 10,
+                    trackerQueries = 2
+                )
+            )
+            val stateWithApp = awaitItem()
+            assertEquals(1, stateWithApp.apps.size)
+            assertEquals("Camera", stateWithApp.apps[0].appName)
+            assertEquals("com.android.camera", stateWithApp.apps[0].packageName)
+
+            sessionFlow.value = listOf(
+                SessionSummary(
+                    sessionId = 1L,
+                    startedAt = 1000L,
+                    endedAt = 2000L,
+                    totalQueries = 10,
+                    trackerQueries = 2
+                )
+            )
+            val stateWithSession = awaitItem()
+            assertEquals(1, stateWithSession.sessions.size)
+            assertEquals(1L, stateWithSession.sessions[0].sessionId)
+        }
+    }
+
+    @Test
+    fun `clear history invokes clearHistoryUseCase`() = runTest {
+        viewModel.onClearHistory()
+        coVerify(exactly = 1) { clearHistoryUseCase() }
     }
 }
