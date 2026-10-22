@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
-        android:name=".VigilApp"
+        android:name=".LanternApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -19,12 +19,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Vigil">
+        android:theme="@style/Theme.Lantern">
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Vigil"
+            android:theme="@style/Theme.Lantern"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,7 +34,7 @@
         </activity>
 
         <service
-            android:name="com.masum.vigil.vpn.VigilVpnService"
+            android:name="com.masum.lantern.vpn.LanternVpnService"
             android:exported="false"
             android:foregroundServiceType="specialUse"
             android:permission="android.permission.BIND_VPN_SERVICE">
@@ -43,7 +43,7 @@
             </intent-filter>
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Vigil uses a local-only VPN tunnel to monitor DNS queries on-device. No traffic is routed externally." />
+                android:value="Lantern uses a local-only VPN tunnel to monitor DNS queries on-device. No traffic is routed externally." />
         </service>
     </application>
 

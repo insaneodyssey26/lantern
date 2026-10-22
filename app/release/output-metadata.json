@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.masum.vigil",
+  "applicationId": "com.masum.lantern",
   "variantName": "release",
   "elements": [
     {

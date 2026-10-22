@@ -28,7 +28,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Vigil"
+rootProject.name = "Lantern"
 include(":app")
 include(":core:common")
 include(":core:ui")

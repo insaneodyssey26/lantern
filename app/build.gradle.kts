@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.masum.vigil"
+    namespace = "com.masum.lantern"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -14,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.masum.vigil"
+        applicationId = "com.masum.lantern"
         minSdk = 29
         targetSdk = 36
         versionCode = 1

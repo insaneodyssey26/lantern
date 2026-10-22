@@ -1,0 +1,17 @@
+package com.masum.lantern.domain.repository
+
+import com.masum.lantern.domain.model.DnsQuery
+import com.masum.lantern.domain.model.PerAppStat
+import com.masum.lantern.domain.model.SessionSummary
+import com.masum.lantern.domain.model.SummaryStats
+import kotlinx.coroutines.flow.Flow
+
+interface DnsLogRepository {
+    fun observeLiveFeed(): Flow<DnsQuery>
+    fun observeSessionHistory(): Flow<List<SessionSummary>>
+    fun observePerAppStats(sessionId: Long? = null): Flow<List<PerAppStat>>
+    fun observeSummaryStats(): Flow<SummaryStats>
+    fun observeTotalCount(): Flow<Int>
+    fun observeAppQueries(packageName: String): Flow<List<DnsQuery>>
+    suspend fun clearHistory()
+}

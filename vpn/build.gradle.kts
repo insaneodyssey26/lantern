@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.masum.vigil.vpn"
+    namespace = "com.masum.lantern.vpn"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1

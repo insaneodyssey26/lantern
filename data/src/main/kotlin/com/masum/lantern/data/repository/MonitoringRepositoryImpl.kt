@@ -1,0 +1,76 @@
+package com.masum.lantern.data.repository
+
+import android.content.Context
+import android.content.Intent
+import android.net.VpnService
+import com.masum.lantern.core.common.dispatcher.DispatcherProvider
+import com.masum.lantern.data.permission.VpnConsentRequiredException
+import com.masum.lantern.core.database.dao.SessionDao
+import com.masum.lantern.core.database.entity.SessionEntity
+import com.masum.lantern.domain.model.MonitoringState
+import com.masum.lantern.domain.repository.MonitoringRepository
+import com.masum.lantern.vpn.LanternVpnService
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class MonitoringRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val sessionDao: SessionDao,
+    private val dispatchers: DispatcherProvider,
+) : MonitoringRepository {
+
+    private val _state = MutableStateFlow<MonitoringState>(MonitoringState.Idle)
+    private var currentSessionId: Long? = null
+    private val transitionMutex = Mutex()
+
+    override suspend fun startMonitoring(): Result<Unit> = withContext(dispatchers.io) {
+        if (transitionMutex.isLocked) return@withContext Result.failure(IllegalStateException("Transition in progress"))
+        transitionMutex.withLock {
+            runCatching {
+                val prepareIntent = VpnService.prepare(context)
+                if (prepareIntent != null) throw VpnConsentRequiredException(prepareIntent)
+
+                val now = System.currentTimeMillis()
+                val sessionId = sessionDao.insert(SessionEntity(startedAt = now, endedAt = null))
+                currentSessionId = sessionId
+
+                context.startForegroundService(
+                    Intent(context, LanternVpnService::class.java).apply {
+                        action = LanternVpnService.ACTION_START
+                        putExtra(LanternVpnService.EXTRA_SESSION_ID, sessionId)
+                    }
+                )
+
+                _state.value = MonitoringState.Active(sessionId = sessionId, startedAt = now)
+            }
+        }
+    }
+
+    override suspend fun stopMonitoring(): Unit = withContext(dispatchers.io) {
+        if (transitionMutex.isLocked) return@withContext
+        transitionMutex.withLock {
+            currentSessionId?.let { id ->
+                sessionDao.updateEndTime(id, System.currentTimeMillis())
+            }
+            currentSessionId = null
+
+            context.startService(
+                Intent(context, LanternVpnService::class.java).apply {
+                    action = LanternVpnService.ACTION_STOP
+                }
+            )
+
+            _state.value = MonitoringState.Idle
+        }
+    }
+
+    override fun observeMonitoringState(): Flow<MonitoringState> = _state.asStateFlow()
+}

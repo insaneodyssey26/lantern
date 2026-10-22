@@ -1,7 +1,0 @@
-package com.masum.vigil.domain.model
-
-data class DomainStat(
-    val domain: String,
-    val count: Int,
-    val isTracker: Boolean,
-)

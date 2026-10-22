@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.masum.vigil.core.database"
+    namespace = "com.masum.lantern.core.database"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
