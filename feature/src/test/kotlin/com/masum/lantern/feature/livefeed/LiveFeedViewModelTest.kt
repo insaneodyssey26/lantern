@@ -32,6 +32,7 @@ class LiveFeedViewModelTest {
 
     private val observeLiveFeed: ObserveLiveFeedUseCase = mockk()
     private val observeMonitoringState: ObserveMonitoringStateUseCase = mockk()
+    private val settingsRepository: com.masum.lantern.domain.repository.SettingsRepository = mockk(relaxed = true)
 
     private lateinit var viewModel: LiveFeedViewModel
 
@@ -40,7 +41,9 @@ class LiveFeedViewModelTest {
         Dispatchers.setMain(testDispatcher)
         every { observeLiveFeed() } returns queryFlow
         every { observeMonitoringState() } returns stateFlow
-        viewModel = LiveFeedViewModel(observeLiveFeed, observeMonitoringState)
+        every { settingsRepository.getUserAllowedDomains() } returns MutableStateFlow(emptySet())
+        every { settingsRepository.getUserBlockedDomains() } returns MutableStateFlow(emptySet())
+        viewModel = LiveFeedViewModel(observeLiveFeed, observeMonitoringState, settingsRepository)
     }
 
     @After

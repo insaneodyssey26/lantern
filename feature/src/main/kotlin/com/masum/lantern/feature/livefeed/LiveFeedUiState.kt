@@ -8,6 +8,8 @@ data class LiveFeedUiState(
     val queries: ImmutableList<DnsQueryUiModel> = persistentListOf(),
     val isMonitoring: Boolean = false,
     val isPaused: Boolean = false,
+    val userAllowedDomains: Set<String> = emptySet(),
+    val userBlockedDomains: Set<String> = emptySet(),
 )
 
 data class DnsQueryUiModel(

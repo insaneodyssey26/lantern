@@ -30,13 +30,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Done
 import androidx.compose.material.icons.rounded.OpenInBrowser
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.RemoveCircleOutline
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
@@ -464,8 +467,25 @@ fun LiveFeedScreen(
             sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
+            val isCustomAllowed = uiState.userAllowedDomains.contains(query.domain.lowercase())
+            val isCustomBlocked = uiState.userBlockedDomains.contains(query.domain.lowercase())
+
             QueryDetailSheet(
                 query = query,
+                isCustomAllowed = isCustomAllowed,
+                isCustomBlocked = isCustomBlocked,
+                onAllowDomain = {
+                    haptics.toggle()
+                    viewModel.allowDomain(query.domain)
+                },
+                onBlockDomain = {
+                    haptics.heavy()
+                    viewModel.blockDomain(query.domain)
+                },
+                onRemoveRule = {
+                    haptics.tap()
+                    viewModel.removeDomainRule(query.domain)
+                },
                 onDismiss = {
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
                         selectedQuery = null
@@ -629,6 +649,11 @@ private fun ExpressiveSwipeableQueryCard(
 @Composable
 fun QueryDetailSheet(
     query: DnsQueryUiModel,
+    isCustomAllowed: Boolean = false,
+    isCustomBlocked: Boolean = false,
+    onAllowDomain: () -> Unit = {},
+    onBlockDomain: () -> Unit = {},
+    onRemoveRule: () -> Unit = {},
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -657,6 +682,8 @@ fun QueryDetailSheet(
                 )
             }
             val verdict = when {
+                isCustomAllowed -> ExpressiveVerdict.SAFE
+                isCustomBlocked -> ExpressiveVerdict.BLOCKED
                 query.verdict == VerdictUiState.Tracker && query.isBlocked -> ExpressiveVerdict.BLOCKED
                 query.verdict == VerdictUiState.Tracker && !query.isBlocked -> ExpressiveVerdict.AUDITED
                 query.verdict == VerdictUiState.Clean -> ExpressiveVerdict.SAFE
@@ -728,13 +755,16 @@ fun QueryDetailSheet(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = when {
+                            isCustomAllowed -> "Always Allowed (Custom user allowlist rule)"
+                            isCustomBlocked -> "Always Blocked (Custom user block rule)"
                             query.isBlocked -> "Blocked (Synthetic NXDOMAIN injected)"
                             query.verdict == VerdictUiState.Tracker -> "Audited (Tracker detected, forwarded passively)"
                             else -> "Clean (Safe domain, resolved normally)"
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = when {
-                            query.isBlocked -> VerdictTracker
+                            isCustomAllowed -> VerdictSafe
+                            isCustomBlocked || query.isBlocked -> VerdictTracker
                             query.verdict == VerdictUiState.Tracker -> VerdictBypassed
                             else -> VerdictSafe
                         },
@@ -748,6 +778,97 @@ fun QueryDetailSheet(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            when {
+                isCustomAllowed -> {
+                    FilledTonalButton(
+                        onClick = {
+                            onRemoveRule()
+                            onDismiss()
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = CircleShape,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.RemoveCircleOutline,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Remove Rule")
+                    }
+                }
+                isCustomBlocked -> {
+                    FilledTonalButton(
+                        onClick = {
+                            onRemoveRule()
+                            onDismiss()
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = CircleShape,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.RemoveCircleOutline,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Remove Rule")
+                    }
+                }
+                query.isBlocked || query.verdict == VerdictUiState.Tracker -> {
+                    FilledTonalButton(
+                        onClick = {
+                            onAllowDomain()
+                            onDismiss()
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = CircleShape,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Always Allow")
+                    }
+                }
+                else -> {
+                    FilledTonalButton(
+                        onClick = {
+                            onBlockDomain()
+                            onDismiss()
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = CircleShape,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Block,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Always Block")
+                    }
+                }
+            }
+
             FilledTonalButton(
                 onClick = {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://who.is/whois/${query.domain}"))
@@ -781,7 +902,7 @@ fun QueryDetailSheet(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Copy Domain")
+                Text("Copy")
             }
         }
     }

@@ -15,5 +15,6 @@ data class SettingsUiState(
     val isUpdatingBlocklist: Boolean = false,
     val blocklistUpdateMessage: String? = null,
     val bypassedAppsCount: Int = 0,
+    val domainRulesCount: Int = 0,
 )
 

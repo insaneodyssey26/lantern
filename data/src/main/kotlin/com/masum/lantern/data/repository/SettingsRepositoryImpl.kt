@@ -170,6 +170,66 @@ class SettingsRepositoryImpl @Inject constructor(
         prefs.edit().putStringSet(KEY_BYPASSED_APPS, current).apply()
     }
 
+    override fun getUserAllowedDomains(): Flow<Set<String>> = callbackFlow {
+        trySend(getUserAllowedDomainsSync())
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_USER_ALLOWED_DOMAINS) {
+                trySend(getUserAllowedDomainsSync())
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override fun getUserAllowedDomainsSync(): Set<String> =
+        prefs.getStringSet(KEY_USER_ALLOWED_DOMAINS, emptySet())?.toSet() ?: emptySet()
+
+    override suspend fun setUserDomainAllowed(domain: String, allowed: Boolean) {
+        val normalized = domain.trim().lowercase()
+        val currentAllowed = getUserAllowedDomainsSync().toMutableSet()
+        val currentBlocked = getUserBlockedDomainsSync().toMutableSet()
+        if (allowed) {
+            currentAllowed.add(normalized)
+            currentBlocked.remove(normalized)
+        } else {
+            currentAllowed.remove(normalized)
+        }
+        prefs.edit()
+            .putStringSet(KEY_USER_ALLOWED_DOMAINS, currentAllowed)
+            .putStringSet(KEY_USER_BLOCKED_DOMAINS, currentBlocked)
+            .apply()
+    }
+
+    override fun getUserBlockedDomains(): Flow<Set<String>> = callbackFlow {
+        trySend(getUserBlockedDomainsSync())
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_USER_BLOCKED_DOMAINS) {
+                trySend(getUserBlockedDomainsSync())
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override fun getUserBlockedDomainsSync(): Set<String> =
+        prefs.getStringSet(KEY_USER_BLOCKED_DOMAINS, emptySet())?.toSet() ?: emptySet()
+
+    override suspend fun setUserDomainBlocked(domain: String, blocked: Boolean) {
+        val normalized = domain.trim().lowercase()
+        val currentBlocked = getUserBlockedDomainsSync().toMutableSet()
+        val currentAllowed = getUserAllowedDomainsSync().toMutableSet()
+        if (blocked) {
+            currentBlocked.add(normalized)
+            currentAllowed.remove(normalized)
+        } else {
+            currentBlocked.remove(normalized)
+        }
+        prefs.edit()
+            .putStringSet(KEY_USER_BLOCKED_DOMAINS, currentBlocked)
+            .putStringSet(KEY_USER_ALLOWED_DOMAINS, currentAllowed)
+            .apply()
+    }
+
     companion object {
         private const val KEY_THEME_MODE   = "theme_mode"
         private const val KEY_COLOR_THEME  = "color_theme"
@@ -180,5 +240,7 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_USE_SYSTEM_FONT  = "use_system_font"
         private const val KEY_PURE_BLACK       = "pure_black"
         private const val KEY_BYPASSED_APPS    = "bypassed_apps"
+        private const val KEY_USER_ALLOWED_DOMAINS = "user_allowed_domains"
+        private const val KEY_USER_BLOCKED_DOMAINS = "user_blocked_domains"
     }
 }

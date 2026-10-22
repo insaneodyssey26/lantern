@@ -56,6 +56,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import com.masum.lantern.feature.control.ControlScreen
+import com.masum.lantern.feature.domainrules.DomainRulesScreen
 import com.masum.lantern.feature.livefeed.LiveFeedScreen
 import com.masum.lantern.feature.settings.SettingsScreen
 import com.masum.lantern.feature.stats.StatsScreen
@@ -111,25 +112,25 @@ fun LanternNavHost(
                 .background(MaterialTheme.colorScheme.background),
             enterTransition = {
                 when (targetState.destination.route) {
-                    "settings", "app_whitelist" -> settingsEnter()
+                    "settings", "app_whitelist", "domain_rules" -> settingsEnter()
                     else -> EnterTransition.None
                 }
             },
             exitTransition = {
                 when (targetState.destination.route) {
-                    "settings", "app_whitelist" -> fadeOut(tween(NAV_DURATION, easing = EmphasizedEasing))
+                    "settings", "app_whitelist", "domain_rules" -> fadeOut(tween(NAV_DURATION, easing = EmphasizedEasing))
                     else -> ExitTransition.None
                 }
             },
             popEnterTransition = {
                 when (initialState.destination.route) {
-                    "settings", "app_whitelist" -> settingsPopEnter()
+                    "settings", "app_whitelist", "domain_rules" -> settingsPopEnter()
                     else -> EnterTransition.None
                 }
             },
             popExitTransition = {
                 when (initialState.destination.route) {
-                    "settings", "app_whitelist" -> settingsPopExit()
+                    "settings", "app_whitelist", "domain_rules" -> settingsPopExit()
                     else -> ExitTransition.None
                 }
             },
@@ -152,7 +153,8 @@ fun LanternNavHost(
             composable("settings") {
                 SettingsScreen(
                     onBackClick = { navController.popBackStack() },
-                    onNavigateToWhitelist = { navController.navigate("app_whitelist") }
+                    onNavigateToWhitelist = { navController.navigate("app_whitelist") },
+                    onNavigateToDomainRules = { navController.navigate("domain_rules") }
                 )
             }
             composable("app_whitelist") {
@@ -160,9 +162,16 @@ fun LanternNavHost(
                     onBackClick = { navController.popBackStack() }
                 )
             }
+            composable("domain_rules") {
+                DomainRulesScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
         }
 
-        val isSubScreen = currentDestination?.route == "settings" || currentDestination?.route == "app_whitelist"
+        val isSubScreen = currentDestination?.route == "settings" ||
+            currentDestination?.route == "app_whitelist" ||
+            currentDestination?.route == "domain_rules"
         if (!isSubScreen) {
             Box(
                 modifier = Modifier

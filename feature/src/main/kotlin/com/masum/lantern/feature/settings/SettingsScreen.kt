@@ -39,6 +39,7 @@ import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.FontDownload
+import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Refresh
@@ -102,6 +103,7 @@ import java.util.Locale
 fun SettingsScreen(
     onBackClick: () -> Unit,
     onNavigateToWhitelist: () -> Unit = {},
+    onNavigateToDomainRules: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -552,6 +554,71 @@ fun SettingsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                             contentDescription = "Navigate to exclusions",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.large)
+                        .clickable {
+                            haptics.tap()
+                            onNavigateToDomainRules()
+                        },
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Language,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Domain Rules",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = if (uiState.domainRulesCount == 0) {
+                                    "No custom domain overrides active"
+                                } else {
+                                    "${uiState.domainRulesCount} custom domain rules defined"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                            contentDescription = "Navigate to domain rules",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )

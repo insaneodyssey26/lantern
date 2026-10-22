@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.masum.lantern.domain.model.DnsQuery
 import com.masum.lantern.domain.model.MonitoringState
+import com.masum.lantern.domain.repository.SettingsRepository
 import com.masum.lantern.domain.usecase.ObserveLiveFeedUseCase
 import com.masum.lantern.domain.usecase.ObserveMonitoringStateUseCase
 import com.masum.lantern.feature.util.formatTime
@@ -24,12 +25,12 @@ import javax.inject.Inject
 class LiveFeedViewModel @Inject constructor(
     private val observeLiveFeed: ObserveLiveFeedUseCase,
     private val observeMonitoringState: ObserveMonitoringStateUseCase,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LiveFeedUiState())
     val uiState: StateFlow<LiveFeedUiState> = _uiState.asStateFlow()
 
-    // Plain mutable buffer; we convert to ImmutableList before exposing to UI
     private val queryBuffer = ArrayDeque<DnsQueryUiModel>(MAX_ITEMS + 1)
     private val localIdCounter = AtomicLong(0)
 
@@ -37,6 +38,16 @@ class LiveFeedViewModel @Inject constructor(
         viewModelScope.launch {
             observeMonitoringState().collect { state ->
                 _uiState.update { it.copy(isMonitoring = state is MonitoringState.Active) }
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.getUserAllowedDomains().collect { allowed ->
+                _uiState.update { it.copy(userAllowedDomains = allowed) }
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.getUserBlockedDomains().collect { blocked ->
+                _uiState.update { it.copy(userBlockedDomains = blocked) }
             }
         }
         viewModelScope.launch {
@@ -57,6 +68,25 @@ class LiveFeedViewModel @Inject constructor(
     fun clearFeed() {
         queryBuffer.clear()
         _uiState.update { it.copy(queries = persistentListOf()) }
+    }
+
+    fun allowDomain(domain: String) {
+        viewModelScope.launch {
+            settingsRepository.setUserDomainAllowed(domain, true)
+        }
+    }
+
+    fun blockDomain(domain: String) {
+        viewModelScope.launch {
+            settingsRepository.setUserDomainBlocked(domain, true)
+        }
+    }
+
+    fun removeDomainRule(domain: String) {
+        viewModelScope.launch {
+            settingsRepository.setUserDomainAllowed(domain, false)
+            settingsRepository.setUserDomainBlocked(domain, false)
+        }
     }
 
     private fun DnsQuery.toUiModel() = DnsQueryUiModel(

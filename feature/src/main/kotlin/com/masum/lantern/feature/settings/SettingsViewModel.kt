@@ -64,13 +64,21 @@ class SettingsViewModel @Inject constructor(
         Triple(updating, message, blocklistRepository.getLastUpdatedTimestamp())
     }
 
+    private val domainAndBypassedFlow = combine(
+        settingsRepository.getBypassedApps(),
+        settingsRepository.getUserAllowedDomains(),
+        settingsRepository.getUserBlockedDomains()
+    ) { bypassed, allowed, blocked ->
+        Pair(bypassed.size, allowed.size + blocked.size)
+    }
+
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsFlow,
         totalLogCountFlow,
         isClearingLogs,
         blocklistStateFlow,
-        settingsRepository.getBypassedApps()
-    ) { settings, logCount, clearing, blocklistState, bypassedApps ->
+        domainAndBypassedFlow
+    ) { settings, logCount, clearing, blocklistState, domainAndBypassed ->
         SettingsUiState(
             themeMode = settings.themeMode,
             colorTheme = settings.colorTheme,
@@ -85,7 +93,8 @@ class SettingsViewModel @Inject constructor(
             isClearingLogs = clearing,
             isUpdatingBlocklist = blocklistState.first,
             blocklistUpdateMessage = blocklistState.second,
-            bypassedAppsCount = bypassedApps.size
+            bypassedAppsCount = domainAndBypassed.first,
+            domainRulesCount = domainAndBypassed.second
         )
     }.stateIn(
         scope = viewModelScope,

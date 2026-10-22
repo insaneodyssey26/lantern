@@ -21,6 +21,8 @@ class PacketProcessor(
     private val sessionId: Long,
 ) {
     @Volatile private var isBlockingEnabled: Boolean = true
+    @Volatile private var userAllowedDomains: Set<String> = emptySet()
+    @Volatile private var userBlockedDomains: Set<String> = emptySet()
 
     init {
         scope.launch {
@@ -28,21 +30,57 @@ class PacketProcessor(
                 isBlockingEnabled = enabled
             }
         }
+        scope.launch {
+            settingsRepository.getUserAllowedDomains().collect { allowed ->
+                userAllowedDomains = allowed
+            }
+        }
+        scope.launch {
+            settingsRepository.getUserBlockedDomains().collect { blocked ->
+                userBlockedDomains = blocked
+            }
+        }
+    }
+
+    private fun isDomainOverriddenAllowed(domain: String): Boolean {
+        if (userAllowedDomains.isEmpty()) return false
+        val normalized = domain.trim().lowercase()
+        if (userAllowedDomains.contains(normalized)) return true
+        return userAllowedDomains.any { allowed ->
+            normalized.endsWith(".$allowed")
+        }
+    }
+
+    private fun isDomainOverriddenBlocked(domain: String): Boolean {
+        if (userBlockedDomains.isEmpty()) return false
+        val normalized = domain.trim().lowercase()
+        if (userBlockedDomains.contains(normalized)) return true
+        return userBlockedDomains.any { blocked ->
+            normalized.endsWith(".$blocked")
+        }
     }
 
     fun process(rawPacket: ByteArray) {
         val parsed = DnsPacketParser.parse(rawPacket) ?: return
         val rawDns = DnsPacketParser.extractDnsPayload(rawPacket) ?: return
 
-        val verdict = blocklistRepository.classify(parsed.domain)
+        val domain = parsed.domain
+        val isExplicitlyAllowed = isDomainOverriddenAllowed(domain)
+        val isExplicitlyBlocked = !isExplicitlyAllowed && isDomainOverriddenBlocked(domain)
+
+        val verdict = when {
+            isExplicitlyAllowed -> Verdict.Clean
+            isExplicitlyBlocked -> Verdict.Tracker(category = "Custom Rule")
+            else -> blocklistRepository.classify(domain)
+        }
         val uid = resolver.getUid(parsed)
         val appInfo = resolver.resolveAppInfo(uid)
 
-        val isBlockedNow = verdict is Verdict.Tracker && isBlockingEnabled
+        val isBlockedNow = (isExplicitlyBlocked || (verdict is Verdict.Tracker && isBlockingEnabled)) && !isExplicitlyAllowed
 
         val query = DnsQuery(
             sessionId = sessionId,
-            domain = parsed.domain,
+            domain = domain,
             timestamp = System.currentTimeMillis(),
             verdict = verdict,
             appInfo = appInfo,

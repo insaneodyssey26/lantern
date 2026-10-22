@@ -33,4 +33,12 @@ interface SettingsRepository {
 
     fun getBypassedApps(): Flow<Set<String>>
     suspend fun setAppBypassed(packageName: String, bypassed: Boolean)
+
+    fun getUserAllowedDomains(): Flow<Set<String>>
+    fun getUserAllowedDomainsSync(): Set<String>
+    suspend fun setUserDomainAllowed(domain: String, allowed: Boolean)
+
+    fun getUserBlockedDomains(): Flow<Set<String>>
+    fun getUserBlockedDomainsSync(): Set<String>
+    suspend fun setUserDomainBlocked(domain: String, blocked: Boolean)
 }
