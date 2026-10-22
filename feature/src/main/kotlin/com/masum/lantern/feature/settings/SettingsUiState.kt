@@ -14,5 +14,6 @@ data class SettingsUiState(
     val isClearingLogs: Boolean = false,
     val isUpdatingBlocklist: Boolean = false,
     val blocklistUpdateMessage: String? = null,
+    val bypassedAppsCount: Int = 0,
 )
 

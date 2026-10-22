@@ -28,6 +28,9 @@ class SettingsRepositoryImpl @Inject constructor(
         awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 
+    override fun getThemeModeSync(): String =
+        prefs.getString(KEY_THEME_MODE, "system") ?: "system"
+
     override suspend fun setThemeMode(mode: String) {
         prefs.edit().putString(KEY_THEME_MODE, mode).apply()
     }
@@ -118,6 +121,9 @@ class SettingsRepositoryImpl @Inject constructor(
         awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 
+    override fun isPureBlackSync(): Boolean =
+        prefs.getBoolean(KEY_PURE_BLACK, false)
+
     override suspend fun setPureBlack(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_PURE_BLACK, enabled).apply()
     }
@@ -133,8 +139,32 @@ class SettingsRepositoryImpl @Inject constructor(
         awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 
+    override fun isUseSystemFontSync(): Boolean =
+        prefs.getBoolean(KEY_USE_SYSTEM_FONT, false)
+
     override suspend fun setUseSystemFont(useSystem: Boolean) {
         prefs.edit().putBoolean(KEY_USE_SYSTEM_FONT, useSystem).apply()
+    }
+
+    override fun getBypassedApps(): Flow<Set<String>> = callbackFlow {
+        trySend(prefs.getStringSet(KEY_BYPASSED_APPS, emptySet())?.toSet() ?: emptySet())
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_BYPASSED_APPS) {
+                trySend(prefs.getStringSet(KEY_BYPASSED_APPS, emptySet())?.toSet() ?: emptySet())
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override suspend fun setAppBypassed(packageName: String, bypassed: Boolean) {
+        val current = prefs.getStringSet(KEY_BYPASSED_APPS, emptySet())?.toMutableSet() ?: mutableSetOf()
+        if (bypassed) {
+            current.add(packageName)
+        } else {
+            current.remove(packageName)
+        }
+        prefs.edit().putStringSet(KEY_BYPASSED_APPS, current).apply()
     }
 
     companion object {
@@ -146,5 +176,6 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_BLOCKING_ENABLED = "blocking_enabled"
         private const val KEY_USE_SYSTEM_FONT  = "use_system_font"
         private const val KEY_PURE_BLACK       = "pure_black"
+        private const val KEY_BYPASSED_APPS    = "bypassed_apps"
     }
 }

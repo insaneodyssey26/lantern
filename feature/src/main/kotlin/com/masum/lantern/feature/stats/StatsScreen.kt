@@ -264,7 +264,7 @@ fun StatsScreen(
 private fun OverviewTabContent(uiState: StatsUiState) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 28.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -441,7 +441,7 @@ private fun AppsTabContent(
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(items = apps, key = { it.packageName }) { app ->
@@ -518,7 +518,7 @@ private fun SessionsTabContent(sessions: List<SessionUiModel>) {
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(items = sessions, key = { it.sessionId }) { session ->

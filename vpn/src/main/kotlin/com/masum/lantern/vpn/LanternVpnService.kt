@@ -20,7 +20,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
@@ -53,14 +55,25 @@ class LanternVpnService : VpnService() {
         ensureNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
 
-        val descriptor = Builder()
+        val builder = Builder()
             .addAddress(TUN_ADDRESS, 32)
             .addDnsServer(SENTINEL_DNS)
             .addRoute(SENTINEL_DNS, 32)
             .setMtu(1500)
             .setBlocking(true)
             .setSession(SESSION_NAME)
-            .establish() ?: run { stopSelf(); return }
+
+        runCatching { builder.addDisallowedApplication(packageName) }
+
+        val bypassedApps = runCatching {
+            runBlocking { settingsRepository.getBypassedApps().first() }
+        }.getOrDefault(emptySet())
+
+        bypassedApps.forEach { appPkg ->
+            runCatching { builder.addDisallowedApplication(appPkg) }
+        }
+
+        val descriptor = builder.establish() ?: run { stopSelf(); return }
 
         pfd = descriptor
 

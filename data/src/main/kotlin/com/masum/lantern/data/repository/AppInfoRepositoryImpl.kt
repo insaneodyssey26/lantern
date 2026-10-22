@@ -35,6 +35,26 @@ class AppInfoRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getInstalledApps(): List<AppInfo> = withContext(dispatchers.io) {
+        val pm = context.packageManager
+        val mainIntent = android.content.Intent(android.content.Intent.ACTION_MAIN, null).apply {
+            addCategory(android.content.Intent.CATEGORY_LAUNCHER)
+        }
+        val resolveInfos = pm.queryIntentActivities(mainIntent, 0)
+        val seen = mutableSetOf<String>()
+        val result = mutableListOf<AppInfo>()
+
+        for (info in resolveInfos) {
+            val pkg = info.activityInfo.packageName
+            if (pkg != context.packageName && seen.add(pkg)) {
+                val appInfo = resolve(pkg, info.activityInfo.applicationInfo.uid, pm)
+                packageCache.put(pkg, appInfo)
+                result.add(appInfo)
+            }
+        }
+        result.sortedBy { it.appName.lowercase() }
+    }
+
     private fun resolve(packageName: String, uid: Int, pm: PackageManager): AppInfo =
         runCatching {
             val info = pm.getApplicationInfo(packageName, 0)

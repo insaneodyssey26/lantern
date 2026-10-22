@@ -68,8 +68,9 @@ class SettingsViewModel @Inject constructor(
         settingsFlow,
         totalLogCountFlow,
         isClearingLogs,
-        blocklistStateFlow
-    ) { settings, logCount, clearing, blocklistState ->
+        blocklistStateFlow,
+        settingsRepository.getBypassedApps()
+    ) { settings, logCount, clearing, blocklistState, bypassedApps ->
         SettingsUiState(
             themeMode = settings.themeMode,
             colorTheme = settings.colorTheme,
@@ -83,7 +84,8 @@ class SettingsViewModel @Inject constructor(
             blocklistLastUpdated = blocklistState.third,
             isClearingLogs = clearing,
             isUpdatingBlocklist = blocklistState.first,
-            blocklistUpdateMessage = blocklistState.second
+            blocklistUpdateMessage = blocklistState.second,
+            bypassedAppsCount = bypassedApps.size
         )
     }.stateIn(
         scope = viewModelScope,

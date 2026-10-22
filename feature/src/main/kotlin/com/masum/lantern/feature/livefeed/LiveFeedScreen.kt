@@ -38,6 +38,7 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -148,6 +149,46 @@ fun LiveFeedScreen(
                     )
                 },
                 actions = {
+                    FilledTonalButton(
+                        onClick = {
+                            haptics.toggle()
+                            viewModel.togglePauseStream()
+                        },
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = if (uiState.isPaused) {
+                                MaterialTheme.colorScheme.errorContainer
+                            } else {
+                                MaterialTheme.colorScheme.primaryContainer
+                            },
+                            contentColor = if (uiState.isPaused) {
+                                MaterialTheme.colorScheme.onErrorContainer
+                            } else {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            }
+                        ),
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.height(34.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (uiState.isPaused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause,
+                                contentDescription = if (uiState.isPaused) "Resume stream" else "Pause stream",
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Text(
+                                text = if (uiState.isPaused) "Paused" else "Live",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
                     IconButton(
                         onClick = { viewModel.clearFeed() },
                         enabled = uiState.queries.isNotEmpty()
@@ -176,43 +217,6 @@ fun LiveFeedScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    haptics.toggle()
-                    viewModel.togglePauseStream()
-                },
-                containerColor = if (uiState.isPaused) {
-                    MaterialTheme.colorScheme.errorContainer
-                } else {
-                    MaterialTheme.colorScheme.primaryContainer
-                },
-                contentColor = if (uiState.isPaused) {
-                    MaterialTheme.colorScheme.onErrorContainer
-                } else {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                },
-                shape = CircleShape,
-                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 3.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = if (uiState.isPaused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause,
-                        contentDescription = if (uiState.isPaused) "Resume stream" else "Pause stream",
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (uiState.isPaused) "Paused" else "Live",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        },
         containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         Column(
@@ -388,7 +392,7 @@ fun LiveFeedScreen(
                         start = 20.dp,
                         end = 20.dp,
                         top = 4.dp,
-                        bottom = 88.dp
+                        bottom = 96.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {

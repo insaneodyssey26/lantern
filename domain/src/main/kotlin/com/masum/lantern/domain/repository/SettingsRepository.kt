@@ -4,9 +4,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
     fun getThemeMode(): Flow<String>
+    fun getThemeModeSync(): String
     suspend fun setThemeMode(mode: String)
 
-    // Color palette key: "system" | "vigil" | "storm" | "ember" | "orchid"
     fun getColorTheme(): Flow<String>
     suspend fun setColorTheme(theme: String)
 
@@ -23,8 +23,13 @@ interface SettingsRepository {
     suspend fun setBlockingEnabled(enabled: Boolean)
 
     fun isPureBlack(): Flow<Boolean>
+    fun isPureBlackSync(): Boolean
     suspend fun setPureBlack(enabled: Boolean)
 
     fun isUseSystemFont(): Flow<Boolean>
+    fun isUseSystemFontSync(): Boolean
     suspend fun setUseSystemFont(useSystem: Boolean)
+
+    fun getBypassedApps(): Flow<Set<String>>
+    suspend fun setAppBypassed(packageName: String, bypassed: Boolean)
 }
