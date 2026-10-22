@@ -1,9 +1,15 @@
 package com.masum.lantern.feature.stats
 
 import android.content.Context
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,32 +29,41 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.PieChart
 import androidx.compose.material.icons.rounded.QueryStats
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LeadingIconTab
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SecondaryTabRow
-import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.WavyProgressIndicatorDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,28 +77,36 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.masum.lantern.core.ui.components.VerdictUiState
 import com.masum.lantern.core.ui.components.EmptyState
 import com.masum.lantern.core.ui.components.ExpressiveVerdict
 import com.masum.lantern.core.ui.components.ExpressiveVerdictBadge
+import com.masum.lantern.core.ui.components.VerdictUiState
+import com.masum.lantern.core.ui.theme.VerdictBypassed
+import com.masum.lantern.core.ui.theme.VerdictSafe
+import com.masum.lantern.core.ui.theme.VerdictSafeContainer
+import com.masum.lantern.core.ui.theme.VerdictTracker
+import com.masum.lantern.core.ui.theme.VerdictTrackerContainer
 import com.masum.lantern.domain.model.DnsQuery
 import com.masum.lantern.domain.model.Verdict
 import com.masum.lantern.feature.livefeed.DnsQueryUiModel
 import com.masum.lantern.feature.livefeed.QueryDetailSheet
-import com.masum.lantern.feature.util.toUiState
 import com.masum.lantern.feature.util.formatDate
 import com.masum.lantern.feature.util.formatTime
+import com.masum.lantern.feature.util.toUiState
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun StatsScreen(
     onSettingsClick: () -> Unit,
     viewModel: StatsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedTab by remember { mutableIntStateOf(0) }
+    val scope = rememberCoroutineScope()
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 3 })
     var selectedAppForInspection by remember { mutableStateOf<AppStatUiModel?>(null) }
 
     Scaffold(
@@ -92,12 +115,11 @@ fun StatsScreen(
                 title = {
                     Text(
                         text = "Insights",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.SemiBold
+                        style = MaterialTheme.typography.titleLarge
                     )
                 },
                 actions = {
-                    if (selectedTab == 2 && uiState.sessions.isNotEmpty()) {
+                    if (pagerState.currentPage == 2 && uiState.sessions.isNotEmpty()) {
                         IconButton(onClick = viewModel::onClearHistory) {
                             Icon(
                                 imageVector = Icons.Rounded.DeleteOutline,
@@ -118,7 +140,8 @@ fun StatsScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -126,15 +149,30 @@ fun StatsScreen(
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding)
         ) {
-            SecondaryTabRow(
-                selectedTabIndex = selectedTab,
+            PrimaryTabRow(
+                selectedTabIndex = pagerState.currentPage,
                 containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary
+                contentColor = MaterialTheme.colorScheme.primary,
+                indicator = {
+                    TabRowDefaults.PrimaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(pagerState.currentPage, matchContentSize = true),
+                        width = 36.dp,
+                        height = 3.dp,
+                        shape = CircleShape
+                    )
+                },
+                divider = {}
             ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = { Text("Overview") },
+                LeadingIconTab(
+                    selected = pagerState.currentPage == 0,
+                    onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                    text = {
+                        Text(
+                            text = "Overview",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (pagerState.currentPage == 0) FontWeight.SemiBold else FontWeight.Medium
+                        )
+                    },
                     icon = {
                         Icon(
                             imageVector = Icons.Rounded.PieChart,
@@ -143,10 +181,16 @@ fun StatsScreen(
                         )
                     }
                 )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = { Text("Apps") },
+                LeadingIconTab(
+                    selected = pagerState.currentPage == 1,
+                    onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
+                    text = {
+                        Text(
+                            text = "Apps (${uiState.apps.size})",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (pagerState.currentPage == 1) FontWeight.SemiBold else FontWeight.Medium
+                        )
+                    },
                     icon = {
                         Icon(
                             imageVector = Icons.Rounded.Layers,
@@ -155,10 +199,16 @@ fun StatsScreen(
                         )
                     }
                 )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    text = { Text("Sessions") },
+                LeadingIconTab(
+                    selected = pagerState.currentPage == 2,
+                    onClick = { scope.launch { pagerState.animateScrollToPage(2) } },
+                    text = {
+                        Text(
+                            text = "Sessions (${uiState.sessions.size})",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (pagerState.currentPage == 2) FontWeight.SemiBold else FontWeight.Medium
+                        )
+                    },
                     icon = {
                         Icon(
                             imageVector = Icons.Rounded.QueryStats,
@@ -169,13 +219,20 @@ fun StatsScreen(
                 )
             }
 
-            when (selectedTab) {
-                0 -> OverviewTabContent(uiState = uiState)
-                1 -> AppsTabContent(
-                    apps = uiState.apps,
-                    onAppClick = { selectedAppForInspection = it }
-                )
-                2 -> SessionsTabContent(sessions = uiState.sessions)
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) { page ->
+                when (page) {
+                    0 -> OverviewTabContent(uiState = uiState)
+                    1 -> AppsTabContent(
+                        apps = uiState.apps,
+                        onAppClick = { selectedAppForInspection = it }
+                    )
+                    2 -> SessionsTabContent(sessions = uiState.sessions)
+                }
             }
         }
     }
@@ -193,74 +250,157 @@ fun StatsScreen(
 private fun OverviewTabContent(uiState: StatsUiState) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            TrackerDonutChart(
+            PixelTelemetryRadialGauge(
                 trackerPercentage = uiState.trackerPercentage,
+                totalQueries = uiState.totalQueries,
+                trackerQueries = uiState.trackerQueries,
+                cleanQueries = uiState.cleanQueries,
                 modifier = Modifier
-                    .size(200.dp)
+                    .fillMaxWidth()
                     .padding(vertical = 8.dp)
             )
         }
 
         item {
-            Row(
+            ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                ),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
             ) {
-                ExpressiveMetricTile(
-                    label = "Total Logs",
-                    value = uiState.totalQueries.formatCount(),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
-                ExpressiveMetricTile(
-                    label = "Trackers",
-                    value = uiState.trackerQueries.formatCount(),
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                    modifier = Modifier.weight(1f)
-                )
-                ExpressiveMetricTile(
-                    label = "Clean Traffic",
-                    value = (uiState.totalQueries - uiState.trackerQueries).formatCount(),
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.weight(1f)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 18.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = uiState.totalQueries.formatCount(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Total Queries",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(36.dp)
+                            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    )
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = uiState.trackerQueries.formatCount(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = VerdictTracker
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Threats Blocked",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = VerdictTracker.copy(alpha = 0.85f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(36.dp)
+                            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    )
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = uiState.cleanQueries.formatCount(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = VerdictSafe
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Allowed Safe",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = VerdictSafe.copy(alpha = 0.85f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
             }
         }
 
         if (uiState.topDomains.isNotEmpty()) {
             item {
-                Column(
+                ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    shape = MaterialTheme.shapes.extraLarge,
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
                 ) {
-                    Text(
-                        text = "Most Requested Domains",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    ElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.large,
-                        colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer
-                        )
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 18.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            val maxCount = uiState.topDomains.maxOf { it.count }
-                            uiState.topDomains.forEach { domain ->
-                                ExpressiveDomainBar(domain = domain, maxCount = maxCount)
-                            }
+                            Text(
+                                text = "Top Targeted Domains",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "${uiState.topDomains.size} analyzed",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        val maxCount = uiState.topDomains.maxOf { it.count }
+                        uiState.topDomains.forEachIndexed { index, domain ->
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.75f),
+                                thickness = 1.dp
+                            )
+                            ExpressiveDomainBar(
+                                domain = domain,
+                                maxCount = maxCount,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 14.dp)
+                            )
                         }
                     }
                 }
@@ -268,11 +408,49 @@ private fun OverviewTabContent(uiState: StatsUiState) {
         }
 
         item {
-            Text(
-                text = "Blocklist Engine Active · ${uiState.blocklistCount.formatCount()} rules loaded",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Shield,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Active Protection Engine",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "${uiState.blocklistCount.formatCount()} forensic threat rules enforced on-device",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -295,30 +473,31 @@ private fun AppsTabContent(
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(items = apps, key = { it.packageName }) { app ->
                 ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.medium)
+                        .clip(MaterialTheme.shapes.large)
                         .clickable { onAppClick(app) },
-                    shape = MaterialTheme.shapes.medium,
+                    shape = MaterialTheme.shapes.large,
                     colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    )
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    ),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(44.dp)
+                                .size(46.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.surfaceContainerHighest),
                             contentAlignment = Alignment.Center
@@ -326,7 +505,7 @@ private fun AppsTabContent(
                             Text(
                                 text = app.appName.take(1).uppercase(),
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
+                                fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -339,8 +518,9 @@ private fun AppsTabContent(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "${app.totalQueries} requests · ${app.trackerQueries} trackers",
+                                text = "${app.totalQueries} calls · ${app.trackerQueries} trackers (${app.trackerPercentage}%)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -370,54 +550,71 @@ private fun SessionsTabContent(sessions: List<SessionUiModel>) {
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(items = sessions, key = { it.sessionId }) { session ->
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
+                    shape = MaterialTheme.shapes.large,
                     colors = CardDefaults.elevatedCardColors(
-                        containerColor = if (session.isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                        else MaterialTheme.colorScheme.surfaceContainer
-                    )
+                        containerColor = if (session.isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                        else MaterialTheme.colorScheme.surfaceContainerHigh
+                    ),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = session.startedAt,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (session.isActive) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(VerdictSafe)
+                                    )
+                                }
+                                Text(
+                                    text = session.startedAt,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
                             Text(
                                 text = session.duration,
                                 style = MaterialTheme.typography.labelMedium,
-                                color = if (session.isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (session.isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
                             )
                         }
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "${session.totalQueries} Total Queries",
+                                text = "${session.totalQueries} Queries Recorded",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "${session.trackerQueries} Blocked (${session.trackerPercentage}%)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (session.trackerQueries > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary,
+                                text = if (session.trackerQueries > 0) "${session.trackerQueries} Blocked (${session.trackerPercentage}%)"
+                                else "100% Clean",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (session.trackerQueries > 0) VerdictTracker else VerdictSafe,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -447,19 +644,31 @@ private fun AppQueriesBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
+                .padding(bottom = 28.dp)
         ) {
-            Text(
-                text = app.appName,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = app.packageName,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = app.appName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = app.packageName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                val verdict = if (app.trackerQueries > 0) ExpressiveVerdict.BLOCKED else ExpressiveVerdict.SAFE
+                ExpressiveVerdictBadge(verdict = verdict)
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
 
             if (queries.isEmpty()) {
                 EmptyState(
@@ -473,11 +682,11 @@ private fun AppQueriesBottomSheet(
                         .height(380.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(items = queries) { query ->
+                    items(items = queries, key = { it.id }) { query ->
                         ElevatedCard(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(MaterialTheme.shapes.small)
+                                .clip(MaterialTheme.shapes.medium)
                                 .clickable {
                                     selectedQueryDetail = DnsQueryUiModel(
                                         id = query.id,
@@ -485,18 +694,19 @@ private fun AppQueriesBottomSheet(
                                         packageName = query.appInfo.packageName,
                                         appName = app.appName,
                                         time = query.timestamp.formatTime(),
-                                        verdict = query.verdict.toUiState()
+                                        verdict = query.verdict.toUiState(),
+                                        isBlocked = query.isBlocked
                                     )
                                 },
-                            shape = MaterialTheme.shapes.small,
+                            shape = MaterialTheme.shapes.medium,
                             colors = CardDefaults.elevatedCardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                             )
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(12.dp),
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -508,16 +718,19 @@ private fun AppQueriesBottomSheet(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
+                                    Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = query.timestamp.formatDate(),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                val verdict = when (query.verdict) {
-                                    is Verdict.Tracker -> ExpressiveVerdict.BLOCKED
-                                    Verdict.Clean -> ExpressiveVerdict.SAFE
-                                    Verdict.Unknown -> ExpressiveVerdict.BYPASSED
+                                Spacer(modifier = Modifier.width(12.dp))
+                                val verdict = when {
+                                    query.verdict is Verdict.Tracker && query.isBlocked -> ExpressiveVerdict.BLOCKED
+                                    query.verdict is Verdict.Tracker && !query.isBlocked -> ExpressiveVerdict.AUDITED
+                                    query.verdict is Verdict.Clean -> ExpressiveVerdict.SAFE
+                                    else -> ExpressiveVerdict.BYPASSED
                                 }
                                 ExpressiveVerdictBadge(verdict = verdict)
                             }
@@ -531,6 +744,7 @@ private fun AppQueriesBottomSheet(
     selectedQueryDetail?.let { queryUi ->
         ModalBottomSheet(
             onDismissRequest = { selectedQueryDetail = null },
+            sheetState = rememberModalBottomSheetState(),
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             QueryDetailSheet(
@@ -542,100 +756,153 @@ private fun AppQueriesBottomSheet(
 }
 
 @Composable
-private fun TrackerDonutChart(trackerPercentage: Int, modifier: Modifier = Modifier) {
+private fun PixelTelemetryRadialGauge(
+    trackerPercentage: Int,
+    totalQueries: Int,
+    trackerQueries: Int,
+    cleanQueries: Int,
+    modifier: Modifier = Modifier
+) {
     val animatedPct by animateFloatAsState(
         targetValue = trackerPercentage.toFloat(),
         animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "donut_pct"
+        label = "radial_pct"
     )
-    val trackerFraction = (animatedPct / 100f).coerceIn(0f, 1f)
-    val cleanFraction = 1f - trackerFraction
+    val fraction = (animatedPct / 100f).coerceIn(0f, 1f)
 
     val primary = MaterialTheme.colorScheme.primary
-    val error = MaterialTheme.colorScheme.error
-    val outline = MaterialTheme.colorScheme.surfaceContainerHighest
+    val error = VerdictTracker
+    val trackBg = MaterialTheme.colorScheme.surfaceContainerHighest
 
-    Box(contentAlignment = Alignment.Center, modifier = modifier) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 20.dp.toPx()
-            val r = (size.minDimension - strokeWidth * 2) / 2f
-            val tl = Offset((size.width - r * 2) / 2f, (size.height - r * 2) / 2f)
+    val totalArc = 200f
+    val startAngle = 170f
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(240.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            val strokeWidth = 18.dp.toPx()
+            val availableWidth = size.width - strokeWidth * 2
+            val availableHeight = size.height * 1.6f
+            val r = minOf(availableWidth / 2f, availableHeight / 2f)
+            val centerOffset = Offset(size.width / 2f, size.height * 0.62f)
+            val tl = Offset(centerOffset.x - r, centerOffset.y - r)
             val arcSize = Size(r * 2, r * 2)
             val strokeStyle = Stroke(strokeWidth, cap = StrokeCap.Round)
 
-            drawArc(outline, 0f, 360f, false, tl, arcSize, style = Stroke(strokeWidth))
+            drawArc(
+                color = trackBg,
+                startAngle = startAngle,
+                sweepAngle = totalArc,
+                useCenter = false,
+                topLeft = tl,
+                size = arcSize,
+                style = strokeStyle
+            )
 
-            if (trackerFraction > 0f) {
-                drawArc(error, -90f, trackerFraction * 360f, false, tl, arcSize, style = strokeStyle)
-            }
-            if (cleanFraction > 0f) {
-                drawArc(primary, -90f + trackerFraction * 360f, cleanFraction * 360f, false, tl, arcSize, style = strokeStyle)
+            val sweepAngle = fraction * totalArc
+            if (sweepAngle > 0f) {
+                drawArc(
+                    color = error,
+                    startAngle = startAngle,
+                    sweepAngle = sweepAngle,
+                    useCenter = false,
+                    topLeft = tl,
+                    size = arcSize,
+                    style = strokeStyle
+                )
+            } else if (totalQueries > 0) {
+                drawArc(
+                    color = primary,
+                    startAngle = startAngle,
+                    sweepAngle = totalArc,
+                    useCenter = false,
+                    topLeft = tl,
+                    size = arcSize,
+                    style = strokeStyle
+                )
             }
         }
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "$trackerPercentage%",
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (trackerPercentage > 0) error else primary
-            )
-            Text(
-                text = if (trackerPercentage > 0) "Telemetry Ratio" else "Fully Clean",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun ExpressiveMetricTile(
-    label: String,
-    value: String,
-    containerColor: Color,
-    contentColor: Color,
-    modifier: Modifier = Modifier
-) {
-    ElevatedCard(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.elevatedCardColors(containerColor = containerColor)
-    ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 14.dp, horizontal = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(top = 18.dp)
         ) {
+            AnimatedContent(
+                targetState = trackerPercentage,
+                transitionSpec = {
+                    slideInVertically { height -> height } + fadeIn() togetherWith
+                            slideOutVertically { height -> -height } + fadeOut()
+                },
+                label = "pct_text"
+            ) { pct ->
+                Text(
+                    text = "$pct%",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontSize = 68.sp,
+                        letterSpacing = (-1.5).sp
+                    ),
+                    fontWeight = FontWeight.Bold,
+                    color = if (pct > 0) error else primary
+                )
+            }
             Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = contentColor
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = contentColor.copy(alpha = 0.8f),
+                text = if (trackerPercentage > 0) "Telemetry Filtered" else if (totalQueries > 0) "100% Clean Network" else "Awaiting Traffic",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(if (trackerPercentage > 0) error else primary)
+                )
+                Text(
+                    text = "${trackerQueries.formatCount()} blocked · ${cleanQueries.formatCount()} clean",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ExpressiveDomainBar(domain: DomainStatUiModel, maxCount: Int) {
-    val fraction = if (maxCount > 0) domain.count.toFloat() / maxCount else 0f
+private fun ExpressiveDomainBar(
+    domain: DomainStatUiModel,
+    maxCount: Int,
+    modifier: Modifier = Modifier
+) {
+    val fraction = if (maxCount > 0) (domain.count.toFloat() / maxCount).coerceIn(0f, 1f) else 0f
     val animatedFraction by animateFloatAsState(
         targetValue = fraction,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
         label = "bar_frac"
     )
-    val barColor = if (domain.isTracker) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    val barColor = if (domain.isTracker) VerdictTracker else MaterialTheme.colorScheme.primary
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -643,36 +910,38 @@ private fun ExpressiveDomainBar(domain: DomainStatUiModel, maxCount: Int) {
         ) {
             Text(
                 text = domain.domain,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.width(12.dp))
-            Text(
-                text = domain.count.toString(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "${domain.count} queries",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold
+                )
+                ExpressiveVerdictBadge(
+                    verdict = if (domain.isTracker) ExpressiveVerdict.BLOCKED else ExpressiveVerdict.SAFE
+                )
+            }
         }
-        Spacer(Modifier.height(6.dp))
-        Box(
+        Spacer(Modifier.height(8.dp))
+        LinearProgressIndicator(
+            progress = { animatedFraction },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(6.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(animatedFraction)
-                    .fillMaxHeight()
-                    .clip(CircleShape)
-                    .background(barColor)
-            )
-        }
+                .clip(CircleShape),
+            color = barColor,
+            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+        )
     }
 }
 

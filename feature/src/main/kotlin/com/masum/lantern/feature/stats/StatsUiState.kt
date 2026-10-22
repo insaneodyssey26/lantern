@@ -8,7 +8,9 @@ data class StatsUiState(
     val blocklistCount: Int = 0,
     val apps: List<AppStatUiModel> = emptyList(),
     val sessions: List<SessionUiModel> = emptyList(),
-)
+) {
+    val cleanQueries: Int get() = (totalQueries - trackerQueries).coerceAtLeast(0)
+}
 
 data class DomainStatUiModel(
     val domain: String,
