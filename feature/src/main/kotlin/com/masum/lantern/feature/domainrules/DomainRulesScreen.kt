@@ -52,8 +52,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TonalToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.FilledTonalToggleButton
+import androidx.compose.material3.FilledTonalToggleButtonDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -74,10 +74,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.masum.lantern.core.ui.components.EmptyState
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
+import com.masum.lantern.core.ui.navigation.PredictiveBackContainer
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -99,8 +100,9 @@ fun DomainRulesScreen(
         DomainRuleTab.BLOCKED -> uiState.blockedDomains
     }
 
-    Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    PredictiveBackContainer(onBack = onBackClick) {
+        Scaffold(
+            modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -144,7 +146,7 @@ fun DomainRulesScreen(
                     }
                 },
                 scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
@@ -232,7 +234,7 @@ fun DomainRulesScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                 ) {
-                    TonalToggleButton(
+                    FilledTonalToggleButton(
                         checked = uiState.selectedTab == DomainRuleTab.ALLOWED,
                         onCheckedChange = {
                             if (uiState.selectedTab != DomainRuleTab.ALLOWED) haptics.tap()
@@ -240,7 +242,7 @@ fun DomainRulesScreen(
                         },
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                         modifier = Modifier.weight(1f),
-                        colors = ToggleButtonDefaults.tonalToggleButtonColors(
+                        colors = FilledTonalToggleButtonDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -265,7 +267,7 @@ fun DomainRulesScreen(
                         }
                     }
 
-                    TonalToggleButton(
+                    FilledTonalToggleButton(
                         checked = uiState.selectedTab == DomainRuleTab.BLOCKED,
                         onCheckedChange = {
                             if (uiState.selectedTab != DomainRuleTab.BLOCKED) haptics.tap()
@@ -273,7 +275,7 @@ fun DomainRulesScreen(
                         },
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                         modifier = Modifier.weight(1f),
-                        colors = ToggleButtonDefaults.tonalToggleButtonColors(
+                        colors = FilledTonalToggleButtonDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -354,6 +356,7 @@ fun DomainRulesScreen(
             },
             onDismiss = { showAddDialog = false }
         )
+    }
     }
 }
 

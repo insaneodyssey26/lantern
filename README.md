@@ -1,18 +1,23 @@
-# Lantern
+# Lantern (formerly Vigil)
 
-Lantern is a modern, privacy-focused on-device DNS firewall and network telemetry audit tool for Android. Powered by Material 3 Expressive motion and typography, Lantern intercepts, attributes, and classifies outbound DNS queries initiated by installed applications against a database of tracker, ad, and telemetry domains. 
+> **Quick heads-up:**  
+> This project was originally known as **Vigil** (referenced across my resume and portfolio). After stepping away for a few months, I'm doing a massive overhaul—rewriting core engine parts, redesigning the UI, and adding a bunch of new features.  
+> 
+> As part of this revamp, I'm renaming the app to **Lantern** and changing the application package name. Because of the package name change, it won't be an in-place upgrade from older Vigil builds; it's practically a fresh, rebuilt app.
 
-Everything runs 100% locally on-device using Android's VPN subsystem without external cloud proxying or latency penalties.
+Lantern is an on-device DNS firewall and network monitor for Android. It lets you see and block trackers, ads, and background telemetry from apps directly on your phone without sending your traffic through remote servers.
 
 ---
 
 ## Key Highlights
 
 - **Active Blocking & Passive Audit Modes**: Switch seamlessly between proactive DNS-sinkholing (`NXDOMAIN` or `0.0.0.0`) to neutralize trackers, or passive audit mode to observe background telemetry without dropping queries.
+- **Custom Domain Rules & App Whitelisting**: Granular per-domain custom whitelist/blocklist and per-application VPN bypass (allowing selected apps to access the internet directly without passing through the VPN tunnel).
+- **TTL DNS Response Cache & Protected Socket Pool**: 2048-entry in-memory DNS cache honoring TTL to eliminate redundant upstream round-trips with zero latency, backed by thread-safe protected socket pooling.
 - **OTA Blocklist Updates**: Built-in background rule updates pulling directly from [StevenBlack/hosts](https://github.com/StevenBlack/hosts) (80,000+ curated hosts) with etag validation and atomic room persistence.
 - **Zero-Latency In-Memory Trie**: Suffix matching engine written with an in-memory reverse-label Radix/Suffix Trie yielding $O(k)$ lookup time ($k = \text{domain labels}$).
 - **App-Level Socket Attribution**: Tracks socket bindings in real-time to identify exactly which application (app name, icon, and UID) triggered each network request.
-- **Material 3 Expressive Design**: Floating capsule dock navigation, Google Sans Flex variable typography, tactile haptic feedback, and a flagship radar hero visualizer.
+- **Material 3 Expressive Design & Predictive Back**: Floating capsule dock navigation, Google Sans Flex variable typography, tactile haptic feedback, fluid 1:1 finger-tracking predictive back navigation gestures with morphing corner radii, and a flagship radar hero visualizer.
 - **AMOLED Pure Black & Dynamic Color**: Calibrated for true-black OLED displays and system dark/light edge-to-edge system bars.
 
 ---
@@ -22,38 +27,33 @@ Everything runs 100% locally on-device using Android's VPN subsystem without ext
 ### How Interception Works
 1. **Network Interception**: Registers a local-only `VpnService` tunnel routing a sentinel DNS address (`10.0.0.2/32`) to capture outbound port 53 (Do53) traffic.
 2. **Packet Parsing**: Reads incoming byte streams directly from the TUN interface descriptor, decoding UDP and DNS wire format headers.
-3. **App Attribution**: Maps socket tables and `/proc/net/udp` bindings to process UIDs in real-time, tagging each query with the owning package.
-4. **Trie-based Classification**: Evaluates requested hostnames against an 80,000+ domain reverse-label Suffix Trie.
-5. **Enforcement & Forwarding**:
+3. **App Attribution & Bypass**: Maps socket tables and `/proc/net/udp` bindings to process UIDs in real-time, checking if the originating app is whitelisted to bypass the VPN tunnel.
+4. **Custom Rules & Trie Classification**: Checks hostname against user custom rules (allow/block) followed by an 80,000+ domain reverse-label Suffix Trie.
+5. **Enforcement, In-Memory Caching & Forwarding**:
    - In **Block Mode**: Returns an immediate synthetic `0.0.0.0` or `NXDOMAIN` response back to the client app.
-   - In **Audit Mode** or for **Clean Domains**: Forwards queries to upstream DNS resolvers (Cloudflare, Quad9, Google DNS) using a protected socket context that bypasses the VPN tunnel.
+   - For **Allowed Queries**: Inspects the 2048-entry in-memory TTL response cache for instant resolution. On a cache miss, forwards the query to upstream resolvers (Cloudflare, Quad9, Google DNS) using a protected socket pool that bypasses the VPN tunnel.
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    participant App as Target Application
-    participant TUN as TUN Interface (Lantern VPN)
-    participant Engine as Packet Processing Engine
-    participant Trie as Reverse Suffix Trie
-    participant DB as SQLite / Room DB
-    participant Net as Upstream DNS (Cloudflare / Quad9)
+flowchart TD
+    App["Target App"] -->|"UDP Port 53 Query"| TUN["VPN TUN Interface"]
+    TUN -->|"Raw Packet"| Engine["Packet Engine\n(UID & Hostname Extraction)"]
 
-    App->>TUN: Outbound UDP Port 53 DNS Query
-    TUN->>Engine: Read Raw Packet Byte Stream
-    Engine->>Engine: Extract Hostname, TxId & Socket UID
-    Engine->>Trie: Match Suffix (e.g., telemetry.domain.com)
-    alt Suffix Match Found & Blocking Enabled
-        Engine->>Engine: Synthesize Block Response (0.0.0.0)
-        Engine->>DB: Log Domain (Verdict: Blocked)
-        Engine-->>TUN: Inject Block Response
-        TUN-->>App: DNS Sinkhole Response
-    else Clean Query or Audit Mode
-        Engine->>DB: Log Domain (Verdict: Safe / Bypassed)
-        Engine->>Net: Forward Query (via protect()ed socket)
-        Net-->>Engine: Upstream DNS Answer
-        Engine-->>TUN: Rewrite Response Packet
-        TUN-->>App: DNS Response Delivered
-    end
+    Engine --> Rules{"Rules & Suffix Trie\nCheck"}
+
+    Rules -->|"Tracker / Blocked"| Block["Synthesize 0.0.0.0\nSinkhole"]
+    Block -->|"Immediate Response"| TUN
+
+    Rules -->|"Clean / Audit Mode"| Cache{"In-Memory TTL\nDNS Cache"}
+
+    Cache -->|"Cache Hit"| Return["Adjust TTL & Build Packet"]
+    Cache -->|"Cache Miss"| Net["Upstream DNS\n(Cloudflare / Quad9 via Protected Socket)"]
+    Net -->|"Store Entry"| Cache
+    Net --> Return
+
+    Return -->|"Forward Answer"| TUN
+    TUN -->|"Resolved Query"| App
+
+    Engine -.->|"Async Query Log"| DB[("Room DB")]
 ```
 
 ---
@@ -74,7 +74,8 @@ Lantern adheres to clean, modern Android modularization:
 │           :feature           ││             :vpn             │
 │ ViewModels & UI screens:     ││ LanternVpnService lifecycle, │
 │ Home, Traffic Stream,        ││ PacketReadLoop, wire parser, │
-│ Insights, and Settings.      ││ and socket attributions.     │
+│ Insights, Settings, Domain   ││ DnsResponseCache, socket     │
+│ Rules, and App Whitelist.    ││ pool, and app attribution.   │
 └──────────────┬───────────────┘└───────────────┬──────────────┘
                │                                │
                ▼                                ▼
@@ -120,10 +121,9 @@ Evaluating DNS packets in real-time requires sub-millisecond decisions without i
 ## Verification & Compilation
 
 ### Requirements
-* Android Studio Ladybug / Meerkat (AGP 8.8+)
-* Kotlin 2.0+
-* Minimum SDK: 29 (Android 10) / Target SDK: 35 (Android 15)
-* JDK: Java 17 or 21
+* JDK 17 or 21
+* Minimum SDK: 29 (Android 10)
+* Target SDK: 36 (Android 16) / Compile SDK: 37
 
 ### Building the Project
 ```bash

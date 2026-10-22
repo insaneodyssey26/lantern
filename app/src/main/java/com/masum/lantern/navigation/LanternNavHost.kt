@@ -1,5 +1,6 @@
 package com.masum.lantern.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -12,9 +13,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.slideIn
-import androidx.compose.animation.slideOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,7 +23,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -40,13 +40,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -63,32 +59,9 @@ import com.masum.lantern.feature.stats.StatsScreen
 import com.masum.lantern.feature.whitelist.AppWhitelistScreen
 
 private val EmphasizedEasing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
-private const val NAV_DURATION = 320
-private const val SLIDE_FRACTION = 0.06f
-
-private fun settingsEnter(): EnterTransition =
-    fadeIn(tween(NAV_DURATION, easing = EmphasizedEasing)) +
-        slideIn(tween(NAV_DURATION, easing = EmphasizedEasing)) { fullSize ->
-            IntOffset(x = (fullSize.width * 0.25f).toInt(), y = 0)
-        }
-
-private fun settingsExit(): ExitTransition =
-    fadeOut(tween(NAV_DURATION, easing = EmphasizedEasing)) +
-        slideOut(tween(NAV_DURATION, easing = EmphasizedEasing)) { fullSize ->
-            IntOffset(x = (fullSize.width * 0.25f).toInt(), y = 0)
-        }
-
-private fun settingsPopEnter(): EnterTransition =
-    fadeIn(tween(NAV_DURATION, easing = EmphasizedEasing)) +
-        slideIn(tween(NAV_DURATION, easing = EmphasizedEasing)) { fullSize ->
-            IntOffset(x = -(fullSize.width * 0.08f).toInt(), y = 0)
-        }
-
-private fun settingsPopExit(): ExitTransition =
-    fadeOut(tween(NAV_DURATION, easing = EmphasizedEasing)) +
-        slideOut(tween(NAV_DURATION, easing = EmphasizedEasing)) { fullSize ->
-            IntOffset(x = (fullSize.width * 0.12f).toInt(), y = 0)
-        }
+private val EmphasizedDecelerateEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+private const val NAV_ENTER_DURATION = 450
+private const val NAV_EXIT_DURATION = 380
 
 @Composable
 fun LanternNavHost(
@@ -112,25 +85,54 @@ fun LanternNavHost(
                 .background(MaterialTheme.colorScheme.background),
             enterTransition = {
                 when (targetState.destination.route) {
-                    "settings", "app_whitelist", "domain_rules" -> settingsEnter()
+                    "settings", "app_whitelist", "domain_rules" -> {
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = tween(NAV_ENTER_DURATION, easing = EmphasizedDecelerateEasing),
+                            initialOffset = { (it * 0.45f).toInt() }
+                        ) + scaleIn(
+                            initialScale = 0.90f,
+                            animationSpec = tween(NAV_ENTER_DURATION, easing = EmphasizedDecelerateEasing)
+                        ) + fadeIn(animationSpec = tween(NAV_ENTER_DURATION / 2, easing = EmphasizedDecelerateEasing))
+                    }
                     else -> EnterTransition.None
                 }
             },
             exitTransition = {
                 when (targetState.destination.route) {
-                    "settings", "app_whitelist", "domain_rules" -> fadeOut(tween(NAV_DURATION, easing = EmphasizedEasing))
+                    "settings", "app_whitelist", "domain_rules" -> {
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = tween(NAV_EXIT_DURATION, easing = EmphasizedEasing),
+                            targetOffset = { (it * 0.18f).toInt() }
+                        ) + scaleOut(
+                            targetScale = 0.94f,
+                            animationSpec = tween(NAV_EXIT_DURATION, easing = EmphasizedEasing)
+                        ) + fadeOut(animationSpec = tween(NAV_EXIT_DURATION, easing = EmphasizedEasing))
+                    }
                     else -> ExitTransition.None
                 }
             },
             popEnterTransition = {
                 when (initialState.destination.route) {
-                    "settings", "app_whitelist", "domain_rules" -> settingsPopEnter()
+                    "settings", "app_whitelist", "domain_rules" -> {
+                        scaleIn(
+                            initialScale = 0.95f,
+                            animationSpec = tween(NAV_ENTER_DURATION, easing = EmphasizedDecelerateEasing)
+                        ) + fadeIn(animationSpec = tween(NAV_ENTER_DURATION / 2, easing = EmphasizedDecelerateEasing))
+                    }
                     else -> EnterTransition.None
                 }
             },
             popExitTransition = {
                 when (initialState.destination.route) {
-                    "settings", "app_whitelist", "domain_rules" -> settingsPopExit()
+                    "settings", "app_whitelist", "domain_rules" -> {
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.End,
+                            animationSpec = tween(NAV_EXIT_DURATION, easing = EmphasizedEasing),
+                            targetOffset = { it }
+                        ) + fadeOut(animationSpec = tween(NAV_EXIT_DURATION / 2, easing = EmphasizedEasing))
+                    }
                     else -> ExitTransition.None
                 }
             },

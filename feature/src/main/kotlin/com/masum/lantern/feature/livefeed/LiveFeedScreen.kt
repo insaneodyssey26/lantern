@@ -64,11 +64,12 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.ToggleButtonDefaults
-import androidx.compose.material3.TonalToggleButton
+import androidx.compose.material3.FilledTonalToggleButtonDefaults
+import androidx.compose.material3.FilledTonalToggleButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -89,7 +90,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.masum.lantern.core.ui.components.EmptyState
 import com.masum.lantern.core.ui.components.ExpressiveVerdict
@@ -118,7 +119,7 @@ fun LiveFeedScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(FeedFilter.All) }
     var selectedQuery by remember { mutableStateOf<DnsQueryUiModel?>(null) }
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val haptics = rememberLanternHaptics()
 
     val filteredQueries = remember(uiState.queries, searchQuery, selectedFilter) {
@@ -299,7 +300,7 @@ fun LiveFeedScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                 ) {
-                    TonalToggleButton(
+                    FilledTonalToggleButton(
                         checked = selectedFilter == FeedFilter.All,
                         onCheckedChange = {
                             if (selectedFilter != FeedFilter.All) haptics.tap()
@@ -309,7 +310,7 @@ fun LiveFeedScreen(
                         },
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                         modifier = Modifier.weight(1f),
-                        colors = ToggleButtonDefaults.tonalToggleButtonColors(
+                        colors = FilledTonalToggleButtonDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -323,7 +324,7 @@ fun LiveFeedScreen(
                         )
                     }
 
-                    TonalToggleButton(
+                    FilledTonalToggleButton(
                         checked = selectedFilter == FeedFilter.Trackers,
                         onCheckedChange = {
                             if (selectedFilter != FeedFilter.Trackers) haptics.tap()
@@ -333,7 +334,7 @@ fun LiveFeedScreen(
                         },
                         shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
                         modifier = Modifier.weight(1f),
-                        colors = ToggleButtonDefaults.tonalToggleButtonColors(
+                        colors = FilledTonalToggleButtonDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -363,7 +364,7 @@ fun LiveFeedScreen(
                         }
                     }
 
-                    TonalToggleButton(
+                    FilledTonalToggleButton(
                         checked = selectedFilter == FeedFilter.Clean,
                         onCheckedChange = {
                             if (selectedFilter != FeedFilter.Clean) haptics.tap()
@@ -373,7 +374,7 @@ fun LiveFeedScreen(
                         },
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                         modifier = Modifier.weight(1f),
-                        colors = ToggleButtonDefaults.tonalToggleButtonColors(
+                        colors = FilledTonalToggleButtonDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,

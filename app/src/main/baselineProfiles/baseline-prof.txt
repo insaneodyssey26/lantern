@@ -1,0 +1,37 @@
+# Lantern Core App Baseline Profile
+# Critical startup and UI classes pre-compiled ahead-of-time (AOT) by ART
+
+Lcom/masum/lantern/LanternApp;
+Lcom/masum/lantern/MainActivity;
+Lcom/masum/lantern/navigation/LanternNavHostKt;
+Lcom/masum/lantern/navigation/LanternDestination;
+
+# Control & Traffic UI screens
+Lcom/masum/lantern/feature/control/ControlScreenKt;
+Lcom/masum/lantern/feature/control/ControlViewModel;
+Lcom/masum/lantern/feature/livefeed/LiveFeedScreenKt;
+Lcom/masum/lantern/feature/livefeed/LiveFeedViewModel;
+Lcom/masum/lantern/feature/stats/StatsScreenKt;
+Lcom/masum/lantern/feature/stats/StatsViewModel;
+Lcom/masum/lantern/feature/settings/SettingsScreenKt;
+Lcom/masum/lantern/feature/settings/SettingsViewModel;
+Lcom/masum/lantern/feature/domainrules/DomainRulesScreenKt;
+Lcom/masum/lantern/feature/domainrules/DomainRulesViewModel;
+Lcom/masum/lantern/feature/whitelist/AppWhitelistScreenKt;
+Lcom/masum/lantern/feature/whitelist/AppWhitelistViewModel;
+
+# Core UI Components & Theme
+Lcom/masum/lantern/core/ui/theme/ThemeKt;
+Lcom/masum/lantern/core/ui/theme/ColorKt;
+Lcom/masum/lantern/core/ui/theme/TypeKt;
+Lcom/masum/lantern/core/ui/haptics/LanternHaptics;
+Lcom/masum/lantern/core/ui/components/LanternHeroKt;
+Lcom/masum/lantern/core/ui/components/ExpressiveVerdictBadgeKt;
+
+# VPN Engine & DNS Response Cache
+Lcom/masum/lantern/vpn/LanternVpnService;
+Lcom/masum/lantern/vpn/engine/DnsForwarder;
+Lcom/masum/lantern/vpn/cache/DnsResponseCache;
+Lcom/masum/lantern/vpn/cache/DnsCacheEntry;
+Lcom/masum/lantern/vpn/socket/ProtectedSocketPool;
+Lcom/masum/lantern/vpn/parser/DnsPacketParser;

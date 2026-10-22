@@ -58,7 +58,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.WavyProgressIndicatorDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -605,7 +606,7 @@ private fun AppQueriesBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden, enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Column(
@@ -712,7 +713,7 @@ private fun AppQueriesBottomSheet(
     selectedQueryDetail?.let { queryUi ->
         ModalBottomSheet(
             onDismissRequest = { selectedQueryDetail = null },
-            sheetState = rememberModalBottomSheetState(),
+            sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden),
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             QueryDetailSheet(

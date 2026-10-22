@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.masum.lantern.core.ui.components.DrawablePainter
+import com.masum.lantern.core.ui.navigation.PredictiveBackContainer
 import com.masum.lantern.core.ui.components.EmptyState
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 
@@ -102,8 +103,9 @@ fun AppWhitelistScreen(
         }
     }
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    PredictiveBackContainer(onBack = onBackClick) {
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -379,5 +381,6 @@ fun AppWhitelistScreen(
                 }
             }
         }
+    }
     }
 }

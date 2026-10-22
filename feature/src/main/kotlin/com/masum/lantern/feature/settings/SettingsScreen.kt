@@ -67,8 +67,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.ToggleButtonDefaults
-import androidx.compose.material3.TonalToggleButton
+import androidx.compose.material3.FilledTonalToggleButtonDefaults
+import androidx.compose.material3.FilledTonalToggleButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -92,6 +92,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
+import com.masum.lantern.core.ui.navigation.PredictiveBackContainer
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.SimpleDateFormat
@@ -121,9 +122,10 @@ fun SettingsScreen(
         }
     }
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+    PredictiveBackContainer(onBack = onBackClick) {
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -730,6 +732,7 @@ fun SettingsScreen(
             }
         )
     }
+    }
 }
 
 @Composable
@@ -767,7 +770,7 @@ private fun ThemeButtonGroup(
                 options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                 else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
             }
-            TonalToggleButton(
+            FilledTonalToggleButton(
                 checked = isSelected,
                 onCheckedChange = {
                     if (it) {
@@ -777,7 +780,7 @@ private fun ThemeButtonGroup(
                 },
                 modifier = Modifier.weight(1f),
                 shapes = shapes,
-                colors = ToggleButtonDefaults.tonalToggleButtonColors(
+                colors = FilledTonalToggleButtonDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
