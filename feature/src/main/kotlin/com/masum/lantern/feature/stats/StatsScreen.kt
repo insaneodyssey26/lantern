@@ -78,6 +78,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.masum.lantern.core.ui.components.EmptyState
@@ -108,6 +109,7 @@ fun StatsScreen(
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 3 })
     var selectedAppForInspection by remember { mutableStateOf<AppStatUiModel?>(null) }
+    val haptics = rememberLanternHaptics()
 
     Scaffold(
         topBar = {
@@ -120,7 +122,10 @@ fun StatsScreen(
                 },
                 actions = {
                     if (pagerState.currentPage == 2 && uiState.sessions.isNotEmpty()) {
-                        IconButton(onClick = viewModel::onClearHistory) {
+                        IconButton(onClick = {
+                            haptics.heavy()
+                            viewModel.onClearHistory()
+                        }) {
                             Icon(
                                 imageVector = Icons.Rounded.DeleteOutline,
                                 contentDescription = "Clear Session History",
@@ -165,7 +170,10 @@ fun StatsScreen(
             ) {
                 LeadingIconTab(
                     selected = pagerState.currentPage == 0,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                    onClick = {
+                        if (pagerState.currentPage != 0) haptics.tap()
+                        scope.launch { pagerState.animateScrollToPage(0) }
+                    },
                     text = {
                         Text(
                             text = "Overview",
@@ -183,7 +191,10 @@ fun StatsScreen(
                 )
                 LeadingIconTab(
                     selected = pagerState.currentPage == 1,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
+                    onClick = {
+                        if (pagerState.currentPage != 1) haptics.tap()
+                        scope.launch { pagerState.animateScrollToPage(1) }
+                    },
                     text = {
                         Text(
                             text = "Apps (${uiState.apps.size})",
@@ -201,7 +212,10 @@ fun StatsScreen(
                 )
                 LeadingIconTab(
                     selected = pagerState.currentPage == 2,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(2) } },
+                    onClick = {
+                        if (pagerState.currentPage != 2) haptics.tap()
+                        scope.launch { pagerState.animateScrollToPage(2) }
+                    },
                     text = {
                         Text(
                             text = "Sessions (${uiState.sessions.size})",

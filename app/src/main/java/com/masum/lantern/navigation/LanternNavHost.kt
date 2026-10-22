@@ -35,6 +35,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import com.masum.lantern.feature.control.ControlScreen
 import com.masum.lantern.feature.livefeed.LiveFeedScreen
 import com.masum.lantern.feature.settings.SettingsScreen
@@ -99,6 +100,7 @@ fun LanternNavHost(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val haptics = rememberLanternHaptics()
 
     Scaffold(
         modifier = modifier,
@@ -114,6 +116,9 @@ fun LanternNavHost(
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
+                            if (!selected) {
+                                haptics.tap()
+                            }
                             if (currentDestination?.route == "settings") {
                                 navController.popBackStack()
                             }

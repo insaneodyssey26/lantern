@@ -81,6 +81,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.masum.lantern.core.ui.components.EmptyState
@@ -111,6 +112,7 @@ fun LiveFeedScreen(
     var selectedFilter by remember { mutableStateOf(FeedFilter.All) }
     var selectedQuery by remember { mutableStateOf<DnsQueryUiModel?>(null) }
     val sheetState = rememberModalBottomSheetState()
+    val haptics = rememberLanternHaptics()
 
     val filteredQueries = remember(uiState.queries, searchQuery, selectedFilter) {
         uiState.queries.filter { query ->
@@ -176,7 +178,10 @@ fun LiveFeedScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { viewModel.togglePauseStream() },
+                onClick = {
+                    haptics.toggle()
+                    viewModel.togglePauseStream()
+                },
                 containerColor = if (uiState.isPaused) {
                     MaterialTheme.colorScheme.errorContainer
                 } else {
@@ -287,6 +292,7 @@ fun LiveFeedScreen(
                     TonalToggleButton(
                         checked = selectedFilter == FeedFilter.All,
                         onCheckedChange = {
+                            if (selectedFilter != FeedFilter.All) haptics.tap()
                             focusManager.clearFocus()
                             keyboardController?.hide()
                             selectedFilter = FeedFilter.All
@@ -304,6 +310,7 @@ fun LiveFeedScreen(
                     TonalToggleButton(
                         checked = selectedFilter == FeedFilter.Trackers,
                         onCheckedChange = {
+                            if (selectedFilter != FeedFilter.Trackers) haptics.tap()
                             focusManager.clearFocus()
                             keyboardController?.hide()
                             selectedFilter = FeedFilter.Trackers
@@ -333,6 +340,7 @@ fun LiveFeedScreen(
                     TonalToggleButton(
                         checked = selectedFilter == FeedFilter.Clean,
                         onCheckedChange = {
+                            if (selectedFilter != FeedFilter.Clean) haptics.tap()
                             focusManager.clearFocus()
                             keyboardController?.hide()
                             selectedFilter = FeedFilter.Clean
@@ -444,14 +452,17 @@ private fun ExpressiveSwipeableQueryCard(
     onWhoisLookup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptics = rememberLanternHaptics()
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
             when (value) {
                 SwipeToDismissBoxValue.StartToEnd -> {
+                    haptics.tick()
                     onCopyDomain()
                     false
                 }
                 SwipeToDismissBoxValue.EndToStart -> {
+                    haptics.tick()
                     onWhoisLookup()
                     false
                 }

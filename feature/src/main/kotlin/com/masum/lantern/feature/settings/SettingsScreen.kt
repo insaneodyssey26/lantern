@@ -81,6 +81,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.SimpleDateFormat
@@ -97,6 +98,7 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     var showClearConfirmDialog by remember { mutableStateOf(false) }
+    val haptics = rememberLanternHaptics()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -134,7 +136,10 @@ fun SettingsScreen(
                 },
                 navigationIcon = {
                     FilledTonalIconButton(
-                        onClick = onBackClick,
+                        onClick = {
+                            haptics.tap()
+                            onBackClick()
+                        },
                         colors = IconButtonDefaults.filledTonalIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                         ),
@@ -177,7 +182,10 @@ fun SettingsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(MaterialTheme.shapes.large)
-                            .clickable { viewModel.setPureBlack(!uiState.pureBlack) },
+                            .clickable {
+                                haptics.toggle()
+                                viewModel.setPureBlack(!uiState.pureBlack)
+                            },
                         shape = MaterialTheme.shapes.large,
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer
@@ -220,7 +228,10 @@ fun SettingsScreen(
                             }
                             Switch(
                                 checked = uiState.pureBlack,
-                                onCheckedChange = { viewModel.setPureBlack(it) }
+                                onCheckedChange = {
+                                    haptics.toggle()
+                                    viewModel.setPureBlack(it)
+                                }
                             )
                         }
                     }
@@ -228,7 +239,10 @@ fun SettingsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(MaterialTheme.shapes.large)
-                            .clickable { viewModel.setUseSystemFont(!uiState.useSystemFont) },
+                            .clickable {
+                                haptics.toggle()
+                                viewModel.setUseSystemFont(!uiState.useSystemFont)
+                            },
                         shape = MaterialTheme.shapes.large,
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer
@@ -271,7 +285,10 @@ fun SettingsScreen(
                             }
                             Switch(
                                 checked = uiState.useSystemFont,
-                                onCheckedChange = { viewModel.setUseSystemFont(it) }
+                                onCheckedChange = {
+                                    haptics.toggle()
+                                    viewModel.setUseSystemFont(it)
+                                }
                             )
                         }
                     }
@@ -288,7 +305,10 @@ fun SettingsScreen(
                         description = "Fast, privacy-first Anycast DNS resolver",
                         icon = Icons.Rounded.CloudQueue,
                         isSelected = uiState.upstreamDns == "1.1.1.1",
-                        onClick = { viewModel.setUpstreamDns("1.1.1.1") }
+                        onClick = {
+                            if (uiState.upstreamDns != "1.1.1.1") haptics.tap()
+                            viewModel.setUpstreamDns("1.1.1.1")
+                        }
                     )
                     DnsProviderTile(
                         title = "Quad9",
@@ -296,7 +316,10 @@ fun SettingsScreen(
                         description = "Swiss non-profit with upstream malware threat blocking",
                         icon = Icons.Rounded.Shield,
                         isSelected = uiState.upstreamDns == "9.9.9.9",
-                        onClick = { viewModel.setUpstreamDns("9.9.9.9") }
+                        onClick = {
+                            if (uiState.upstreamDns != "9.9.9.9") haptics.tap()
+                            viewModel.setUpstreamDns("9.9.9.9")
+                        }
                     )
                     DnsProviderTile(
                         title = "Google Public DNS",
@@ -304,7 +327,10 @@ fun SettingsScreen(
                         description = "High-availability global anycast resolution",
                         icon = Icons.Rounded.Public,
                         isSelected = uiState.upstreamDns == "8.8.8.8",
-                        onClick = { viewModel.setUpstreamDns("8.8.8.8") }
+                        onClick = {
+                            if (uiState.upstreamDns != "8.8.8.8") haptics.tap()
+                            viewModel.setUpstreamDns("8.8.8.8")
+                        }
                     )
                 }
             }
@@ -406,7 +432,10 @@ fun SettingsScreen(
                             )
 
                             FilledTonalButton(
-                                onClick = { viewModel.updateBlocklist() },
+                                onClick = {
+                                    haptics.heavy()
+                                    viewModel.updateBlocklist()
+                                },
                                 enabled = !uiState.isUpdatingBlocklist,
                                 modifier = Modifier.height(40.dp),
                                 contentPadding = PaddingValues(horizontal = 16.dp)
@@ -452,7 +481,10 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(MaterialTheme.shapes.large)
-                        .clickable { showClearConfirmDialog = true },
+                        .clickable {
+                            haptics.heavy()
+                            showClearConfirmDialog = true
+                        },
                     shape = MaterialTheme.shapes.large,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer
@@ -527,6 +559,7 @@ fun SettingsScreen(
             confirmButton = {
                 FilledTonalButton(
                     onClick = {
+                        haptics.reject()
                         viewModel.clearAllLogs()
                         showClearConfirmDialog = false
                     },
@@ -564,6 +597,7 @@ private fun ThemeButtonGroup(
     currentMode: String,
     onModeSelected: (String) -> Unit
 ) {
+    val haptics = rememberLanternHaptics()
     val options = listOf(
         Triple("system", "System", Icons.Rounded.BrightnessAuto),
         Triple("light", "Light", Icons.Rounded.LightMode),
@@ -583,7 +617,12 @@ private fun ThemeButtonGroup(
             }
             TonalToggleButton(
                 checked = isSelected,
-                onCheckedChange = { if (it) onModeSelected(mode) },
+                onCheckedChange = {
+                    if (it) {
+                        haptics.toggle()
+                        onModeSelected(mode)
+                    }
+                },
                 modifier = Modifier.weight(1f),
                 shapes = shapes
             ) {

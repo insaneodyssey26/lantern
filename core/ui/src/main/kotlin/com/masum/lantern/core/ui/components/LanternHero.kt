@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import com.masum.lantern.core.ui.theme.LanternAmber
 import com.masum.lantern.core.ui.theme.LanternAmberBright
 
@@ -64,6 +65,7 @@ fun LanternHero(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     var menuExpanded by remember { mutableStateOf(false) }
+    val haptics = rememberLanternHaptics()
 
     val topStartRadius by animateDpAsState(
         targetValue = if (isActive) 48.dp else 32.dp,
@@ -183,7 +185,10 @@ fun LanternHero(
                     modifier = Modifier.fillMaxWidth(),
                     leadingButton = {
                         SplitButtonDefaults.LeadingButton(
-                            onClick = onToggle
+                            onClick = {
+                                haptics.heavy()
+                                onToggle()
+                            }
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.PowerSettingsNew,
@@ -200,7 +205,10 @@ fun LanternHero(
                     trailingButton = {
                         SplitButtonDefaults.TrailingButton(
                             checked = menuExpanded,
-                            onCheckedChange = { menuExpanded = it }
+                            onCheckedChange = {
+                                haptics.tap()
+                                menuExpanded = it
+                            }
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.KeyboardArrowDown,
@@ -236,6 +244,7 @@ fun LanternHero(
                             { Icon(Icons.Rounded.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
                         } else null,
                         onClick = {
+                            haptics.toggle()
                             menuExpanded = false
                             onPresetSelected("blocking")
                         }
@@ -259,6 +268,7 @@ fun LanternHero(
                             { Icon(Icons.Rounded.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
                         } else null,
                         onClick = {
+                            haptics.toggle()
                             menuExpanded = false
                             onPresetSelected("audit")
                         }
