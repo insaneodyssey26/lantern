@@ -38,6 +38,7 @@ class LanternVpnService : VpnService() {
 
     private var pfd: ParcelFileDescriptor? = null
     private var readLoop: PacketReadLoop? = null
+    private var forwarder: DnsForwarder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -77,12 +78,13 @@ class LanternVpnService : VpnService() {
 
         pfd = descriptor
 
-        val forwarder = DnsForwarder(this, descriptor, scope, settingsRepository)
+        val forwarderInstance = DnsForwarder(this, descriptor, scope, settingsRepository)
+        forwarder = forwarderInstance
         val resolver = ConnectionOwnerResolver(this)
         val processor = PacketProcessor(
             blocklistRepository = blocklistRepository,
             sessionBus = sessionBus,
-            forwarder = forwarder,
+            forwarder = forwarderInstance,
             resolver = resolver,
             settingsRepository = settingsRepository,
             scope = scope,
@@ -112,6 +114,8 @@ class LanternVpnService : VpnService() {
     private fun stopTunnel() {
         readLoop?.stop()
         readLoop = null
+        forwarder?.close()
+        forwarder = null
         pfd?.close()
         pfd = null
         queryCount.set(0)
