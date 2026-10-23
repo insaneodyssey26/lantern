@@ -52,6 +52,15 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Lantern uses a local-only VPN tunnel to monitor DNS queries on-device. No traffic is routed externally." />
         </service>
+
+        <receiver
+            android:name=".receiver.LanternNotificationReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.masum.lantern.action.STOP_VPN" />
+                <action android:name="com.masum.lantern.action.TOGGLE_SHIELD" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
