@@ -30,12 +30,14 @@ class MainActivity : ComponentActivity() {
         val initialColorTheme = settingsRepository.getColorThemeSync()
         val initialPureBlack = settingsRepository.isPureBlackSync()
         val initialUseSystemFont = settingsRepository.isUseSystemFontSync()
+        val isOnboardingCompleted = settingsRepository.isOnboardingCompletedSync()
 
         setContent {
             val themeMode by settingsRepository.getThemeMode().collectAsStateWithLifecycle(initialValue = initialThemeMode)
             val colorTheme by settingsRepository.getColorTheme().collectAsStateWithLifecycle(initialValue = initialColorTheme)
             val pureBlack by settingsRepository.isPureBlack().collectAsStateWithLifecycle(initialValue = initialPureBlack)
             val useSystemFont by settingsRepository.isUseSystemFont().collectAsStateWithLifecycle(initialValue = initialUseSystemFont)
+            val onboardingCompleted by settingsRepository.isOnboardingCompleted().collectAsStateWithLifecycle(initialValue = isOnboardingCompleted)
 
             val darkTheme = when (themeMode) {
                 "dark"  -> true
@@ -67,7 +69,12 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LanternNavHost()
+                    val startDestination = if (onboardingCompleted) {
+                        com.masum.lantern.navigation.LanternDestination.Home.route
+                    } else {
+                        "onboarding"
+                    }
+                    LanternNavHost(startDestination = startDestination)
                 }
             }
         }

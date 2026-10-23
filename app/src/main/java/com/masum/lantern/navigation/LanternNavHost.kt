@@ -17,6 +17,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -57,6 +59,7 @@ import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import com.masum.lantern.feature.control.ControlScreen
 import com.masum.lantern.feature.domainrules.DomainRulesScreen
 import com.masum.lantern.feature.livefeed.LiveFeedScreen
+import com.masum.lantern.feature.onboarding.OnboardingScreen
 import com.masum.lantern.feature.settings.SettingsScreen
 import com.masum.lantern.feature.stats.StatsScreen
 import com.masum.lantern.feature.stats.detail.SessionDetailScreen
@@ -70,7 +73,7 @@ private const val TAB_TRANSITION_DURATION = 320
 private const val TAB_SLIDE_FRACTION = 0.15f
 
 private fun isSubScreenRoute(route: String?): Boolean =
-    route in listOf("settings", "app_whitelist", "domain_rules") || route?.startsWith("session_detail/") == true
+    route in listOf("settings", "app_whitelist", "domain_rules", "onboarding") || route?.startsWith("session_detail/") == true
 
 private fun destinationOrder(route: String?): Int = when (route) {
     LanternDestination.Home.route -> 0
@@ -83,6 +86,7 @@ private fun destinationOrder(route: String?): Int = when (route) {
 fun LanternNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
+    startDestination: String = LanternDestination.Home.route,
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -95,7 +99,7 @@ fun LanternNavHost(
     ) {
         NavHost(
             navController = navController,
-            startDestination = LanternDestination.Home.route,
+            startDestination = startDestination,
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
@@ -103,6 +107,14 @@ fun LanternNavHost(
                 val targetOrder = destinationOrder(targetState.destination.route)
                 val initialOrder = destinationOrder(initialState.destination.route)
                 when {
+                    initialState.destination.route == "onboarding" -> {
+                        fadeIn(
+                            animationSpec = tween(520, easing = EmphasizedDecelerateEasing)
+                        ) + scaleIn(
+                            initialScale = 0.92f,
+                            animationSpec = tween(520, easing = EmphasizedDecelerateEasing)
+                        )
+                    }
                     isSubScreenRoute(targetState.destination.route) -> {
                         slideIntoContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Start,
@@ -132,6 +144,14 @@ fun LanternNavHost(
                 val targetOrder = destinationOrder(targetState.destination.route)
                 val initialOrder = destinationOrder(initialState.destination.route)
                 when {
+                    initialState.destination.route == "onboarding" -> {
+                        fadeOut(
+                            animationSpec = tween(380, easing = EmphasizedEasing)
+                        ) + scaleOut(
+                            targetScale = 1.05f,
+                            animationSpec = tween(380, easing = EmphasizedEasing)
+                        )
+                    }
                     isSubScreenRoute(targetState.destination.route) -> {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Start,
@@ -270,28 +290,48 @@ fun LanternNavHost(
                     onBackClick = { navController.popBackStack() }
                 )
             }
+            composable("onboarding") {
+                OnboardingScreen(
+                    onFinished = {
+                        navController.navigate(LanternDestination.Home.route) {
+                            popUpTo("onboarding") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
         }
 
         val isSubScreen = isSubScreenRoute(currentDestination?.route)
-        if (!isSubScreen) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(bottom = 16.dp),
-                contentAlignment = Alignment.Center
+        AnimatedVisibility(
+            visible = !isSubScreen,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 16.dp),
+            enter = slideInVertically(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
+                initialOffsetY = { it * 2 }
+            ) + fadeIn(animationSpec = tween(400)),
+            exit = slideOutVertically(
+                animationSpec = tween(250, easing = EmphasizedEasing),
+                targetOffsetY = { it * 2 }
+            ) + fadeOut(animationSpec = tween(200))
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.94f),
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp,
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)
+                ),
+                modifier = Modifier.height(54.dp)
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.94f),
-                    tonalElevation = 4.dp,
-                    shadowElevation = 8.dp,
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)
-                    ),
-                    modifier = Modifier.height(54.dp)
-                ) {
                     Row(
                         modifier = Modifier
                             .padding(horizontal = 6.dp, vertical = 5.dp),
@@ -400,4 +440,3 @@ fun LanternNavHost(
             }
         }
     }
-}

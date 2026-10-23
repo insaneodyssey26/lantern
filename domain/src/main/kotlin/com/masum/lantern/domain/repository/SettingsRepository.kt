@@ -45,4 +45,8 @@ interface SettingsRepository {
     fun getUserBlockedDomains(): Flow<Set<String>>
     fun getUserBlockedDomainsSync(): Set<String>
     suspend fun setUserDomainBlocked(domain: String, blocked: Boolean)
+
+    fun isOnboardingCompleted(): Flow<Boolean>
+    fun isOnboardingCompletedSync(): Boolean
+    suspend fun setOnboardingCompleted(completed: Boolean)
 }

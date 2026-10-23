@@ -32,6 +32,7 @@ class SettingsRepositoryImplTest {
         assertEquals("UDP", repository.getDnsProtocolSync())
         assertFalse(repository.isPureBlackSync())
         assertFalse(repository.isUseSystemFontSync())
+        assertFalse(repository.isOnboardingCompletedSync())
         assertTrue(repository.getUserAllowedDomainsSync().isEmpty())
         assertTrue(repository.getUserBlockedDomainsSync().isEmpty())
     }
@@ -128,5 +129,15 @@ class SettingsRepositoryImplTest {
         repository.setUserDomainBlocked("allowed.com", true)
         assertTrue(repository.getUserBlockedDomainsSync().contains("allowed.com"))
         assertFalse(repository.getUserAllowedDomainsSync().contains("allowed.com"))
+    }
+
+    @Test
+    fun `isOnboardingCompleted updates correctly`() = runTest {
+        repository.isOnboardingCompleted().test {
+            assertFalse(awaitItem())
+            repository.setOnboardingCompleted(true)
+            assertTrue(awaitItem())
+        }
+        assertTrue(repository.isOnboardingCompletedSync())
     }
 }

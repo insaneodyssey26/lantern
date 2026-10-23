@@ -248,6 +248,24 @@ class SettingsRepositoryImpl @Inject constructor(
             .apply()
     }
 
+    override fun isOnboardingCompleted(): Flow<Boolean> = callbackFlow {
+        trySend(isOnboardingCompletedSync())
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_ONBOARDING_COMPLETED) {
+                trySend(isOnboardingCompletedSync())
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override fun isOnboardingCompletedSync(): Boolean =
+        prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
+
+    override suspend fun setOnboardingCompleted(completed: Boolean) {
+        prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, completed).apply()
+    }
+
     companion object {
         private const val KEY_THEME_MODE   = "theme_mode"
         private const val KEY_COLOR_THEME  = "color_theme"
@@ -261,5 +279,6 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_BYPASSED_APPS    = "bypassed_apps"
         private const val KEY_USER_ALLOWED_DOMAINS = "user_allowed_domains"
         private const val KEY_USER_BLOCKED_DOMAINS = "user_blocked_domains"
+        private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
     }
 }
