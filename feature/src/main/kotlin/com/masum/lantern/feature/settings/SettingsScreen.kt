@@ -62,9 +62,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -76,6 +78,7 @@ import androidx.compose.material3.FilledTonalToggleButtonDefaults
 import androidx.compose.material3.FilledTonalToggleButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -116,6 +119,8 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     var showClearConfirmDialog by remember { mutableStateOf(false) }
+    var showAboutSheet by remember { mutableStateOf(false) }
+    val aboutSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val haptics = rememberLanternHaptics()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -797,7 +802,12 @@ fun SettingsScreen(
             }
 
             item {
-                LanternFooter()
+                LanternFooter(
+                    onAboutClick = {
+                        haptics.tap()
+                        showAboutSheet = true
+                    }
+                )
             }
         }
     }
@@ -844,6 +854,18 @@ fun SettingsScreen(
                 }
             }
         )
+    }
+
+    if (showAboutSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showAboutSheet = false },
+            sheetState = aboutSheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
+            AboutLanternSheet(
+                onDismiss = { showAboutSheet = false }
+            )
+        }
     }
     }
 }
@@ -1129,25 +1151,221 @@ private fun DnsProviderTile(
 }
 
 @Composable
-private fun LanternFooter() {
+private fun LanternFooter(
+    onAboutClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 24.dp),
+            .padding(top = 8.dp, bottom = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(
-            text = "Lantern",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = "Version 1.0",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Surface(
+            onClick = onAboutClick,
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+            )
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Shield,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "Lantern",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                text = "v1.0",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = "About, architecture, privacy & source code",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AboutLanternSheet(
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val haptics = rememberLanternHaptics()
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 36.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Shield,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Lantern",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "On-Device DNS Firewall & Privacy Guardian",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "How Lantern Works",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Lantern establishes a local Android VpnService interface strictly to intercept port 53 DNS queries on your device. Unlike traditional commercial VPNs, zero user traffic leaves your phone through external proxies or tunnels.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Queried domains are matched in microsecond time against a 60,000+ threat and advertising blocklist using a high-performance in-memory Radix Tree. Blocked hosts receive synthetic NXDOMAIN responses instantly, saving mobile bandwidth and battery.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Privacy Policy & Zero-Telemetry Guarantee",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "• 100% On-Device Processing: Query logs, app stats, and custom rules are saved strictly inside an encrypted local Room SQLite database on your device.\n• No Remote Telemetry: Lantern contains no analytics SDKs, no tracking beacons, and no cloud backends.\n• Upstream Security: Queries to upstream resolvers (Cloudflare, Quad9, Google) can be secured with DNS-over-HTTPS (RFC 8484) or DNS-over-TLS (RFC 7858) to defeat ISP surveillance.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.tap()
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/insaneodyssey26/lantern"))
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.weight(1f),
+                shape = MaterialTheme.shapes.large
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.OpenInNew,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("GitHub Source", maxLines = 1)
+            }
+
+            Button(
+                onClick = {
+                    haptics.tap()
+                    onDismiss()
+                },
+                modifier = Modifier.weight(1f),
+                shape = MaterialTheme.shapes.large
+            ) {
+                Text("Close", maxLines = 1)
+            }
+        }
     }
 }
 
