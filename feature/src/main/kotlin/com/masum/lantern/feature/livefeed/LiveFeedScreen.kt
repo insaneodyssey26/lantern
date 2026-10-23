@@ -95,6 +95,7 @@ import androidx.compose.ui.unit.dp
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.masum.lantern.core.ui.components.AppIconImage
 import com.masum.lantern.core.ui.components.EmptyState
 import com.masum.lantern.core.ui.components.ExpressiveVerdict
 import com.masum.lantern.core.ui.components.ExpressiveVerdictBadge
@@ -725,32 +726,37 @@ fun QueryDetailSheet(
             .padding(bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = query.appName,
-                    style = MaterialTheme.typography.titleLarge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                AppIconImage(
+                    packageName = query.packageName,
+                    appName = query.appName,
+                    size = 44.dp
                 )
-                Text(
-                    text = query.packageName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = query.appName,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = query.packageName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                val verdict = when {
+                    isCustomAllowed -> ExpressiveVerdict.SAFE
+                    isCustomBlocked -> ExpressiveVerdict.BLOCKED
+                    query.verdict == VerdictUiState.Tracker && query.isBlocked -> ExpressiveVerdict.BLOCKED
+                    query.verdict == VerdictUiState.Tracker && !query.isBlocked -> ExpressiveVerdict.AUDITED
+                    query.verdict == VerdictUiState.Clean -> ExpressiveVerdict.SAFE
+                    else -> ExpressiveVerdict.BYPASSED
+                }
+                ExpressiveVerdictBadge(verdict = verdict)
             }
-            val verdict = when {
-                isCustomAllowed -> ExpressiveVerdict.SAFE
-                isCustomBlocked -> ExpressiveVerdict.BLOCKED
-                query.verdict == VerdictUiState.Tracker && query.isBlocked -> ExpressiveVerdict.BLOCKED
-                query.verdict == VerdictUiState.Tracker && !query.isBlocked -> ExpressiveVerdict.AUDITED
-                query.verdict == VerdictUiState.Clean -> ExpressiveVerdict.SAFE
-                else -> ExpressiveVerdict.BYPASSED
-            }
-            ExpressiveVerdictBadge(verdict = verdict)
-        }
 
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),

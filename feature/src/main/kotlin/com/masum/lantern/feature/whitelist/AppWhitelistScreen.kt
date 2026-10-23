@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.masum.lantern.core.ui.components.AppIconImage
 import com.masum.lantern.core.ui.components.DrawablePainter
 import com.masum.lantern.core.ui.navigation.PredictiveBackContainer
 import com.masum.lantern.core.ui.components.EmptyState
@@ -318,36 +319,11 @@ fun AppWhitelistScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
-                                val appIcon = remember(appInfo.packageName) {
-                                    runCatching {
-                                        context.packageManager.getApplicationIcon(appInfo.packageName)
-                                    }.getOrNull()
-                                }
-
-                                if (appIcon != null) {
-                                    androidx.compose.foundation.Image(
-                                        painter = DrawablePainter(appIcon),
-                                        contentDescription = appInfo.appName,
-                                        modifier = Modifier
-                                            .size(42.dp)
-                                            .clip(CircleShape)
-                                    )
-                                } else {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(42.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = appInfo.appName.take(1).uppercase(),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
+                                AppIconImage(
+                                    packageName = appInfo.packageName,
+                                    appName = appInfo.appName,
+                                    size = 42.dp
+                                )
 
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(

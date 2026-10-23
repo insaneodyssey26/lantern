@@ -28,6 +28,17 @@ interface SessionDao {
                SUM(CASE WHEN q.verdictType = 1 THEN 1 ELSE 0 END) AS trackerQueries
         FROM sessions s
         LEFT JOIN dns_queries q ON q.sessionId = s.id
+        WHERE s.id = :sessionId
+        GROUP BY s.id
+    """)
+    fun observeSessionWithCounts(sessionId: Long): Flow<SessionWithCountsTuple?>
+
+    @Query("""
+        SELECT s.id AS sessionId, s.startedAt, s.endedAt,
+               COUNT(q.id) AS totalQueries,
+               SUM(CASE WHEN q.verdictType = 1 THEN 1 ELSE 0 END) AS trackerQueries
+        FROM sessions s
+        LEFT JOIN dns_queries q ON q.sessionId = s.id
         GROUP BY s.id
         ORDER BY s.startedAt DESC
     """)

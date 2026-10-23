@@ -87,6 +87,9 @@ class DnsLogRepositoryImpl @Inject constructor(
             list.map { it.toSessionSummary() }
         }
 
+    override fun observeSession(sessionId: Long): Flow<SessionSummary?> =
+        sessionDao.observeSessionWithCounts(sessionId).map { it?.toSessionSummary() }
+
     override fun observePerAppStats(sessionId: Long?): Flow<List<PerAppStat>> =
         dnsQueryDao.observePerAppStats(sessionId).map { list ->
             list.map { it.toPerAppStat() }
@@ -104,6 +107,16 @@ class DnsLogRepositoryImpl @Inject constructor(
 
     override fun observeAppQueries(packageName: String): Flow<List<DnsQuery>> =
         dnsQueryDao.observeByPackage(packageName).map { list ->
+            list.map { it.toDomain() }
+        }
+
+    override fun observeSessionQueries(sessionId: Long): Flow<List<DnsQuery>> =
+        dnsQueryDao.observeBySession(sessionId).map { list ->
+            list.map { it.toDomain() }
+        }
+
+    override fun observeSessionAppQueries(sessionId: Long, packageName: String): Flow<List<DnsQuery>> =
+        dnsQueryDao.observeBySessionAndPackage(sessionId, packageName).map { list ->
             list.map { it.toDomain() }
         }
 

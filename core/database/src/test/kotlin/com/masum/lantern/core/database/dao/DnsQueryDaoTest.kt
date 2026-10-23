@@ -133,6 +133,20 @@ class DnsQueryDaoTest {
     }
 
     @Test
+    fun `observeBySession returns queries for specific session`() = runTest {
+        dao.insertAll(listOf(
+            entity("sess1.com", sessionId = 1L),
+            entity("sess2.com", sessionId = 2L),
+            entity("sess1-b.com", sessionId = 1L),
+        ))
+        val session1Queries = dao.observeBySession(1L).first()
+        assertEquals(2, session1Queries.size)
+        val session2Queries = dao.observeBySession(2L).first()
+        assertEquals(1, session2Queries.size)
+        assertEquals("sess2.com", session2Queries[0].domain)
+    }
+
+    @Test
     fun `top domains returns correct counts`() = runTest {
         dao.insertAll(listOf(
             entity("ads.com", VERDICT_TRACKER),

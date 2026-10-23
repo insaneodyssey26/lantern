@@ -85,6 +85,7 @@ import androidx.compose.ui.unit.sp
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.masum.lantern.core.ui.components.AppIconImage
 import com.masum.lantern.core.ui.components.EmptyState
 import com.masum.lantern.core.ui.components.ExpressiveVerdict
 import com.masum.lantern.core.ui.components.ExpressiveVerdictBadge
@@ -107,6 +108,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun StatsScreen(
     onSettingsClick: () -> Unit,
+    onSessionClick: (Long) -> Unit = {},
     viewModel: StatsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -222,7 +224,10 @@ fun StatsScreen(
                         apps = uiState.apps,
                         onAppClick = { selectedAppForInspection = it }
                     )
-                    2 -> SessionsTabContent(sessions = uiState.sessions)
+                    2 -> SessionsTabContent(
+                        sessions = uiState.sessions,
+                        onSessionClick = onSessionClick
+                    )
                 }
             }
         }
@@ -440,20 +445,11 @@ private fun AppsTabContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = app.appName.take(1).uppercase(),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        AppIconImage(
+                            packageName = app.packageName,
+                            appName = app.appName,
+                            size = 46.dp
+                        )
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
@@ -481,7 +477,11 @@ private fun AppsTabContent(
 }
 
 @Composable
-private fun SessionsTabContent(sessions: List<SessionUiModel>) {
+private fun SessionsTabContent(
+    sessions: List<SessionUiModel>,
+    onSessionClick: (Long) -> Unit
+) {
+    val haptics = rememberLanternHaptics()
     if (sessions.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -500,7 +500,13 @@ private fun SessionsTabContent(sessions: List<SessionUiModel>) {
         ) {
             items(items = sessions, key = { it.sessionId }) { session ->
                 ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.large)
+                        .clickable {
+                            haptics.tap()
+                            onSessionClick(session.sessionId)
+                        },
                     shape = MaterialTheme.shapes.large,
                     colors = CardDefaults.elevatedCardColors(
                         containerColor = if (session.isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
@@ -594,8 +600,13 @@ private fun AppQueriesBottomSheet(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+                AppIconImage(
+                    packageName = app.packageName,
+                    appName = app.appName,
+                    size = 46.dp
+                )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = app.appName,

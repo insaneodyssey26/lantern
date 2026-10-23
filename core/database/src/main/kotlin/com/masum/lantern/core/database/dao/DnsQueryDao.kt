@@ -65,6 +65,12 @@ interface DnsQueryDao {
     @Query("SELECT * FROM dns_queries WHERE appPackageName = :packageName ORDER BY timestamp DESC")
     fun observeByPackage(packageName: String): Flow<List<DnsQueryEntity>>
 
+    @Query("SELECT * FROM dns_queries WHERE sessionId = :sessionId ORDER BY timestamp DESC")
+    fun observeBySession(sessionId: Long): Flow<List<DnsQueryEntity>>
+
+    @Query("SELECT * FROM dns_queries WHERE sessionId = :sessionId AND appPackageName = :packageName ORDER BY timestamp DESC")
+    fun observeBySessionAndPackage(sessionId: Long, packageName: String): Flow<List<DnsQueryEntity>>
+
     @Query("SELECT COUNT(*) FROM dns_queries")
     suspend fun count(): Int
 

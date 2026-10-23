@@ -47,16 +47,19 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import com.masum.lantern.feature.control.ControlScreen
 import com.masum.lantern.feature.domainrules.DomainRulesScreen
 import com.masum.lantern.feature.livefeed.LiveFeedScreen
 import com.masum.lantern.feature.settings.SettingsScreen
 import com.masum.lantern.feature.stats.StatsScreen
+import com.masum.lantern.feature.stats.detail.SessionDetailScreen
 import com.masum.lantern.feature.whitelist.AppWhitelistScreen
 
 private val EmphasizedEasing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
@@ -65,6 +68,9 @@ private const val NAV_ENTER_DURATION = 450
 private const val NAV_EXIT_DURATION = 380
 private const val TAB_TRANSITION_DURATION = 320
 private const val TAB_SLIDE_FRACTION = 0.15f
+
+private fun isSubScreenRoute(route: String?): Boolean =
+    route in listOf("settings", "app_whitelist", "domain_rules") || route?.startsWith("session_detail/") == true
 
 private fun destinationOrder(route: String?): Int = when (route) {
     LanternDestination.Home.route -> 0
@@ -97,7 +103,7 @@ fun LanternNavHost(
                 val targetOrder = destinationOrder(targetState.destination.route)
                 val initialOrder = destinationOrder(initialState.destination.route)
                 when {
-                    targetState.destination.route in listOf("settings", "app_whitelist", "domain_rules") -> {
+                    isSubScreenRoute(targetState.destination.route) -> {
                         slideIntoContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Start,
                             animationSpec = tween(NAV_ENTER_DURATION, easing = EmphasizedDecelerateEasing),
@@ -126,7 +132,7 @@ fun LanternNavHost(
                 val targetOrder = destinationOrder(targetState.destination.route)
                 val initialOrder = destinationOrder(initialState.destination.route)
                 when {
-                    targetState.destination.route in listOf("settings", "app_whitelist", "domain_rules") -> {
+                    isSubScreenRoute(targetState.destination.route) -> {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Start,
                             animationSpec = tween(NAV_EXIT_DURATION, easing = EmphasizedEasing),
@@ -155,7 +161,7 @@ fun LanternNavHost(
                 val targetOrder = destinationOrder(targetState.destination.route)
                 val initialOrder = destinationOrder(initialState.destination.route)
                 when {
-                    initialState.destination.route in listOf("settings", "app_whitelist", "domain_rules") -> {
+                    isSubScreenRoute(initialState.destination.route) -> {
                         scaleIn(
                             initialScale = 0.95f,
                             animationSpec = tween(NAV_ENTER_DURATION, easing = EmphasizedDecelerateEasing)
@@ -180,7 +186,7 @@ fun LanternNavHost(
                 val targetOrder = destinationOrder(targetState.destination.route)
                 val initialOrder = destinationOrder(initialState.destination.route)
                 when {
-                    initialState.destination.route in listOf("settings", "app_whitelist", "domain_rules") -> {
+                    isSubScreenRoute(initialState.destination.route) -> {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.End,
                             animationSpec = tween(NAV_EXIT_DURATION, easing = EmphasizedEasing),
@@ -233,7 +239,18 @@ fun LanternNavHost(
                     }
                 }
                 StatsScreen(
-                    onSettingsClick = { navController.navigate("settings") }
+                    onSettingsClick = { navController.navigate("settings") },
+                    onSessionClick = { sessionId ->
+                        navController.navigate("session_detail/$sessionId")
+                    }
+                )
+            }
+            composable(
+                route = "session_detail/{sessionId}",
+                arguments = listOf(navArgument("sessionId") { type = NavType.LongType })
+            ) {
+                SessionDetailScreen(
+                    onBackClick = { navController.popBackStack() }
                 )
             }
             composable("settings") {
@@ -255,9 +272,7 @@ fun LanternNavHost(
             }
         }
 
-        val isSubScreen = currentDestination?.route == "settings" ||
-            currentDestination?.route == "app_whitelist" ||
-            currentDestination?.route == "domain_rules"
+        val isSubScreen = isSubScreenRoute(currentDestination?.route)
         if (!isSubScreen) {
             Box(
                 modifier = Modifier
