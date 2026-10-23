@@ -95,6 +95,9 @@ import com.masum.lantern.feature.util.formatDuration
 @Composable
 fun ControlScreen(
     onSettingsClick: () -> Unit,
+    onNavigateToTraffic: (String) -> Unit = {},
+    onNavigateToInsights: () -> Unit = {},
+    onNavigateToDomainRules: () -> Unit = {},
     viewModel: ControlViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -253,7 +256,23 @@ fun ControlScreen(
                     totalQueries = uiState.totalQueries,
                     trackerQueries = uiState.trackerQueries,
                     blocklistCount = uiState.blocklistCount,
-                    isBlockingEnabled = uiState.isBlockingEnabled
+                    isBlockingEnabled = uiState.isBlockingEnabled,
+                    onBlockedClick = {
+                        haptics.tap()
+                        onNavigateToTraffic("Trackers")
+                    },
+                    onCleanClick = {
+                        haptics.tap()
+                        onNavigateToTraffic("Clean")
+                    },
+                    onTotalAuditedClick = {
+                        haptics.tap()
+                        onNavigateToInsights()
+                    },
+                    onRulesetClick = {
+                        haptics.tap()
+                        onNavigateToDomainRules()
+                    }
                 )
             }
 
@@ -365,7 +384,11 @@ private fun ExpressiveSegmentedMetrics(
     totalQueries: Int,
     trackerQueries: Int,
     blocklistCount: Int,
-    isBlockingEnabled: Boolean
+    isBlockingEnabled: Boolean,
+    onBlockedClick: () -> Unit = {},
+    onCleanClick: () -> Unit = {},
+    onTotalAuditedClick: () -> Unit = {},
+    onRulesetClick: () -> Unit = {}
 ) {
     val cleanQueries = (totalQueries - trackerQueries).coerceAtLeast(0)
 
@@ -384,6 +407,7 @@ private fun ExpressiveSegmentedMetrics(
                 icon = if (isBlockingEnabled) Icons.Rounded.Block else Icons.Rounded.Shield,
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                onClick = onBlockedClick,
                 modifier = Modifier.weight(1f)
             )
 
@@ -394,6 +418,7 @@ private fun ExpressiveSegmentedMetrics(
                 icon = Icons.Rounded.CheckCircleOutline,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                onClick = onCleanClick,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -409,6 +434,7 @@ private fun ExpressiveSegmentedMetrics(
                 icon = Icons.Rounded.Speed,
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 contentColor = MaterialTheme.colorScheme.onSurface,
+                onClick = onTotalAuditedClick,
                 modifier = Modifier.weight(1f)
             )
 
@@ -419,6 +445,7 @@ private fun ExpressiveSegmentedMetrics(
                 icon = Icons.Rounded.Dns,
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 contentColor = MaterialTheme.colorScheme.onSurface,
+                onClick = onRulesetClick,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -433,9 +460,11 @@ private fun MetricTile(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     containerColor: Color,
     contentColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier,
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = containerColor)
@@ -457,12 +486,23 @@ private fun MetricTile(
                     color = contentColor.copy(alpha = 0.8f),
                     fontWeight = FontWeight.Medium
                 )
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = contentColor.copy(alpha = 0.7f),
-                    modifier = Modifier.size(18.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = contentColor.copy(alpha = 0.7f),
+                        modifier = Modifier.size(17.dp)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = contentColor.copy(alpha = 0.4f),
+                        modifier = Modifier.size(15.dp)
+                    )
+                }
             }
 
             Text(

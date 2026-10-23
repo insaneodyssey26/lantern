@@ -112,6 +112,7 @@ enum class FeedFilter { All, Trackers, Clean }
 @Composable
 fun LiveFeedScreen(
     onSettingsClick: () -> Unit,
+    initialFilter: FeedFilter = FeedFilter.All,
     viewModel: LiveFeedViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -122,7 +123,7 @@ fun LiveFeedScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf(FeedFilter.All) }
+    var selectedFilter by remember(initialFilter) { mutableStateOf(initialFilter) }
     var selectedQuery by remember { mutableStateOf<DnsQueryUiModel?>(null) }
     var showClearConfirmDialog by remember { mutableStateOf(false) }
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)

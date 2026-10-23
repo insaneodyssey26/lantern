@@ -39,7 +39,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +60,7 @@ import androidx.navigation.navArgument
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import com.masum.lantern.feature.control.ControlScreen
 import com.masum.lantern.feature.domainrules.DomainRulesScreen
+import com.masum.lantern.feature.livefeed.FeedFilter
 import com.masum.lantern.feature.livefeed.LiveFeedScreen
 import com.masum.lantern.feature.onboarding.OnboardingScreen
 import com.masum.lantern.feature.settings.SettingsScreen
@@ -97,6 +100,8 @@ fun LanternNavHost(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        var trafficInitialFilter by remember { mutableStateOf(FeedFilter.All) }
+
         NavHost(
             navController = navController,
             startDestination = startDestination,
@@ -231,7 +236,33 @@ fun LanternNavHost(
         ) {
             composable(LanternDestination.Home.route) {
                 ControlScreen(
-                    onSettingsClick = { navController.navigate("settings") }
+                    onSettingsClick = { navController.navigate("settings") },
+                    onNavigateToTraffic = { filterName ->
+                        trafficInitialFilter = when (filterName) {
+                            "Trackers" -> FeedFilter.Trackers
+                            "Clean" -> FeedFilter.Clean
+                            else -> FeedFilter.All
+                        }
+                        navController.navigate(LanternDestination.Traffic.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNavigateToInsights = {
+                        navController.navigate(LanternDestination.Insights.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNavigateToDomainRules = {
+                        navController.navigate("domain_rules")
+                    }
                 )
             }
             composable(LanternDestination.Traffic.route) {
@@ -245,7 +276,8 @@ fun LanternNavHost(
                     }
                 }
                 LiveFeedScreen(
-                    onSettingsClick = { navController.navigate("settings") }
+                    onSettingsClick = { navController.navigate("settings") },
+                    initialFilter = trafficInitialFilter
                 )
             }
             composable(LanternDestination.Insights.route) {
