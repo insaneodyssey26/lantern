@@ -310,12 +310,9 @@ fun LanternNavHost(
                 .navigationBarsPadding()
                 .padding(bottom = 16.dp),
             enter = slideInVertically(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMediumLow
-                ),
+                animationSpec = tween(NAV_ENTER_DURATION, easing = EmphasizedDecelerateEasing),
                 initialOffsetY = { it * 2 }
-            ) + fadeIn(animationSpec = tween(400)),
+            ) + fadeIn(animationSpec = tween(NAV_ENTER_DURATION, easing = EmphasizedDecelerateEasing)),
             exit = slideOutVertically(
                 animationSpec = tween(250, easing = EmphasizedEasing),
                 targetOffsetY = { it * 2 }

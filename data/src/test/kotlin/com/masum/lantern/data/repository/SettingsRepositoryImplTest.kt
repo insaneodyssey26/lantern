@@ -33,6 +33,7 @@ class SettingsRepositoryImplTest {
         assertFalse(repository.isPureBlackSync())
         assertFalse(repository.isUseSystemFontSync())
         assertFalse(repository.isOnboardingCompletedSync())
+        assertFalse(repository.isFeatureGuideCompletedSync())
         assertTrue(repository.getUserAllowedDomainsSync().isEmpty())
         assertTrue(repository.getUserBlockedDomainsSync().isEmpty())
     }
@@ -139,5 +140,15 @@ class SettingsRepositoryImplTest {
             assertTrue(awaitItem())
         }
         assertTrue(repository.isOnboardingCompletedSync())
+    }
+
+    @Test
+    fun `isFeatureGuideCompleted updates correctly`() = runTest {
+        repository.isFeatureGuideCompleted().test {
+            assertFalse(awaitItem())
+            repository.setFeatureGuideCompleted(true)
+            assertTrue(awaitItem())
+        }
+        assertTrue(repository.isFeatureGuideCompletedSync())
     }
 }

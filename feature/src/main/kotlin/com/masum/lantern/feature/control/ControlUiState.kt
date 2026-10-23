@@ -12,4 +12,5 @@ data class ControlUiState(
     val blocklistCount: Int = 0,
     val isBlockingEnabled: Boolean = true,
     val upstreamDns: String = "1.1.1.1",
+    val isFeatureGuideCompleted: Boolean = true,
 )

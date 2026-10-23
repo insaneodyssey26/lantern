@@ -128,6 +128,12 @@ class ControlViewModelTest {
     }
 
     @Test
+    fun `setUpstreamDns delegates to settings repository`() = runTest {
+        viewModel.setUpstreamDns("9.9.9.9")
+        coVerify { settingsRepository.setUpstreamDns("9.9.9.9") }
+    }
+
+    @Test
     fun `onConsentDismissed clears pending intent`() {
         viewModel.onConsentDismissed()
         assertEquals(null, viewModel.uiState.value.pendingConsentIntent)

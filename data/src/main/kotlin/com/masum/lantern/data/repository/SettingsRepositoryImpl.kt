@@ -54,15 +54,18 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override fun getUpstreamDns(): Flow<String> = callbackFlow {
-        trySend(prefs.getString(KEY_UPSTREAM_DNS, "1.1.1.1") ?: "1.1.1.1")
+        trySend(getUpstreamDnsSync())
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             if (key == KEY_UPSTREAM_DNS) {
-                trySend(prefs.getString(KEY_UPSTREAM_DNS, "1.1.1.1") ?: "1.1.1.1")
+                trySend(getUpstreamDnsSync())
             }
         }
         prefs.registerOnSharedPreferenceChangeListener(listener)
         awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
+
+    override fun getUpstreamDnsSync(): String =
+        prefs.getString(KEY_UPSTREAM_DNS, "1.1.1.1") ?: "1.1.1.1"
 
     override suspend fun setUpstreamDns(dns: String) {
         prefs.edit().putString(KEY_UPSTREAM_DNS, dns).apply()
@@ -266,6 +269,24 @@ class SettingsRepositoryImpl @Inject constructor(
         prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, completed).apply()
     }
 
+    override fun isFeatureGuideCompleted(): Flow<Boolean> = callbackFlow {
+        trySend(isFeatureGuideCompletedSync())
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_FEATURE_GUIDE_COMPLETED) {
+                trySend(isFeatureGuideCompletedSync())
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override fun isFeatureGuideCompletedSync(): Boolean =
+        prefs.getBoolean(KEY_FEATURE_GUIDE_COMPLETED, false)
+
+    override suspend fun setFeatureGuideCompleted(completed: Boolean) {
+        prefs.edit().putBoolean(KEY_FEATURE_GUIDE_COMPLETED, completed).apply()
+    }
+
     companion object {
         private const val KEY_THEME_MODE   = "theme_mode"
         private const val KEY_COLOR_THEME  = "color_theme"
@@ -280,5 +301,6 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_USER_ALLOWED_DOMAINS = "user_allowed_domains"
         private const val KEY_USER_BLOCKED_DOMAINS = "user_blocked_domains"
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
+        private const val KEY_FEATURE_GUIDE_COMPLETED = "feature_guide_completed"
     }
 }

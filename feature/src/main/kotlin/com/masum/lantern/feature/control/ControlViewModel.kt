@@ -56,12 +56,29 @@ class ControlViewModel @Inject constructor(
                 _uiState.update { it.copy(upstreamDns = dns) }
             }
         }
+        viewModelScope.launch {
+            settingsRepository.isFeatureGuideCompleted().collect { completed ->
+                _uiState.update { it.copy(isFeatureGuideCompleted = completed) }
+            }
+        }
         refreshPrivateDnsStatus()
+    }
+
+    fun completeFeatureGuide() {
+        viewModelScope.launch {
+            settingsRepository.setFeatureGuideCompleted(true)
+        }
     }
 
     fun setBlockingEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setBlockingEnabled(enabled)
+        }
+    }
+
+    fun setUpstreamDns(dns: String) {
+        viewModelScope.launch {
+            settingsRepository.setUpstreamDns(dns)
         }
     }
 

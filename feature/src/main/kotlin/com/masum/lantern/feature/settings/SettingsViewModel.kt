@@ -104,7 +104,15 @@ class SettingsViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = SettingsUiState()
+        initialValue = SettingsUiState(
+            themeMode = settingsRepository.getThemeModeSync(),
+            colorTheme = settingsRepository.getColorThemeSync(),
+            pureBlack = settingsRepository.isPureBlackSync(),
+            useSystemFont = settingsRepository.isUseSystemFontSync(),
+            upstreamDns = settingsRepository.getUpstreamDnsSync(),
+            dnsProtocol = settingsRepository.getDnsProtocolSync(),
+            blocklistCount = blocklistRepository.domainCount()
+        )
     )
 
     fun setThemeMode(mode: String) {

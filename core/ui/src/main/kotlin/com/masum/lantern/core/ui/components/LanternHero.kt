@@ -130,29 +130,13 @@ fun LanternHero(
                     text = if (isActive) {
                         if (isBlockingEnabled) "Filtering ads, trackers, and telemetry on-device"
                         else "Auditing outbound DNS without blocking queries"
-                    } else "Tap the power button to illuminate local DNS filtering",
+                    } else "Tap the power button to start protection",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
             }
-
-            MasterActionButton(
-                isActive = isActive,
-                onClick = {
-                    haptics.heavy()
-                    onToggle()
-                }
-            )
-
-            ProtectionModePill(
-                isBlockingEnabled = isBlockingEnabled,
-                onModeSelected = { mode ->
-                    haptics.toggle()
-                    onPresetSelected(mode)
-                }
-            )
         }
     }
 }

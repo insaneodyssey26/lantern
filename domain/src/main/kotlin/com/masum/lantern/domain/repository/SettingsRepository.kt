@@ -12,6 +12,7 @@ interface SettingsRepository {
     suspend fun setColorTheme(theme: String)
 
     fun getUpstreamDns(): Flow<String>
+    fun getUpstreamDnsSync(): String
     suspend fun setUpstreamDns(dns: String)
 
     fun getDnsProtocol(): Flow<String>
@@ -49,4 +50,8 @@ interface SettingsRepository {
     fun isOnboardingCompleted(): Flow<Boolean>
     fun isOnboardingCompletedSync(): Boolean
     suspend fun setOnboardingCompleted(completed: Boolean)
+
+    fun isFeatureGuideCompleted(): Flow<Boolean>
+    fun isFeatureGuideCompletedSync(): Boolean
+    suspend fun setFeatureGuideCompleted(completed: Boolean)
 }

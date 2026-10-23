@@ -27,33 +27,50 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Block
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircleOutline
 import androidx.compose.material.icons.rounded.Dns
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledTonalToggleButton
+import androidx.compose.material3.FilledTonalToggleButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SplitButtonDefaults
+import androidx.compose.material3.SplitButtonLayout
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,7 +80,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import com.masum.lantern.core.ui.components.LanternHero
+import com.masum.lantern.core.ui.components.SpotlightStep
+import com.masum.lantern.core.ui.components.SpotlightTourOverlay
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import com.masum.lantern.core.ui.theme.LanternAmber
 import com.masum.lantern.domain.model.MonitoringState
@@ -80,6 +102,25 @@ fun ControlScreen(
     val isActive = activeSession != null
     val haptics = rememberLanternHaptics()
 
+    var shieldRect by remember { mutableStateOf<Rect?>(null) }
+    var snapshotRect by remember { mutableStateOf<Rect?>(null) }
+    var currentTourStepIndex by remember { mutableIntStateOf(0) }
+
+    val tourSteps = listOf(
+        SpotlightStep(
+            title = "Power Shield",
+            description = "Tap the shield anytime to turn on your on-device firewall and start blocking trackers.",
+            targetRect = shieldRect,
+            isBottomTarget = false
+        ),
+        SpotlightStep(
+            title = "Security Snapshot",
+            description = "Monitor your active DNS upstream, protocol, and threat blocklist count at a glance.",
+            targetRect = snapshotRect,
+            isBottomTarget = false
+        )
+    )
+
     val consentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -91,52 +132,18 @@ fun ControlScreen(
         uiState.pendingConsentIntent?.let { consentLauncher.launch(it) }
     }
 
-    Scaffold(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(
-                            text = "Lantern",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.5).sp
-                        )
-                        Box(
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .background(
-                                    if (isActive) LanternAmber.copy(alpha = 0.18f)
-                                    else MaterialTheme.colorScheme.surfaceContainerHighest
-                                )
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (isActive) LanternAmber
-                                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                        )
-                                )
-                                Text(
-                                    text = if (isActive) "ACTIVE" else "OFFLINE",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isActive) LanternAmber
-                                    else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
+                    Text(
+                        text = "Lantern",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.75).sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 },
                 actions = {
                     FilledTonalIconButton(
@@ -179,26 +186,39 @@ fun ControlScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                LanternHero(
-                    isActive = isActive,
-                    onToggle = { viewModel.onToggleClick() },
-                    isBlockingEnabled = uiState.isBlockingEnabled,
-                    onPresetSelected = { preset ->
-                        when (preset) {
-                            "blocking" -> viewModel.setBlockingEnabled(true)
-                            "audit" -> viewModel.setBlockingEnabled(false)
+                Box(modifier = Modifier.onGloballyPositioned { coordinates ->
+                    shieldRect = coordinates.boundsInRoot()
+                }) {
+                    LanternHero(
+                        isActive = isActive,
+                        onToggle = { viewModel.onToggleClick() },
+                        isBlockingEnabled = uiState.isBlockingEnabled,
+                        onPresetSelected = { preset ->
+                            when (preset) {
+                                "blocking" -> viewModel.setBlockingEnabled(true)
+                                "audit" -> viewModel.setBlockingEnabled(false)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
 
             item {
-                QuickSecuritySnapshot(
-                    upstreamDns = uiState.upstreamDns,
-                    blocklistCount = uiState.blocklistCount,
-                    isBlockingEnabled = uiState.isBlockingEnabled,
-                    isActive = isActive
-                )
+                Box(modifier = Modifier.onGloballyPositioned { coordinates ->
+                    snapshotRect = coordinates.boundsInRoot()
+                }) {
+                    QuickSecuritySnapshot(
+                        upstreamDns = uiState.upstreamDns,
+                        isBlockingEnabled = uiState.isBlockingEnabled,
+                        isActive = isActive,
+                        onSelectDns = { dns ->
+                            viewModel.setUpstreamDns(dns)
+                        },
+                        onSelectBlockingEnabled = { enabled ->
+                            viewModel.setBlockingEnabled(enabled)
+                        }
+                    )
+                }
             }
 
             if (isActive) {
@@ -242,6 +262,25 @@ fun ControlScreen(
             }
         }
     }
+
+    if (!uiState.isFeatureGuideCompleted && currentTourStepIndex < tourSteps.size) {
+        SpotlightTourOverlay(
+            step = tourSteps[currentTourStepIndex],
+            stepIndex = currentTourStepIndex,
+            totalSteps = tourSteps.size,
+            onNext = {
+                if (currentTourStepIndex < tourSteps.size - 1) {
+                    currentTourStepIndex++
+                } else {
+                    viewModel.completeFeatureGuide()
+                }
+            },
+            onSkip = {
+                viewModel.completeFeatureGuide()
+            }
+        )
+    }
+}
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -442,19 +481,37 @@ private fun MetricTile(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun QuickSecuritySnapshot(
     upstreamDns: String,
-    blocklistCount: Int,
     isBlockingEnabled: Boolean,
-    isActive: Boolean
+    isActive: Boolean,
+    onSelectDns: (String) -> Unit = {},
+    onSelectBlockingEnabled: (Boolean) -> Unit = {}
 ) {
+    val haptics = rememberLanternHaptics()
+    var dnsExpanded by remember { mutableStateOf(false) }
+    var modeExpanded by remember { mutableStateOf(false) }
+
     val dnsName = when (upstreamDns) {
         "1.1.1.1" -> "Cloudflare"
         "9.9.9.9" -> "Quad9"
         "8.8.8.8" -> "Google"
         else -> upstreamDns
     }
+
+    val dnsArrowRotation by animateFloatAsState(
+        targetValue = if (dnsExpanded) 180f else 0f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "dnsArrowRotation"
+    )
+
+    val modeArrowRotation by animateFloatAsState(
+        targetValue = if (modeExpanded) 180f else 0f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "modeArrowRotation"
+    )
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -463,87 +520,230 @@ private fun QuickSecuritySnapshot(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                    contentAlignment = Alignment.Center
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Dns,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Dns,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Upstream DNS",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = upstreamDns,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-                Column {
-                    Text(
-                        text = "DNS Resolver",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                Box {
+                    SplitButtonLayout(
+                        leadingButton = {
+                            SplitButtonDefaults.TonalLeadingButton(
+                                onClick = {
+                                    haptics.tap()
+                                    dnsExpanded = !dnsExpanded
+                                }
+                            ) {
+                                Text(
+                                    text = dnsName,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1
+                                )
+                            }
+                        },
+                        trailingButton = {
+                            SplitButtonDefaults.TonalTrailingButton(
+                                checked = dnsExpanded,
+                                onCheckedChange = {
+                                    haptics.tap()
+                                    dnsExpanded = it
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                                    contentDescription = "Choose DNS Resolver",
+                                    modifier = Modifier
+                                        .size(SplitButtonDefaults.TrailingIconSize)
+                                        .graphicsLayer { rotationZ = dnsArrowRotation }
+                                )
+                            }
+                        }
                     )
-                    Text(
-                        text = "$dnsName ($upstreamDns)",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+
+                    DropdownMenu(
+                        expanded = dnsExpanded,
+                        onDismissRequest = { dnsExpanded = false },
+                        shape = MaterialTheme.shapes.large,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    ) {
+                        val dnsOptions = listOf(
+                            Pair("Cloudflare", "1.1.1.1"),
+                            Pair("Quad9", "9.9.9.9"),
+                            Pair("Google", "8.8.8.8")
+                        )
+
+                        dnsOptions.forEach { (name, ip) ->
+                            val isSelected = upstreamDns == ip
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "($ip)",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                },
+                                trailingIcon = if (isSelected) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                } else null,
+                                onClick = {
+                                    haptics.heavy()
+                                    onSelectDns(ip)
+                                    dnsExpanded = false
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
             Box(
                 modifier = Modifier
-                    .width(1.dp)
-                    .height(28.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant)
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             )
 
             Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 14.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                    contentAlignment = Alignment.Center
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Shield,
-                        contentDescription = null,
-                        tint = if (isBlockingEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isBlockingEnabled) Icons.Rounded.Shield else Icons.Rounded.Security,
+                            contentDescription = null,
+                            tint = if (isBlockingEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Protection Mode",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (isBlockingEnabled) "Block trackers" else "Audit queries only",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-                Column {
-                    Text(
-                        text = "Active Rules",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+                ) {
+                    val modeOptions = listOf(
+                        Triple(true, "Block", Icons.Rounded.Shield),
+                        Triple(false, "Audit", Icons.Rounded.Security)
                     )
-                    Text(
-                        text = if (isBlockingEnabled) "${blocklistCount.formatCount()} domains" else "Bypassed",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    modeOptions.forEachIndexed { index, (enabled, label, icon) ->
+                        val isSelected = isBlockingEnabled == enabled
+                        val shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        }
+                        FilledTonalToggleButton(
+                            checked = isSelected,
+                            onCheckedChange = {
+                                if (it && !isSelected) {
+                                    haptics.toggle()
+                                    onSelectBlockingEnabled(enabled)
+                                }
+                            },
+                            shapes = shapes,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            colors = FilledTonalToggleButtonDefaults.colors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = label,
+                                maxLines = 1,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                        }
+                    }
                 }
             }
         }
