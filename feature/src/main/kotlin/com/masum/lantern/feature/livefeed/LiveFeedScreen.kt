@@ -320,6 +320,7 @@ fun LiveFeedScreen(
                             selectedFilter = FeedFilter.All
                         },
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                         modifier = Modifier.weight(1f),
                         colors = FilledTonalToggleButtonDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -331,7 +332,8 @@ fun LiveFeedScreen(
                         Text(
                             text = "All ($totalCount)",
                             style = MaterialTheme.typography.labelMedium,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -344,6 +346,7 @@ fun LiveFeedScreen(
                             selectedFilter = FeedFilter.Trackers
                         },
                         shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                         modifier = Modifier.weight(1f),
                         colors = FilledTonalToggleButtonDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -352,27 +355,12 @@ fun LiveFeedScreen(
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Shield,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = if (selectedFilter == FeedFilter.Trackers) {
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                } else {
-                                    VerdictTracker
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Trackers ($trackerCount)",
-                                style = MaterialTheme.typography.labelMedium,
-                                maxLines = 1
-                            )
-                        }
+                        Text(
+                            text = "Trackers ($trackerCount)",
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
 
                     FilledTonalToggleButton(
@@ -384,6 +372,7 @@ fun LiveFeedScreen(
                             selectedFilter = FeedFilter.Clean
                         },
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                         modifier = Modifier.weight(1f),
                         colors = FilledTonalToggleButtonDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -392,27 +381,12 @@ fun LiveFeedScreen(
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.CheckCircle,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = if (selectedFilter == FeedFilter.Clean) {
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                } else {
-                                    VerdictSafe
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Clean ($cleanCount)",
-                                style = MaterialTheme.typography.labelMedium,
-                                maxLines = 1
-                            )
-                        }
+                        Text(
+                            text = "Clean ($cleanCount)",
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
@@ -460,13 +434,7 @@ fun LiveFeedScreen(
                             onWhoisLookup = {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://who.is/whois/${query.domain}"))
                                 context.startActivity(intent)
-                            },
-                            modifier = Modifier.animateItem(
-                                placementSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                    stiffness = Spring.StiffnessLow
-                                )
-                            )
+                            }
                         )
                     }
                 }
@@ -660,8 +628,14 @@ private fun ExpressiveSwipeableQueryCard(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+                AppIconImage(
+                    packageName = query.packageName,
+                    appName = query.appName,
+                    size = 40.dp
+                )
+
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = query.domain,
@@ -691,8 +665,6 @@ private fun ExpressiveSwipeableQueryCard(
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.width(12.dp))
 
                 val verdict = when {
                     query.verdict == VerdictUiState.Tracker && query.isBlocked -> ExpressiveVerdict.BLOCKED

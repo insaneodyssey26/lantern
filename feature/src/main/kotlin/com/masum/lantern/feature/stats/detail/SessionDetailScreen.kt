@@ -409,9 +409,14 @@ private fun SessionQueriesList(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        AppIconImage(
+                            packageName = query.packageName,
+                            appName = query.appName,
+                            size = 36.dp
+                        )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = query.domain,
@@ -429,7 +434,6 @@ private fun SessionQueriesList(
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
                         val verdict = when {
                             query.isTracker && query.isBlocked -> ExpressiveVerdict.BLOCKED
                             query.isTracker && !query.isBlocked -> ExpressiveVerdict.AUDITED
