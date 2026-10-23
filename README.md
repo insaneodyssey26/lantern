@@ -12,8 +12,15 @@ Lantern is an on-device DNS firewall and network monitor for Android. It lets yo
 ## Key Highlights
 
 - **Active Blocking & Passive Audit Modes**: Switch seamlessly between proactive DNS-sinkholing (`NXDOMAIN` or `0.0.0.0`) to neutralize trackers, or passive audit mode to observe background telemetry without dropping queries.
-- **Custom Domain Rules & App Whitelisting**: Granular per-domain custom whitelist/blocklist and per-application VPN bypass (allowing selected apps to access the internet directly without passing through the VPN tunnel).
-- **DNS-over-HTTPS (DoH - RFC 8484)**: Encrypted upstream resolution over TLS (Cloudflare, Quad9, Google DNS) with HTTP/2 framing, protected socket pooling, and hardcoded bootstrap DNS to defeat ISP eavesdropping and DNS hijacking.
+- **Custom Domain Rules & App Whitelisting**: Granular per-domain custom whitelist/blocklist and per-application kernel VPN bypass (`VpnService.Builder.addDisallowedApplication` allowing banking and VoIP apps to communicate directly through the physical network interface).
+- **Encrypted DNS Transports (DoH & DoT)**:
+  - **DNS-over-HTTPS (DoH - RFC 8484)**: HTTP/2 binary payload framing over TLS port 443 with protected socket pooling.
+  - **DNS-over-TLS (DoT - RFC 7858)**: 2-byte length-prefixed raw wire format directly over TLS port 853.
+  - Upstream providers supported: Cloudflare, Quad9, Google DNS, with hardcoded bootstrap IPs preventing circular DNS dependency loops.
+- **Persistent Live Notification with Remote IPC**: Ongoing silent notification with real-time query counts, threat block percentage, and upstream protocol badges. Features quick notification shade action buttons (`Stop` & `Block/Audit Toggle`) handled by `LanternNotificationReceiver` using `goAsync()` to respect Android 12+ background start limits.
+- **Session Forensics & App Drill-Down**: Historical session inspection screen with aggregate query metrics, per-application bandwidth distribution, and interactive modal sheets to filter queries by specific package.
+- **Forensic Data Export (RFC 4180 CSV via FileProvider)**: Full forensic CSV export with automated escaping and secure `content://` URI sharing via Android `FileProvider`, requiring zero dangerous storage permissions.
+- **High-Performance App Icon Caching**: Thread-safe in-memory drawable caching over Android `PackageManager`, ensuring smooth 120Hz scrolling across traffic feeds and session details.
 - **TTL DNS Response Cache & Protected Socket Pool**: 2048-entry in-memory DNS cache honoring TTL to eliminate redundant upstream round-trips with zero latency, backed by thread-safe protected socket pooling.
 - **OTA Blocklist Updates**: Built-in background rule updates pulling directly from [StevenBlack/hosts](https://github.com/StevenBlack/hosts) (80,000+ curated hosts) with etag validation and atomic room persistence.
 - **Zero-Latency In-Memory Trie**: Suffix matching engine written with an in-memory reverse-label Radix/Suffix Trie yielding $O(k)$ lookup time ($k = \text{domain labels}$).
@@ -131,7 +138,29 @@ Evaluating DNS packets in real-time requires sub-millisecond decisions without i
 ./gradlew assembleDebug
 ```
 
-### Running Unit Tests
+### Running the Complete Test Suite
 ```bash
-./gradlew :vpn:test :data:testDebugUnitTest :domain:test :feature:testDebugUnitTest
+./gradlew testDebugUnitTest test
+```
+
+### Building On-Device Instrumentation Tests
+```bash
+./gradlew assembleDebugAndroidTest
+```
+
+---
+
+## License & Privacy
+
+- **License**: Lantern is free and open-source software licensed under the [GNU General Public License v3.0 (GPLv3)](LICENSE).
+- **Privacy Policy**: 100% on-device processing with zero data collection, zero tracking SDKs, and zero telemetry. Read the full [Privacy Policy](PRIVACY.md).
+
+```text
+Lantern - On-device DNS firewall and network monitor for Android
+Copyright (C) 2026 Masum
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 ```
