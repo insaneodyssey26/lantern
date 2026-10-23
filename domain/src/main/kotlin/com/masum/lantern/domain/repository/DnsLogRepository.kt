@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface DnsLogRepository {
     fun observeLiveFeed(): Flow<DnsQuery>
+    suspend fun getRecentQueries(limit: Int = 100): List<DnsQuery>
     fun observeSessionHistory(): Flow<List<SessionSummary>>
     fun observePerAppStats(sessionId: Long? = null): Flow<List<PerAppStat>>
     fun observeSummaryStats(): Flow<SummaryStats>

@@ -77,6 +77,11 @@ class DnsLogRepositoryImpl @Inject constructor(
 
     override fun observeLiveFeed(): Flow<DnsQuery> = bus.queries
 
+    override suspend fun getRecentQueries(limit: Int): List<DnsQuery> = withContext(dispatchers.io) {
+        flushBatch()
+        dnsQueryDao.getRecent(limit).map { it.toDomain() }
+    }
+
     override fun observeSessionHistory(): Flow<List<SessionSummary>> =
         sessionDao.observeAllWithCounts().map { list ->
             list.map { it.toSessionSummary() }

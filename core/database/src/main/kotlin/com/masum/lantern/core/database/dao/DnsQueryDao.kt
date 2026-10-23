@@ -18,6 +18,9 @@ interface DnsQueryDao {
     @Query("SELECT * FROM dns_queries ORDER BY timestamp DESC LIMIT 200")
     fun observeRecent(): Flow<List<DnsQueryEntity>>
 
+    @Query("SELECT * FROM dns_queries ORDER BY timestamp DESC LIMIT :limit")
+    suspend fun getRecent(limit: Int): List<DnsQueryEntity>
+
     @Query("""
         SELECT appPackageName, appName, appUid,
                COUNT(*) AS totalQueries,

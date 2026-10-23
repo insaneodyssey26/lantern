@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.masum.lantern.domain.model.DnsQuery
 import com.masum.lantern.domain.model.MonitoringState
 import com.masum.lantern.domain.repository.SettingsRepository
+import com.masum.lantern.domain.usecase.GetRecentQueriesUseCase
 import com.masum.lantern.domain.usecase.ObserveLiveFeedUseCase
 import com.masum.lantern.domain.usecase.ObserveMonitoringStateUseCase
 import com.masum.lantern.feature.util.formatTime
@@ -24,6 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LiveFeedViewModel @Inject constructor(
     private val observeLiveFeed: ObserveLiveFeedUseCase,
+    private val getRecentQueries: GetRecentQueriesUseCase,
     private val observeMonitoringState: ObserveMonitoringStateUseCase,
     private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
@@ -33,6 +35,7 @@ class LiveFeedViewModel @Inject constructor(
 
     private val queryBuffer = ArrayDeque<DnsQueryUiModel>(MAX_ITEMS + 1)
     private val localIdCounter = AtomicLong(0)
+    private val seenKeys = HashSet<String>()
 
     init {
         viewModelScope.launch {
@@ -51,12 +54,28 @@ class LiveFeedViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            val initialRecent = getRecentQueries(MAX_ITEMS)
+            initialRecent.forEach { q ->
+                val key = "${q.timestamp}_${q.domain}_${q.appInfo.uid}"
+                if (seenKeys.add(key)) {
+                    queryBuffer.addLast(q.toUiModel())
+                }
+            }
+            if (queryBuffer.isNotEmpty()) {
+                _uiState.update { it.copy(queries = queryBuffer.toPersistentList()) }
+            }
+
             observeLiveFeed().collect { query ->
                 if (_uiState.value.isPaused) return@collect
-                queryBuffer.addFirst(query.toUiModel())
-                if (queryBuffer.size > MAX_ITEMS) queryBuffer.removeLast()
-                val snapshot: ImmutableList<DnsQueryUiModel> = queryBuffer.toPersistentList()
-                _uiState.update { it.copy(queries = snapshot) }
+                val key = "${query.timestamp}_${query.domain}_${query.appInfo.uid}"
+                if (seenKeys.add(key)) {
+                    queryBuffer.addFirst(query.toUiModel())
+                    if (queryBuffer.size > MAX_ITEMS) {
+                        queryBuffer.removeLast()
+                    }
+                    val snapshot: ImmutableList<DnsQueryUiModel> = queryBuffer.toPersistentList()
+                    _uiState.update { it.copy(queries = snapshot) }
+                }
             }
         }
     }
@@ -66,6 +85,7 @@ class LiveFeedViewModel @Inject constructor(
     }
 
     fun clearFeed() {
+        seenKeys.clear()
         queryBuffer.clear()
         _uiState.update { it.copy(queries = persistentListOf()) }
     }
