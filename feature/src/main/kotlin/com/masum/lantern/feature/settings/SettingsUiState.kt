@@ -6,6 +6,7 @@ data class SettingsUiState(
     val pureBlack: Boolean = false,
     val useSystemFont: Boolean = false,
     val upstreamDns: String = "1.1.1.1",
+    val dnsProtocol: String = "UDP",
     val maxAgeDays: Int = 7,
     val maxRows: Int = 50_000,
     val totalLogCount: Long = 0,

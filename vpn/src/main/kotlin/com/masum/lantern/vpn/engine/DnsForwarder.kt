@@ -5,6 +5,8 @@ import android.os.ParcelFileDescriptor
 import com.masum.lantern.core.common.config.ResolverConfig
 import com.masum.lantern.domain.repository.SettingsRepository
 import com.masum.lantern.vpn.cache.DnsResponseCache
+import com.masum.lantern.vpn.doh.DohClient
+import com.masum.lantern.vpn.dot.DotClient
 import com.masum.lantern.vpn.parser.DnsPacketBuilder
 import com.masum.lantern.vpn.parser.ParsedDnsQuery
 import kotlinx.coroutines.CoroutineScope
@@ -22,9 +24,12 @@ class DnsForwarder(
     private val scope: CoroutineScope,
     private val settingsRepository: SettingsRepository,
     private val cache: DnsResponseCache = DnsResponseCache(maxEntries = 2048),
+    private val dohClient: DohClient = DohClient(service),
+    private val dotClient: DotClient = DotClient(service),
 ) {
     private val output = FileOutputStream(pfd.fileDescriptor)
     @Volatile private var upstreamDns: String = ResolverConfig.PRIMARY_DNS
+    @Volatile private var dnsProtocol: String = "UDP"
 
     private val socketPool = ArrayBlockingQueue<DatagramSocket>(POOL_SIZE)
 
@@ -32,6 +37,11 @@ class DnsForwarder(
         scope.launch {
             settingsRepository.getUpstreamDns().collect { dns ->
                 upstreamDns = dns
+            }
+        }
+        scope.launch {
+            settingsRepository.getDnsProtocol().collect { proto ->
+                dnsProtocol = proto
             }
         }
         repeat(POOL_SIZE) {
@@ -66,7 +76,26 @@ class DnsForwarder(
         }
 
         scope.launch(Dispatchers.IO) {
-            runCatching { sendAndReply(query, rawDns) }
+            runCatching {
+                val encryptedResponse = when (dnsProtocol) {
+                    "DOH" -> dohClient.query(rawDns, upstreamDns)
+                    "DOT" -> dotClient.query(rawDns, upstreamDns)
+                    else -> null
+                }
+                if (encryptedResponse != null) {
+                    cache.put(query.domain, query.queryType, encryptedResponse)
+                    val wrapped = DnsPacketBuilder.wrapResponse(
+                        dnsResponse = encryptedResponse,
+                        sourceIp = query.destIp,
+                        destIp = query.sourceIp,
+                        sourcePort = ResolverConfig.DNS_PORT,
+                        destPort = query.sourcePort,
+                    )
+                    writePacket(wrapped)
+                    return@runCatching
+                }
+                sendAndReply(query, rawDns)
+            }
         }
     }
 
@@ -118,6 +147,8 @@ class DnsForwarder(
 
     fun close() {
         cache.clear()
+        dohClient.close()
+        dotClient.close()
         while (true) {
             val s = socketPool.poll() ?: break
             runCatching { s.close() }

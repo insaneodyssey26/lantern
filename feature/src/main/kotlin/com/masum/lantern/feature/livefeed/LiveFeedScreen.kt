@@ -43,6 +43,7 @@ import androidx.compose.material.icons.rounded.RemoveCircleOutline
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CardDefaults
@@ -775,108 +776,108 @@ fun QueryDetailSheet(
             }
         }
 
+        when {
+            isCustomAllowed -> {
+                Button(
+                    onClick = {
+                        onRemoveRule()
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.RemoveCircleOutline,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Remove Custom Rule")
+                }
+            }
+            isCustomBlocked -> {
+                Button(
+                    onClick = {
+                        onRemoveRule()
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.RemoveCircleOutline,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Remove Custom Rule")
+                }
+            }
+            query.isBlocked || query.verdict == VerdictUiState.Tracker -> {
+                Button(
+                    onClick = {
+                        onAllowDomain()
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Always Allow Domain")
+                }
+            }
+            else -> {
+                Button(
+                    onClick = {
+                        onBlockDomain()
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Block,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Always Block Domain")
+                }
+            }
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            when {
-                isCustomAllowed -> {
-                    FilledTonalButton(
-                        onClick = {
-                            onRemoveRule()
-                            onDismiss()
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = CircleShape,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.RemoveCircleOutline,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Remove Rule")
-                    }
-                }
-                isCustomBlocked -> {
-                    FilledTonalButton(
-                        onClick = {
-                            onRemoveRule()
-                            onDismiss()
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = CircleShape,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.RemoveCircleOutline,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Remove Rule")
-                    }
-                }
-                query.isBlocked || query.verdict == VerdictUiState.Tracker -> {
-                    FilledTonalButton(
-                        onClick = {
-                            onAllowDomain()
-                            onDismiss()
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = CircleShape,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.CheckCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Always Allow")
-                    }
-                }
-                else -> {
-                    FilledTonalButton(
-                        onClick = {
-                            onBlockDomain()
-                            onDismiss()
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = CircleShape,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Block,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Always Block")
-                    }
-                }
-            }
-
             FilledTonalButton(
                 onClick = {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://who.is/whois/${query.domain}"))
                     context.startActivity(intent)
                 },
                 modifier = Modifier.weight(1f),
-                shape = CircleShape
+                shape = MaterialTheme.shapes.large
             ) {
                 Icon(
                     imageVector = Icons.Rounded.OpenInBrowser,
@@ -884,7 +885,7 @@ fun QueryDetailSheet(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("WHOIS")
+                Text("WHOIS", maxLines = 1)
             }
 
             FilledTonalButton(
@@ -895,7 +896,7 @@ fun QueryDetailSheet(
                     onDismiss()
                 },
                 modifier = Modifier.weight(1f),
-                shape = CircleShape
+                shape = MaterialTheme.shapes.large
             ) {
                 Icon(
                     imageVector = Icons.Rounded.ContentCopy,
@@ -903,7 +904,7 @@ fun QueryDetailSheet(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Copy")
+                Text("Copy", maxLines = 1)
             }
         }
     }

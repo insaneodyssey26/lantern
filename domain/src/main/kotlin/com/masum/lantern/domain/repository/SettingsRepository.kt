@@ -14,6 +14,10 @@ interface SettingsRepository {
     fun getUpstreamDns(): Flow<String>
     suspend fun setUpstreamDns(dns: String)
 
+    fun getDnsProtocol(): Flow<String>
+    fun getDnsProtocolSync(): String
+    suspend fun setDnsProtocol(protocol: String)
+
     fun getMaxAgeDays(): Flow<Int>
     suspend fun setMaxAgeDays(days: Int)
 

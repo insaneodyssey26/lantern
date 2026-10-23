@@ -13,6 +13,7 @@ Lantern is an on-device DNS firewall and network monitor for Android. It lets yo
 
 - **Active Blocking & Passive Audit Modes**: Switch seamlessly between proactive DNS-sinkholing (`NXDOMAIN` or `0.0.0.0`) to neutralize trackers, or passive audit mode to observe background telemetry without dropping queries.
 - **Custom Domain Rules & App Whitelisting**: Granular per-domain custom whitelist/blocklist and per-application VPN bypass (allowing selected apps to access the internet directly without passing through the VPN tunnel).
+- **DNS-over-HTTPS (DoH - RFC 8484)**: Encrypted upstream resolution over TLS (Cloudflare, Quad9, Google DNS) with HTTP/2 framing, protected socket pooling, and hardcoded bootstrap DNS to defeat ISP eavesdropping and DNS hijacking.
 - **TTL DNS Response Cache & Protected Socket Pool**: 2048-entry in-memory DNS cache honoring TTL to eliminate redundant upstream round-trips with zero latency, backed by thread-safe protected socket pooling.
 - **OTA Blocklist Updates**: Built-in background rule updates pulling directly from [StevenBlack/hosts](https://github.com/StevenBlack/hosts) (80,000+ curated hosts) with etag validation and atomic room persistence.
 - **Zero-Latency In-Memory Trie**: Suffix matching engine written with an in-memory reverse-label Radix/Suffix Trie yielding $O(k)$ lookup time ($k = \text{domain labels}$).
@@ -31,7 +32,7 @@ Lantern is an on-device DNS firewall and network monitor for Android. It lets yo
 4. **Custom Rules & Trie Classification**: Checks hostname against user custom rules (allow/block) followed by an 80,000+ domain reverse-label Suffix Trie.
 5. **Enforcement, In-Memory Caching & Forwarding**:
    - In **Block Mode**: Returns an immediate synthetic `0.0.0.0` or `NXDOMAIN` response back to the client app.
-   - For **Allowed Queries**: Inspects the 2048-entry in-memory TTL response cache for instant resolution. On a cache miss, forwards the query to upstream resolvers (Cloudflare, Quad9, Google DNS) using a protected socket pool that bypasses the VPN tunnel.
+   - For **Allowed Queries**: Inspects the 2048-entry in-memory TTL response cache for instant resolution. On a cache miss, forwards the query to upstream resolvers (Cloudflare, Quad9, Google DNS) either via encrypted **DNS-over-HTTPS (DoH)** or standard UDP using a protected socket pool that bypasses the VPN tunnel.
 
 ```mermaid
 flowchart TD

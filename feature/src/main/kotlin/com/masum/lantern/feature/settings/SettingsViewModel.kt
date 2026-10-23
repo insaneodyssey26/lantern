@@ -34,6 +34,7 @@ class SettingsViewModel @Inject constructor(
         settingsRepository.isPureBlack(),
         settingsRepository.isUseSystemFont(),
         settingsRepository.getUpstreamDns(),
+        settingsRepository.getDnsProtocol(),
         settingsRepository.getMaxAgeDays(),
         settingsRepository.getMaxRows()
     ) { args: Array<Any> ->
@@ -43,8 +44,9 @@ class SettingsViewModel @Inject constructor(
             pureBlack = args[2] as Boolean,
             useSystemFont = args[3] as Boolean,
             upstreamDns = args[4] as String,
-            maxAgeDays = args[5] as Int,
-            maxRows = args[6] as Int
+            dnsProtocol = args[5] as String,
+            maxAgeDays = args[6] as Int,
+            maxRows = args[7] as Int
         )
     }
 
@@ -85,6 +87,7 @@ class SettingsViewModel @Inject constructor(
             pureBlack = settings.pureBlack,
             useSystemFont = settings.useSystemFont,
             upstreamDns = settings.upstreamDns,
+            dnsProtocol = settings.dnsProtocol,
             maxAgeDays = settings.maxAgeDays,
             maxRows = settings.maxRows,
             totalLogCount = logCount,
@@ -117,6 +120,12 @@ class SettingsViewModel @Inject constructor(
     fun setUpstreamDns(dns: String) {
         viewModelScope.launch {
             settingsRepository.setUpstreamDns(dns)
+        }
+    }
+
+    fun setDnsProtocol(protocol: String) {
+        viewModelScope.launch {
+            settingsRepository.setDnsProtocol(protocol)
         }
     }
 
@@ -186,6 +195,7 @@ data class SettingsTuple(
     val pureBlack: Boolean,
     val useSystemFont: Boolean,
     val upstreamDns: String,
+    val dnsProtocol: String,
     val maxAgeDays: Int,
     val maxRows: Int,
 )

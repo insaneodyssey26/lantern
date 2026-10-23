@@ -68,6 +68,24 @@ class SettingsRepositoryImpl @Inject constructor(
         prefs.edit().putString(KEY_UPSTREAM_DNS, dns).apply()
     }
 
+    override fun getDnsProtocol(): Flow<String> = callbackFlow {
+        trySend(getDnsProtocolSync())
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_DNS_PROTOCOL) {
+                trySend(getDnsProtocolSync())
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override fun getDnsProtocolSync(): String =
+        prefs.getString(KEY_DNS_PROTOCOL, "UDP") ?: "UDP"
+
+    override suspend fun setDnsProtocol(protocol: String) {
+        prefs.edit().putString(KEY_DNS_PROTOCOL, protocol).apply()
+    }
+
     override fun getMaxAgeDays(): Flow<Int> = callbackFlow {
         trySend(prefs.getInt(KEY_MAX_AGE_DAYS, 7))
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
@@ -234,6 +252,7 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_THEME_MODE   = "theme_mode"
         private const val KEY_COLOR_THEME  = "color_theme"
         private const val KEY_UPSTREAM_DNS = "upstream_dns"
+        private const val KEY_DNS_PROTOCOL = "dns_protocol"
         private const val KEY_MAX_AGE_DAYS = "max_age_days"
         private const val KEY_MAX_ROWS     = "max_rows"
         private const val KEY_BLOCKING_ENABLED = "blocking_enabled"
