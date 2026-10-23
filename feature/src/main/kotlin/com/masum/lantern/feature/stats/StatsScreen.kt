@@ -42,8 +42,11 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalToggleButton
+import androidx.compose.material3.FilledTonalToggleButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -155,83 +158,56 @@ fun StatsScreen(
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding)
         ) {
-            PrimaryTabRow(
-                selectedTabIndex = pagerState.currentPage,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary,
-                indicator = {
-                    TabRowDefaults.PrimaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(pagerState.currentPage, matchContentSize = true),
-                        width = 36.dp,
-                        height = 3.dp,
-                        shape = CircleShape
-                    )
-                },
-                divider = {}
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
             ) {
-                LeadingIconTab(
-                    selected = pagerState.currentPage == 0,
-                    onClick = {
-                        if (pagerState.currentPage != 0) haptics.tap()
-                        scope.launch { pagerState.animateScrollToPage(0) }
-                    },
-                    text = {
-                        Text(
-                            text = "Overview",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = if (pagerState.currentPage == 0) FontWeight.SemiBold else FontWeight.Medium
+                val tabs = listOf(
+                    Triple("Overview", Icons.Rounded.PieChart, ""),
+                    Triple("Apps", Icons.Rounded.Layers, if (uiState.apps.isNotEmpty()) " (${uiState.apps.size})" else ""),
+                    Triple("Sessions", Icons.Rounded.QueryStats, if (uiState.sessions.isNotEmpty()) " (${uiState.sessions.size})" else "")
+                )
+                tabs.forEachIndexed { index, (label, icon, badge) ->
+                    val isSelected = pagerState.currentPage == index
+                    val shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        tabs.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    }
+                    FilledTonalToggleButton(
+                        checked = isSelected,
+                        onCheckedChange = {
+                            if (it && !isSelected) {
+                                haptics.toggle()
+                                scope.launch { pagerState.animateScrollToPage(index) }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        shapes = shapes,
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                        colors = FilledTonalToggleButtonDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
-                    },
-                    icon = {
+                    ) {
                         Icon(
-                            imageVector = Icons.Rounded.PieChart,
+                            imageVector = icon,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "$label$badge",
+                            maxLines = 1,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                         )
                     }
-                )
-                LeadingIconTab(
-                    selected = pagerState.currentPage == 1,
-                    onClick = {
-                        if (pagerState.currentPage != 1) haptics.tap()
-                        scope.launch { pagerState.animateScrollToPage(1) }
-                    },
-                    text = {
-                        Text(
-                            text = "Apps (${uiState.apps.size})",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = if (pagerState.currentPage == 1) FontWeight.SemiBold else FontWeight.Medium
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Rounded.Layers,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                )
-                LeadingIconTab(
-                    selected = pagerState.currentPage == 2,
-                    onClick = {
-                        if (pagerState.currentPage != 2) haptics.tap()
-                        scope.launch { pagerState.animateScrollToPage(2) }
-                    },
-                    text = {
-                        Text(
-                            text = "Sessions (${uiState.sessions.size})",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = if (pagerState.currentPage == 2) FontWeight.SemiBold else FontWeight.Medium
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Rounded.QueryStats,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                )
+                }
             }
 
             HorizontalPager(
