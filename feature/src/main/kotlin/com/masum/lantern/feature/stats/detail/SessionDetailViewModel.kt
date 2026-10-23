@@ -8,6 +8,7 @@ import com.masum.lantern.domain.model.PerAppStat
 import com.masum.lantern.domain.model.SessionSummary
 import com.masum.lantern.domain.model.Verdict
 import com.masum.lantern.domain.repository.DnsLogRepository
+import com.masum.lantern.domain.usecase.ExportLogsUseCase
 import com.masum.lantern.feature.util.formatDate
 import com.masum.lantern.feature.util.formatDuration
 import com.masum.lantern.feature.util.formatTime
@@ -22,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SessionDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val dnsLogRepository: DnsLogRepository
+    private val dnsLogRepository: DnsLogRepository,
+    private val exportLogsUseCase: ExportLogsUseCase
 ) : ViewModel() {
 
     private val sessionId: Long = checkNotNull(savedStateHandle.get<Long>("sessionId") ?: savedStateHandle.get<String>("sessionId")?.toLongOrNull() ?: 0L)
@@ -65,6 +67,10 @@ class SessionDetailViewModel @Inject constructor(
     fun onTabSelected(tab: SessionDetailTab) {
         selectedTab.value = tab
     }
+
+    suspend fun exportCsv(): String = exportLogsUseCase.exportToCsv(sessionId)
+
+    suspend fun exportJson(): String = exportLogsUseCase.exportToJson(sessionId)
 
     fun getSessionAppQueries(packageName: String): kotlinx.coroutines.flow.Flow<List<DnsQuery>> =
         dnsLogRepository.observeSessionAppQueries(sessionId, packageName)

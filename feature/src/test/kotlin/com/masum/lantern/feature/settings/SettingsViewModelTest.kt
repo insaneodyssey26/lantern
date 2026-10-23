@@ -28,6 +28,7 @@ class SettingsViewModelTest {
     private val settingsRepository: SettingsRepository = mockk(relaxed = true)
     private val dnsLogRepository: DnsLogRepository = mockk(relaxed = true)
     private val blocklistRepository: BlocklistRepository = mockk(relaxed = true)
+    private val exportLogsUseCase: com.masum.lantern.domain.usecase.ExportLogsUseCase = mockk(relaxed = true)
 
     private val themeModeFlow = MutableStateFlow("dark")
     private val colorThemeFlow = MutableStateFlow("amber")
@@ -61,7 +62,7 @@ class SettingsViewModelTest {
         every { blocklistRepository.domainCount() } returns 85000
         every { blocklistRepository.getLastUpdatedTimestamp() } returns 1700000000L
 
-        viewModel = SettingsViewModel(settingsRepository, dnsLogRepository, blocklistRepository)
+        viewModel = SettingsViewModel(settingsRepository, dnsLogRepository, blocklistRepository, exportLogsUseCase)
     }
 
     @After
@@ -168,5 +169,14 @@ class SettingsViewModelTest {
             val state = expectMostRecentItem()
             assertEquals(null, state.blocklistUpdateMessage)
         }
+    }
+
+    @Test
+    fun `exportAllLogs delegates to exportLogsUseCase`() = runTest {
+        io.mockk.coEvery { exportLogsUseCase.exportToCsv(null) } returns "csv-data"
+        io.mockk.coEvery { exportLogsUseCase.exportToJson(null) } returns "json-data"
+
+        assertEquals("csv-data", viewModel.exportAllLogsCsv())
+        assertEquals("json-data", viewModel.exportAllLogsJson())
     }
 }

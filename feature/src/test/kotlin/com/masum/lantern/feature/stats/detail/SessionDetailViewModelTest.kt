@@ -28,6 +28,7 @@ class SessionDetailViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private val dnsLogRepository: DnsLogRepository = mockk()
+    private val exportLogsUseCase: com.masum.lantern.domain.usecase.ExportLogsUseCase = mockk(relaxed = true)
 
     private val sessionFlow = MutableStateFlow<SessionSummary?>(null)
     private val perAppFlow = MutableStateFlow<List<PerAppStat>>(emptyList())
@@ -72,7 +73,7 @@ class SessionDetailViewModelTest {
 
     private fun createViewModel(sessionId: Long = 42L): SessionDetailViewModel {
         val savedStateHandle = SavedStateHandle(mapOf("sessionId" to sessionId))
-        return SessionDetailViewModel(savedStateHandle, dnsLogRepository)
+        return SessionDetailViewModel(savedStateHandle, dnsLogRepository, exportLogsUseCase)
     }
 
     @Test
@@ -131,5 +132,15 @@ class SessionDetailViewModelTest {
             assertEquals("com.browser", result[0].appInfo.packageName)
             awaitComplete()
         }
+    }
+
+    @Test
+    fun `exportCsv and exportJson delegate to exportLogsUseCase`() = runTest {
+        val viewModel = createViewModel()
+        io.mockk.coEvery { exportLogsUseCase.exportToCsv(42L) } returns "header\nrow"
+        io.mockk.coEvery { exportLogsUseCase.exportToJson(42L) } returns "[{}]"
+
+        assertEquals("header\nrow", viewModel.exportCsv())
+        assertEquals("[{}]", viewModel.exportJson())
     }
 }

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Dns
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -48,7 +49,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,6 +82,8 @@ fun SessionDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val haptics = rememberLanternHaptics()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     var selectedQueryDetail by remember { mutableStateOf<DnsQueryUiModel?>(null) }
     var selectedAppForInspection by remember { mutableStateOf<SessionAppStatUiModel?>(null) }
 
@@ -109,6 +114,30 @@ fun SessionDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            haptics.tap()
+                            scope.launch {
+                                val csv = viewModel.exportCsv()
+                                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm", java.util.Locale.US)
+                                val dateStr = sdf.format(java.util.Date())
+                                com.masum.lantern.core.ui.util.FileExportHelper.shareTextAsFile(
+                                    context = context,
+                                    fileName = "lantern_session_${uiState.sessionId}_$dateStr.csv",
+                                    content = csv,
+                                    mimeType = "text/csv",
+                                    chooserTitle = "Export Session CSV"
+                                )
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Share,
+                            contentDescription = "Export Session Logs"
                         )
                     }
                 },

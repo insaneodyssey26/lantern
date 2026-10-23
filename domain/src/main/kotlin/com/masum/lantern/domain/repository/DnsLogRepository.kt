@@ -17,5 +17,7 @@ interface DnsLogRepository {
     fun observeAppQueries(packageName: String): Flow<List<DnsQuery>>
     fun observeSessionQueries(sessionId: Long): Flow<List<DnsQuery>>
     fun observeSessionAppQueries(sessionId: Long, packageName: String): Flow<List<DnsQuery>>
+    suspend fun getAllQueries(): List<DnsQuery>
+    suspend fun getQueriesBySession(sessionId: Long): List<DnsQuery>
     suspend fun clearHistory()
 }

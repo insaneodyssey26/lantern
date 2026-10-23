@@ -120,6 +120,16 @@ class DnsLogRepositoryImpl @Inject constructor(
             list.map { it.toDomain() }
         }
 
+    override suspend fun getAllQueries(): List<DnsQuery> = withContext(dispatchers.io) {
+        flushBatch()
+        dnsQueryDao.getAllQueries().map { it.toDomain() }
+    }
+
+    override suspend fun getQueriesBySession(sessionId: Long): List<DnsQuery> = withContext(dispatchers.io) {
+        flushBatch()
+        dnsQueryDao.getQueriesBySession(sessionId).map { it.toDomain() }
+    }
+
     override suspend fun clearHistory(): Unit = withContext(dispatchers.io) {
         dnsQueryDao.deleteAll()
         sessionDao.deleteAll()

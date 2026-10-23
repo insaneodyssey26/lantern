@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.masum.lantern.domain.repository.BlocklistRepository
 import com.masum.lantern.domain.repository.DnsLogRepository
 import com.masum.lantern.domain.repository.SettingsRepository
+import com.masum.lantern.domain.usecase.ExportLogsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val dnsLogRepository: DnsLogRepository,
     private val blocklistRepository: BlocklistRepository,
+    private val exportLogsUseCase: ExportLogsUseCase,
 ) : ViewModel() {
 
     private val isClearingLogs = MutableStateFlow(false)
@@ -187,6 +189,10 @@ class SettingsViewModel @Inject constructor(
     fun clearBlocklistMessage() {
         blocklistUpdateMessage.value = null
     }
+
+    suspend fun exportAllLogsCsv(): String = exportLogsUseCase.exportToCsv(null)
+
+    suspend fun exportAllLogsJson(): String = exportLogsUseCase.exportToJson(null)
 }
 
 data class SettingsTuple(
