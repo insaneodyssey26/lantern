@@ -1,5 +1,6 @@
 package com.masum.lantern.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -62,6 +63,15 @@ private val EmphasizedEasing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
 private val EmphasizedDecelerateEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
 private const val NAV_ENTER_DURATION = 450
 private const val NAV_EXIT_DURATION = 380
+private const val TAB_TRANSITION_DURATION = 320
+private const val TAB_SLIDE_FRACTION = 0.15f
+
+private fun destinationOrder(route: String?): Int = when (route) {
+    LanternDestination.Home.route -> 0
+    LanternDestination.Traffic.route -> 1
+    LanternDestination.Insights.route -> 2
+    else -> -1
+}
 
 @Composable
 fun LanternNavHost(
@@ -84,8 +94,10 @@ fun LanternNavHost(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
             enterTransition = {
-                when (targetState.destination.route) {
-                    "settings", "app_whitelist", "domain_rules" -> {
+                val targetOrder = destinationOrder(targetState.destination.route)
+                val initialOrder = destinationOrder(initialState.destination.route)
+                when {
+                    targetState.destination.route in listOf("settings", "app_whitelist", "domain_rules") -> {
                         slideIntoContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Start,
                             animationSpec = tween(NAV_ENTER_DURATION, easing = EmphasizedDecelerateEasing),
@@ -95,12 +107,26 @@ fun LanternNavHost(
                             animationSpec = tween(NAV_ENTER_DURATION, easing = EmphasizedDecelerateEasing)
                         ) + fadeIn(animationSpec = tween(NAV_ENTER_DURATION / 2, easing = EmphasizedDecelerateEasing))
                     }
+                    targetOrder != -1 && initialOrder != -1 && targetOrder != initialOrder -> {
+                        val slideDirection = if (targetOrder > initialOrder) {
+                            AnimatedContentTransitionScope.SlideDirection.Start
+                        } else {
+                            AnimatedContentTransitionScope.SlideDirection.End
+                        }
+                        slideIntoContainer(
+                            towards = slideDirection,
+                            animationSpec = tween(TAB_TRANSITION_DURATION, easing = EmphasizedEasing),
+                            initialOffset = { (it * TAB_SLIDE_FRACTION).toInt() }
+                        ) + fadeIn(animationSpec = tween(TAB_TRANSITION_DURATION, easing = EmphasizedEasing))
+                    }
                     else -> EnterTransition.None
                 }
             },
             exitTransition = {
-                when (targetState.destination.route) {
-                    "settings", "app_whitelist", "domain_rules" -> {
+                val targetOrder = destinationOrder(targetState.destination.route)
+                val initialOrder = destinationOrder(initialState.destination.route)
+                when {
+                    targetState.destination.route in listOf("settings", "app_whitelist", "domain_rules") -> {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Start,
                             animationSpec = tween(NAV_EXIT_DURATION, easing = EmphasizedEasing),
@@ -110,28 +136,68 @@ fun LanternNavHost(
                             animationSpec = tween(NAV_EXIT_DURATION, easing = EmphasizedEasing)
                         ) + fadeOut(animationSpec = tween(NAV_EXIT_DURATION, easing = EmphasizedEasing))
                     }
+                    targetOrder != -1 && initialOrder != -1 && targetOrder != initialOrder -> {
+                        val slideDirection = if (targetOrder > initialOrder) {
+                            AnimatedContentTransitionScope.SlideDirection.Start
+                        } else {
+                            AnimatedContentTransitionScope.SlideDirection.End
+                        }
+                        slideOutOfContainer(
+                            towards = slideDirection,
+                            animationSpec = tween(TAB_TRANSITION_DURATION, easing = EmphasizedEasing),
+                            targetOffset = { (it * TAB_SLIDE_FRACTION).toInt() }
+                        ) + fadeOut(animationSpec = tween(TAB_TRANSITION_DURATION, easing = EmphasizedEasing))
+                    }
                     else -> ExitTransition.None
                 }
             },
             popEnterTransition = {
-                when (initialState.destination.route) {
-                    "settings", "app_whitelist", "domain_rules" -> {
+                val targetOrder = destinationOrder(targetState.destination.route)
+                val initialOrder = destinationOrder(initialState.destination.route)
+                when {
+                    initialState.destination.route in listOf("settings", "app_whitelist", "domain_rules") -> {
                         scaleIn(
                             initialScale = 0.95f,
                             animationSpec = tween(NAV_ENTER_DURATION, easing = EmphasizedDecelerateEasing)
                         ) + fadeIn(animationSpec = tween(NAV_ENTER_DURATION / 2, easing = EmphasizedDecelerateEasing))
                     }
+                    targetOrder != -1 && initialOrder != -1 && targetOrder != initialOrder -> {
+                        val slideDirection = if (targetOrder > initialOrder) {
+                            AnimatedContentTransitionScope.SlideDirection.Start
+                        } else {
+                            AnimatedContentTransitionScope.SlideDirection.End
+                        }
+                        slideIntoContainer(
+                            towards = slideDirection,
+                            animationSpec = tween(TAB_TRANSITION_DURATION, easing = EmphasizedEasing),
+                            initialOffset = { (it * TAB_SLIDE_FRACTION).toInt() }
+                        ) + fadeIn(animationSpec = tween(TAB_TRANSITION_DURATION, easing = EmphasizedEasing))
+                    }
                     else -> EnterTransition.None
                 }
             },
             popExitTransition = {
-                when (initialState.destination.route) {
-                    "settings", "app_whitelist", "domain_rules" -> {
+                val targetOrder = destinationOrder(targetState.destination.route)
+                val initialOrder = destinationOrder(initialState.destination.route)
+                when {
+                    initialState.destination.route in listOf("settings", "app_whitelist", "domain_rules") -> {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.End,
                             animationSpec = tween(NAV_EXIT_DURATION, easing = EmphasizedEasing),
                             targetOffset = { it }
                         ) + fadeOut(animationSpec = tween(NAV_EXIT_DURATION / 2, easing = EmphasizedEasing))
+                    }
+                    targetOrder != -1 && initialOrder != -1 && targetOrder != initialOrder -> {
+                        val slideDirection = if (targetOrder > initialOrder) {
+                            AnimatedContentTransitionScope.SlideDirection.Start
+                        } else {
+                            AnimatedContentTransitionScope.SlideDirection.End
+                        }
+                        slideOutOfContainer(
+                            towards = slideDirection,
+                            animationSpec = tween(TAB_TRANSITION_DURATION, easing = EmphasizedEasing),
+                            targetOffset = { (it * TAB_SLIDE_FRACTION).toInt() }
+                        ) + fadeOut(animationSpec = tween(TAB_TRANSITION_DURATION, easing = EmphasizedEasing))
                     }
                     else -> ExitTransition.None
                 }
@@ -143,11 +209,29 @@ fun LanternNavHost(
                 )
             }
             composable(LanternDestination.Traffic.route) {
+                BackHandler {
+                    navController.navigate(LanternDestination.Home.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
                 LiveFeedScreen(
                     onSettingsClick = { navController.navigate("settings") }
                 )
             }
             composable(LanternDestination.Insights.route) {
+                BackHandler {
+                    navController.navigate(LanternDestination.Home.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
                 StatsScreen(
                     onSettingsClick = { navController.navigate("settings") }
                 )

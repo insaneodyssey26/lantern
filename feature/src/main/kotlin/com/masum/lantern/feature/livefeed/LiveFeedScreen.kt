@@ -43,6 +43,7 @@ import androidx.compose.material.icons.rounded.RemoveCircleOutline
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
@@ -63,6 +64,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.FilledTonalToggleButtonDefaults
@@ -120,6 +122,7 @@ fun LiveFeedScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(FeedFilter.All) }
     var selectedQuery by remember { mutableStateOf<DnsQueryUiModel?>(null) }
+    var showClearConfirmDialog by remember { mutableStateOf(false) }
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val haptics = rememberLanternHaptics()
 
@@ -198,7 +201,10 @@ fun LiveFeedScreen(
                     Spacer(modifier = Modifier.width(4.dp))
 
                     IconButton(
-                        onClick = { viewModel.clearFeed() },
+                        onClick = {
+                            haptics.tap()
+                            showClearConfirmDialog = true
+                        },
                         enabled = uiState.queries.isNotEmpty()
                     ) {
                         Icon(
@@ -211,7 +217,10 @@ fun LiveFeedScreen(
                             }
                         )
                     }
-                    IconButton(onClick = onSettingsClick) {
+                    IconButton(onClick = {
+                        haptics.tap()
+                        onSettingsClick()
+                    }) {
                         Icon(
                             imageVector = Icons.Rounded.Settings,
                             contentDescription = "Settings",
@@ -434,6 +443,7 @@ fun LiveFeedScreen(
                         ExpressiveSwipeableQueryCard(
                             query = query,
                             onClick = {
+                                haptics.tap()
                                 focusManager.clearFocus()
                                 keyboardController?.hide()
                                 selectedQuery = query
@@ -461,6 +471,53 @@ fun LiveFeedScreen(
                 }
             }
         }
+    }
+
+    if (showClearConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirmDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Rounded.DeleteOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = {
+                Text(
+                    text = "Clear Traffic Stream?",
+                    fontWeight = FontWeight.SemiBold
+                )
+            },
+            text = {
+                Text(
+                    text = "This will clear all captured DNS records from the current live feed. New network queries will continue to stream in real-time."
+                )
+            },
+            confirmButton = {
+                FilledTonalButton(
+                    onClick = {
+                        haptics.reject()
+                        viewModel.clearFeed()
+                        showClearConfirmDialog = false
+                    },
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) {
+                    Text("Clear")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    haptics.tap()
+                    showClearConfirmDialog = false
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     selectedQuery?.let { query ->
@@ -659,6 +716,7 @@ fun QueryDetailSheet(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val haptics = rememberLanternHaptics()
 
     Column(
         modifier = Modifier
@@ -873,6 +931,7 @@ fun QueryDetailSheet(
         ) {
             FilledTonalButton(
                 onClick = {
+                    haptics.tap()
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://who.is/whois/${query.domain}"))
                     context.startActivity(intent)
                 },
@@ -890,6 +949,7 @@ fun QueryDetailSheet(
 
             FilledTonalButton(
                 onClick = {
+                    haptics.tap()
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("domain", query.domain)
                     clipboard.setPrimaryClip(clip)
