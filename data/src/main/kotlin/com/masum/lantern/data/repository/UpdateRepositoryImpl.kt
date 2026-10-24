@@ -38,34 +38,17 @@ class UpdateRepositoryImpl @Inject constructor(
         currentVersionName: String,
     ): Result<AppUpdate?> = withContext(Dispatchers.IO) {
         runCatching {
-            val urls = listOf(
-                "https://api.github.com/repos/insaneodyssey26/lantern/releases/latest",
-                "https://api.github.com/repos/insaneodyssey26/vigil/releases/latest"
-            )
+            val req = Request.Builder()
+                .url("https://api.github.com/repos/insaneodyssey26/lantern/releases/latest")
+                .header("Accept", "application/vnd.github+json")
+                .header("User-Agent", "Lantern-Android")
+                .build()
 
-            var responseBody: String? = null
-            for (url in urls) {
-                val req = Request.Builder()
-                    .url(url)
-                    .header("Accept", "application/vnd.github+json")
-                    .header("User-Agent", "Lantern-Android")
-                    .build()
-                try {
-                    client.newCall(req).execute().use { resp ->
-                        if (resp.isSuccessful) {
-                            val content = resp.body.string()
-                            if (content.isNotBlank()) {
-                                responseBody = content
-                                return@use
-                            }
-                        }
-                    }
-                } catch (_: Exception) {}
-                if (responseBody != null) break
-            }
+            val responseBody = client.newCall(req).execute().use { resp ->
+                if (resp.isSuccessful) resp.body.string() else null
+            } ?: return@runCatching null
 
-            val jsonStr = responseBody ?: return@runCatching null
-            val root = JSONObject(jsonStr)
+            val root = JSONObject(responseBody)
 
             val tagName = root.optString("tag_name", "").trim()
             val releaseTitle = root.optString("name", tagName)
