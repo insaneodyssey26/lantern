@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector android:width="288dp" android:height="288dp" android:viewportWidth="288" android:viewportHeight="288">
+            <path android:name="stemTop" android:pathData="M112.5,99 V132" android:strokeColor="@color/splash_glyph" android:strokeWidth="18" android:strokeLineCap="round" android:strokeLineJoin="round" android:trimPathEnd="0" />
+            <path android:name="stemMain" android:pathData="M112.5,132 V189 H175.5" android:strokeColor="@color/splash_glyph" android:strokeWidth="18" android:strokeLineCap="round" android:strokeLineJoin="round" android:trimPathEnd="0" />
+            <group android:name="dotGroup" android:pivotX="157.5" android:pivotY="132" android:scaleX="0.28" android:scaleY="0.28" android:translateX="-90">
+                <path android:name="dotFill" android:pathData="M146.7,132 a10.8,10.8 0 1,0 21.6,0 a10.8,10.8 0 1,0 -21.6,0" android:fillColor="@color/splash_glyph" android:fillAlpha="0" />
+            </group>
+            <group android:name="appNameGroup" android:translateY="6">
+                <path android:name="appName"
+                    android:pathData="M103.56,230.00 L103.56,215.00 L106.78,215.00 L106.78,227.36 L112.84,227.36 L112.84,230.00 Z M120.18,218.33 C121.60,218.33 122.70,218.67 123.46,219.34 C124.23,220.02 124.61,221.03 124.61,222.36 L124.61,230.00 L122.41,230.00 L121.80,228.45 L121.71,228.45 C121.21,229.07 120.68,229.52 120.14,229.80 C119.60,230.07 118.85,230.20 117.89,230.20 C116.88,230.20 116.04,229.91 115.36,229.33 C114.70,228.75 114.36,227.84 114.36,226.62 C114.36,225.43 114.79,224.53 115.66,223.92 C116.52,223.31 117.82,222.97 119.55,222.91 L121.46,222.84 L121.46,222.48 C121.46,221.80 121.30,221.32 120.99,221.05 C120.68,220.78 120.24,220.64 119.69,220.64 C119.17,220.64 118.64,220.73 118.10,220.89 C117.55,221.06 117.02,221.26 116.49,221.50 L115.55,219.33 C116.15,219.03 116.84,218.79 117.61,218.61 C118.39,218.42 119.25,218.33 120.18,218.33 Z M120.25,224.75 C119.25,224.78 118.56,224.95 118.18,225.23 C117.79,225.53 117.60,225.94 117.60,226.47 C117.60,226.96 117.73,227.32 118.00,227.56 C118.27,227.79 118.64,227.91 119.11,227.91 C119.77,227.91 120.32,227.71 120.77,227.31 C121.23,226.92 121.46,226.36 121.46,225.62 L121.46,224.69 Z M134.18,218.33 C135.43,218.33 136.43,218.66 137.16,219.33 C137.89,219.98 138.25,221.05 138.25,222.53 L138.25,230.00 L135.11,230.00 L135.11,223.33 C135.11,221.67 134.49,220.84 133.25,220.84 C132.30,220.84 131.66,221.17 131.32,221.83 C130.97,222.48 130.80,223.41 130.80,224.62 L130.80,230.00 L127.63,230.00 L127.63,218.53 L130.07,218.53 L130.50,220.06 L130.63,220.06 C131.39,218.91 132.57,218.33 134.18,218.33 Z M146.22,227.72 C146.57,227.72 146.91,227.68 147.22,227.61 C147.54,227.54 147.86,227.45 148.19,227.36 L148.19,229.69 C147.85,229.82 147.44,229.95 146.94,230.05 C146.45,230.15 145.91,230.20 145.31,230.20 C144.62,230.20 144.01,230.09 143.47,229.88 C142.94,229.65 142.51,229.26 142.19,228.70 C141.88,228.15 141.72,227.39 141.72,226.41 L141.72,220.89 L140.23,220.89 L140.23,219.56 L141.95,218.52 L142.86,216.09 L144.86,216.09 L144.86,218.53 L148.06,218.53 L148.06,220.89 L144.86,220.89 L144.86,226.41 C144.86,226.84 144.98,227.17 145.23,227.39 C145.48,227.61 145.81,227.72 146.22,227.72 Z M155.29,218.33 C156.88,218.33 158.13,218.78 159.05,219.67 C159.98,220.57 160.44,221.86 160.44,223.53 L160.44,225.06 L153.07,225.06 C153.11,225.93 153.37,226.61 153.86,227.11 C154.36,227.61 155.08,227.86 156.02,227.86 C156.74,227.86 157.39,227.79 157.97,227.66 C158.57,227.51 159.17,227.30 159.79,227.02 L159.79,229.39 C159.22,229.67 158.62,229.88 157.99,230.00 C157.36,230.13 156.60,230.20 155.69,230.20 C154.55,230.20 153.55,229.99 152.68,229.56 C151.80,229.14 151.11,228.49 150.60,227.62 C150.10,226.76 149.85,225.67 149.85,224.34 C149.85,222.34 150.35,220.84 151.35,219.84 C152.35,218.84 153.66,218.33 155.29,218.33 Z M155.38,220.58 C154.74,220.58 154.23,220.78 153.83,221.17 C153.43,221.57 153.21,222.16 153.14,222.94 L157.47,222.94 C157.46,222.26 157.29,221.70 156.94,221.25 C156.60,220.80 156.07,220.58 155.38,220.58 Z M169.27,218.33 C169.48,218.33 169.70,218.34 169.95,218.38 C170.18,218.40 170.38,218.42 170.54,218.45 L170.21,221.41 C170.06,221.37 169.88,221.34 169.66,221.31 C169.45,221.29 169.20,221.28 168.91,221.28 C168.48,221.28 168.04,221.38 167.60,221.56 C167.17,221.74 166.81,222.04 166.52,222.47 C166.24,222.89 166.10,223.46 166.10,224.19 L166.10,230.00 L162.93,230.00 L162.93,218.53 L165.35,218.53 L165.80,220.47 L165.96,220.47 C166.29,219.88 166.75,219.37 167.32,218.95 C167.90,218.54 168.55,218.33 169.27,218.33 Z M178.87,218.33 C180.12,218.33 181.12,218.66 181.85,219.33 C182.58,219.98 182.95,221.05 182.95,222.53 L182.95,230.00 L179.80,230.00 L179.80,223.33 C179.80,221.67 179.18,220.84 177.95,220.84 C177.00,220.84 176.35,221.17 176.01,221.83 C175.66,222.48 175.49,223.41 175.49,224.62 L175.49,230.00 L172.32,230.00 L172.32,218.53 L174.76,218.53 L175.20,220.06 L175.32,220.06 C176.08,218.91 177.26,218.33 178.87,218.33 Z M184.44,230.00"
+                    android:fillColor="@color/splash_glyph"
+                    android:fillAlpha="0" />
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="stemTop">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator android:propertyName="trimPathEnd" android:valueFrom="0" android:valueTo="1" android:duration="300" android:interpolator="@android:interpolator/fast_out_slow_in" />
+                <objectAnimator android:propertyName="pathData" android:valueFrom="M112.5,99 V132" android:valueTo="M112.5,99 V114" android:valueType="pathType" android:startOffset="330" android:duration="170" android:interpolator="@android:interpolator/fast_out_slow_in" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="stemMain">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator android:propertyName="trimPathEnd" android:valueFrom="0" android:valueTo="1" android:duration="300" android:interpolator="@android:interpolator/fast_out_slow_in" />
+                <objectAnimator android:propertyName="pathData" android:valueFrom="M112.5,132 V189 H175.5" android:valueTo="M112.5,150 V189 H175.5" android:valueType="pathType" android:startOffset="330" android:duration="170" android:interpolator="@android:interpolator/fast_out_slow_in" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="dotGroup">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator android:propertyName="translateX" android:valueFrom="-90" android:valueTo="0" android:startOffset="420" android:duration="480" android:interpolator="@android:interpolator/decelerate_cubic" />
+                <objectAnimator android:propertyName="scaleX" android:valueFrom="0.28" android:valueTo="1" android:startOffset="420" android:duration="280" android:interpolator="@android:interpolator/fast_out_slow_in" />
+                <objectAnimator android:propertyName="scaleY" android:valueFrom="0.28" android:valueTo="1" android:startOffset="420" android:duration="280" android:interpolator="@android:interpolator/fast_out_slow_in" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="dotFill">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="1" android:startOffset="420" android:duration="100" />
+        </aapt:attr>
+    </target>
+    <target android:name="appNameGroup">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="translateY" android:valueFrom="6" android:valueTo="0" android:startOffset="780" android:duration="320" android:interpolator="@android:interpolator/decelerate_cubic" />
+        </aapt:attr>
+    </target>
+    <target android:name="appName">
+        <aapt:attr name="android:animation">
+            <objectAnimator android:propertyName="fillAlpha" android:valueFrom="0" android:valueTo="1" android:startOffset="780" android:duration="280" android:interpolator="@android:interpolator/fast_out_slow_in" />
+        </aapt:attr>
+    </target>
+</animated-vector>

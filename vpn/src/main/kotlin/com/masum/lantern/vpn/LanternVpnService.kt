@@ -212,7 +212,7 @@ class LanternVpnService : VpnService() {
             )
         }
 
-        val stopIntent = Intent("com.masum.lantern.action.STOP_VPN").apply {
+        val stopIntent = Intent("${packageName}.action.STOP_VPN").apply {
             setPackage(packageName)
         }
         val stopPendingIntent = PendingIntent.getBroadcast(
@@ -222,7 +222,7 @@ class LanternVpnService : VpnService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val toggleShieldIntent = Intent("com.masum.lantern.action.TOGGLE_SHIELD").apply {
+        val toggleShieldIntent = Intent("${packageName}.action.TOGGLE_SHIELD").apply {
             setPackage(packageName)
         }
         val toggleShieldPendingIntent = PendingIntent.getBroadcast(

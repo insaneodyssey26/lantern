@@ -24,8 +24,10 @@ mockk = "1.14.11"
 robolectric = "4.17"
 profileInstaller = "1.4.1"
 okhttp = "5.5.1"
+coreSplashScreen = "1.2.0"
 
 [libraries]
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashScreen" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

@@ -20,13 +20,15 @@ class LanternNotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
         val pendingResult = goAsync()
+        val stopAction = "${context.packageName}.action.STOP_VPN"
+        val toggleAction = "${context.packageName}.action.TOGGLE_SHIELD"
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 when (intent?.action) {
-                    ACTION_STOP_VPN -> {
+                    stopAction -> {
                         stopMonitoringUseCase()
                     }
-                    ACTION_TOGGLE_SHIELD -> {
+                    toggleAction -> {
                         val current = settingsRepository.isBlockingEnabled().first()
                         settingsRepository.setBlockingEnabled(!current)
                     }

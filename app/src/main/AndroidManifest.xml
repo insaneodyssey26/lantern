@@ -22,7 +22,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="${appName}"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
@@ -30,8 +30,8 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.Lantern"
+            android:label="${appName}"
+            android:theme="@style/Theme.Lantern.Splash"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -57,8 +57,8 @@
             android:name=".receiver.LanternNotificationReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.masum.lantern.action.STOP_VPN" />
-                <action android:name="com.masum.lantern.action.TOGGLE_SHIELD" />
+                <action android:name="${applicationId}.action.STOP_VPN" />
+                <action android:name="${applicationId}.action.TOGGLE_SHIELD" />
             </intent-filter>
         </receiver>
 

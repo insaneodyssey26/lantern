@@ -3,4 +3,11 @@
     <style name="Theme.Lantern" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">#0F141C</item>
     </style>
+
+    <style name="Theme.Lantern.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/avd_lantern_splash</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="postSplashScreenTheme">@style/Theme.Lantern</item>
+    </style>
 </resources>

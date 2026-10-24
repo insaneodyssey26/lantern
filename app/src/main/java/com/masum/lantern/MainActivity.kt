@@ -1,10 +1,12 @@
 package com.masum.lantern
 
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +27,11 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var settingsRepository: SettingsRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+        val splashStartTime = SystemClock.uptimeMillis()
+        splashScreen.setKeepOnScreenCondition {
+            SystemClock.uptimeMillis() - splashStartTime < 1700L
+        }
         super.onCreate(savedInstanceState)
         val initialThemeMode = settingsRepository.getThemeModeSync()
         val initialColorTheme = settingsRepository.getColorThemeSync()
