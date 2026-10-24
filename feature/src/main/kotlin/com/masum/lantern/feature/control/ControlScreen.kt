@@ -62,12 +62,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberBottomSheetState
+import androidx.compose.material3.SheetValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -83,6 +87,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import com.masum.lantern.feature.whatsnew.WhatsNewContent
+import kotlinx.coroutines.launch
 import com.masum.lantern.core.ui.components.LanternHero
 import com.masum.lantern.core.ui.components.SpotlightStep
 import com.masum.lantern.core.ui.components.SpotlightTourOverlay
@@ -104,6 +110,8 @@ fun ControlScreen(
     val activeSession = uiState.monitoringState as? MonitoringState.Active
     val isActive = activeSession != null
     val haptics = rememberLanternHaptics()
+    val scope = rememberCoroutineScope()
+    val whatsNewSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
     var shieldRect by remember { mutableStateOf<Rect?>(null) }
     var snapshotRect by remember { mutableStateOf<Rect?>(null) }
@@ -298,6 +306,24 @@ fun ControlScreen(
                 viewModel.completeFeatureGuide()
             }
         )
+    }
+
+    if (uiState.showWhatsNewSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.dismissWhatsNew() },
+            sheetState = whatsNewSheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
+            WhatsNewContent(
+                onDismiss = {
+                    scope.launch {
+                        whatsNewSheetState.hide()
+                        viewModel.dismissWhatsNew()
+                    }
+                },
+                versionName = "2.0"
+            )
+        }
     }
 }
 }

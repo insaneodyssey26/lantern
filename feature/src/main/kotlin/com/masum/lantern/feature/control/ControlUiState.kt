@@ -13,4 +13,5 @@ data class ControlUiState(
     val isBlockingEnabled: Boolean = true,
     val upstreamDns: String = "1.1.1.1",
     val isFeatureGuideCompleted: Boolean = true,
+    val showWhatsNewSheet: Boolean = false,
 )

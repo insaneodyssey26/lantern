@@ -900,8 +900,8 @@ fun SettingsScreen(
                     onCheckUpdatesClick = {
                         haptics.tap()
                         updaterViewModel.checkForUpdates(
-                            currentVersionCode = 1,
-                            currentVersionName = "1.0",
+                            currentVersionCode = 2,
+                            currentVersionName = "2.0",
                             showSheetOnResult = true
                         )
                     }
@@ -961,7 +961,12 @@ fun SettingsScreen(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             AboutLanternSheet(
-                onDismiss = { showAboutSheet = false }
+                onDismiss = {
+                    scope.launch {
+                        aboutSheetState.hide()
+                        showAboutSheet = false
+                    }
+                }
             )
         }
     }
@@ -973,7 +978,12 @@ fun SettingsScreen(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             WhatsNewContent(
-                onDismiss = { showWhatsNewSheet = false }
+                onDismiss = {
+                    scope.launch {
+                        whatsNewSheetState.hide()
+                        showWhatsNewSheet = false
+                    }
+                }
             )
         }
     }
@@ -986,8 +996,8 @@ fun SettingsScreen(
             onInstallUpdate = { filePath -> updaterViewModel.installDownloadedUpdate(filePath) },
             onRetryCheck = {
                 updaterViewModel.checkForUpdates(
-                    currentVersionCode = 1,
-                    currentVersionName = "1.0",
+                    currentVersionCode = 2,
+                    currentVersionName = "2.0",
                     showSheetOnResult = true
                 )
             }
@@ -1400,7 +1410,7 @@ private fun LanternFooter(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = "v1.0",
+                                text = "v2.0",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,

@@ -40,12 +40,14 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val DecelerateEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
 
@@ -76,8 +79,9 @@ fun WhatsNewBottomSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     versionName: String = "2.0",
+    sheetState: SheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden),
 ) {
-    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
+    val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -86,7 +90,12 @@ fun WhatsNewBottomSheet(
         modifier = modifier
     ) {
         WhatsNewContent(
-            onDismiss = onDismiss,
+            onDismiss = {
+                scope.launch {
+                    sheetState.hide()
+                    onDismiss()
+                }
+            },
             versionName = versionName
         )
     }

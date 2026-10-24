@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - Lantern 2.0 (In Development)
+## Lantern 2.0 - (Rebranded from Vigil-1.0)
+
+### In-App GitHub Updater & What's New
+- **In-App GitHub Updater**: Built-in release check and APK downloader utilizing GitHub Releases API with streaming progress, SHA/integrity checks, and native Android `PackageInstaller` integration via `FileProvider`.
+- **Material 3 Expressive Squiggly Loader**: Integrated `CircularWavyProgressIndicator` with indeterminate wave animations during update checks and determinate progress during downloads.
+- **What's New Release Showcase**: Material 3 Expressive bottom sheet detailing major features and release highlights with adaptive chip tags that never wrap or overflow across form factors.
 
 ### Rebranding & Architecture Overhaul
 - **Project Renaming**: Rebranded from **Vigil** to **Lantern**, migrating the core Android application ID and package namespaces from `com.masum.vigil` to `com.masum.lantern`.

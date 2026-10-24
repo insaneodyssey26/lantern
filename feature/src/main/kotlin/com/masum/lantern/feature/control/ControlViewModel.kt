@@ -61,7 +61,20 @@ class ControlViewModel @Inject constructor(
                 _uiState.update { it.copy(isFeatureGuideCompleted = completed) }
             }
         }
+        viewModelScope.launch {
+            val lastSeen = settingsRepository.getLastSeenVersionCodeSync()
+            if (lastSeen < 2) {
+                _uiState.update { it.copy(showWhatsNewSheet = true) }
+            }
+        }
         refreshPrivateDnsStatus()
+    }
+
+    fun dismissWhatsNew() {
+        _uiState.update { it.copy(showWhatsNewSheet = false) }
+        viewModelScope.launch {
+            settingsRepository.setLastSeenVersionCode(2)
+        }
     }
 
     fun completeFeatureGuide() {
