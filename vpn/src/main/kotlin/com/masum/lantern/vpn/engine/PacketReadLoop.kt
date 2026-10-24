@@ -8,7 +8,7 @@ class PacketReadLoop(
     private val pfd: ParcelFileDescriptor,
     private val onPacket: (ByteArray) -> Unit,
 ) {
-    private val thread = Thread(::loop, "vigil-packet-reader").apply { isDaemon = true }
+    private val thread = Thread(::loop, "lantern-packet-reader").apply { isDaemon = true }
 
     fun start() = thread.start()
 

@@ -795,7 +795,7 @@ fun QueryDetailSheet(
 
                 Column {
                     Text(
-                        text = "Vigil Action / Verdict",
+                        text = "Lantern Action / Verdict",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

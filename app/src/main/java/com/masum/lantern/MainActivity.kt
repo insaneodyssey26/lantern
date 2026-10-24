@@ -1,5 +1,6 @@
 package com.masum.lantern
 
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import androidx.activity.ComponentActivity
@@ -63,6 +64,9 @@ class MainActivity : ComponentActivity() {
                         android.graphics.Color.TRANSPARENT,
                     ) { darkTheme }
                 )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
+                }
                 onDispose {}
             }
 

@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -67,6 +68,7 @@ import com.masum.lantern.feature.settings.SettingsScreen
 import com.masum.lantern.feature.stats.StatsScreen
 import com.masum.lantern.feature.stats.detail.SessionDetailScreen
 import com.masum.lantern.feature.whitelist.AppWhitelistScreen
+import com.masum.lantern.feature.whatsnew.WhatsNewBottomSheet
 
 private val EmphasizedEasing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
 private val EmphasizedDecelerateEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
@@ -76,7 +78,7 @@ private const val TAB_TRANSITION_DURATION = 320
 private const val TAB_SLIDE_FRACTION = 0.15f
 
 private fun isSubScreenRoute(route: String?): Boolean =
-    route in listOf("settings", "app_whitelist", "domain_rules", "onboarding") || route?.startsWith("session_detail/") == true
+    route in listOf("settings", "app_whitelist", "domain_rules", "onboarding", "whats_new") || route?.startsWith("session_detail/") == true
 
 private fun destinationOrder(route: String?): Int = when (route) {
     LanternDestination.Home.route -> 0
@@ -309,7 +311,8 @@ fun LanternNavHost(
                 SettingsScreen(
                     onBackClick = { navController.popBackStack() },
                     onNavigateToWhitelist = { navController.navigate("app_whitelist") },
-                    onNavigateToDomainRules = { navController.navigate("domain_rules") }
+                    onNavigateToDomainRules = { navController.navigate("domain_rules") },
+                    onNavigateToWhatsNew = { navController.navigate("whats_new") }
                 )
             }
             composable("app_whitelist") {
@@ -320,6 +323,11 @@ fun LanternNavHost(
             composable("domain_rules") {
                 DomainRulesScreen(
                     onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable("whats_new") {
+                WhatsNewBottomSheet(
+                    onDismiss = { navController.popBackStack() }
                 )
             }
             composable("onboarding") {
@@ -359,7 +367,9 @@ fun LanternNavHost(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)
                 ),
-                modifier = Modifier.height(54.dp)
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .height(54.dp)
             ) {
                     Row(
                         modifier = Modifier

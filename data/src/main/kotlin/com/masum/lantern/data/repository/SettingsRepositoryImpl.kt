@@ -15,7 +15,7 @@ class SettingsRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : SettingsRepository {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences("vigil_settings", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = context.getSharedPreferences("lantern_settings", Context.MODE_PRIVATE)
 
     override fun getThemeMode(): Flow<String> = callbackFlow {
         trySend(prefs.getString(KEY_THEME_MODE, "system") ?: "system")
@@ -287,6 +287,24 @@ class SettingsRepositoryImpl @Inject constructor(
         prefs.edit().putBoolean(KEY_FEATURE_GUIDE_COMPLETED, completed).apply()
     }
 
+    override fun getLastSeenVersionCode(): Flow<Int> = callbackFlow {
+        trySend(getLastSeenVersionCodeSync())
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_LAST_SEEN_VERSION_CODE) {
+                trySend(getLastSeenVersionCodeSync())
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override fun getLastSeenVersionCodeSync(): Int =
+        prefs.getInt(KEY_LAST_SEEN_VERSION_CODE, 0)
+
+    override suspend fun setLastSeenVersionCode(code: Int) {
+        prefs.edit().putInt(KEY_LAST_SEEN_VERSION_CODE, code).apply()
+    }
+
     companion object {
         private const val KEY_THEME_MODE   = "theme_mode"
         private const val KEY_COLOR_THEME  = "color_theme"
@@ -302,5 +320,6 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_USER_BLOCKED_DOMAINS = "user_blocked_domains"
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         private const val KEY_FEATURE_GUIDE_COMPLETED = "feature_guide_completed"
+        private const val KEY_LAST_SEEN_VERSION_CODE = "last_seen_version_code"
     }
 }

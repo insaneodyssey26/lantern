@@ -89,7 +89,7 @@ class DohClient(
             .url(endpointUrl)
             .post(requestBody)
             .header("Accept", "application/dns-message")
-            .header("User-Agent", "Vigil-Android-DoH")
+            .header("User-Agent", "Lantern-Android-DoH")
             .build()
 
         return runCatching {

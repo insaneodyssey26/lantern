@@ -54,4 +54,8 @@ interface SettingsRepository {
     fun isFeatureGuideCompleted(): Flow<Boolean>
     fun isFeatureGuideCompletedSync(): Boolean
     suspend fun setFeatureGuideCompleted(completed: Boolean)
+
+    fun getLastSeenVersionCode(): Flow<Int>
+    fun getLastSeenVersionCodeSync(): Int
+    suspend fun setLastSeenVersionCode(code: Int)
 }

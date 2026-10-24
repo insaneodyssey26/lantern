@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -107,6 +108,9 @@ import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
 import com.masum.lantern.core.ui.navigation.PredictiveBackContainer
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.masum.lantern.feature.settings.updater.UpdateBottomSheet
+import com.masum.lantern.feature.settings.updater.UpdaterViewModel
+import com.masum.lantern.feature.whatsnew.WhatsNewContent
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -117,15 +121,20 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     onNavigateToWhitelist: () -> Unit = {},
     onNavigateToDomainRules: () -> Unit = {},
-    viewModel: SettingsViewModel = hiltViewModel()
+    onNavigateToWhatsNew: () -> Unit = {},
+    viewModel: SettingsViewModel = hiltViewModel(),
+    updaterViewModel: UpdaterViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val updaterUiState by updaterViewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showClearConfirmDialog by remember { mutableStateOf(false) }
     var showAboutSheet by remember { mutableStateOf(false) }
+    var showWhatsNewSheet by remember { mutableStateOf(false) }
     val aboutSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
+    val whatsNewSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val haptics = rememberLanternHaptics()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -514,7 +523,7 @@ fun SettingsScreen(
                                 Icon(
                                     imageVector = Icons.Rounded.Security,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -659,7 +668,7 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.Rounded.Apps,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -724,7 +733,7 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.Rounded.Language,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -797,13 +806,13 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.secondaryContainer),
+                                .background(MaterialTheme.colorScheme.primaryContainer),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Share,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -883,6 +892,18 @@ fun SettingsScreen(
                     onAboutClick = {
                         haptics.tap()
                         showAboutSheet = true
+                    },
+                    onWhatsNewClick = {
+                        haptics.tap()
+                        showWhatsNewSheet = true
+                    },
+                    onCheckUpdatesClick = {
+                        haptics.tap()
+                        updaterViewModel.checkForUpdates(
+                            currentVersionCode = 1,
+                            currentVersionName = "1.0",
+                            showSheetOnResult = true
+                        )
                     }
                 )
             }
@@ -943,6 +964,34 @@ fun SettingsScreen(
                 onDismiss = { showAboutSheet = false }
             )
         }
+    }
+
+    if (showWhatsNewSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showWhatsNewSheet = false },
+            sheetState = whatsNewSheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
+            WhatsNewContent(
+                onDismiss = { showWhatsNewSheet = false }
+            )
+        }
+    }
+
+    if (updaterUiState.isSheetVisible) {
+        UpdateBottomSheet(
+            uiState = updaterUiState,
+            onDismiss = { updaterViewModel.dismissSheet() },
+            onStartDownload = { update -> updaterViewModel.startDownload(update) },
+            onInstallUpdate = { filePath -> updaterViewModel.installDownloadedUpdate(filePath) },
+            onRetryCheck = {
+                updaterViewModel.checkForUpdates(
+                    currentVersionCode = 1,
+                    currentVersionName = "1.0",
+                    showSheetOnResult = true
+                )
+            }
+        )
     }
     }
 }
@@ -1229,7 +1278,9 @@ private fun DnsProviderTile(
 
 @Composable
 private fun LanternFooter(
-    onAboutClick: () -> Unit
+    onAboutClick: () -> Unit,
+    onWhatsNewClick: () -> Unit,
+    onCheckUpdatesClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -1238,6 +1289,73 @@ private fun LanternFooter(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        Surface(
+            onClick = onWhatsNewClick,
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+            )
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "What's New in Lantern",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Text(
+                                text = "New",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Explore key highlights and features in this release",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
         Surface(
             onClick = onAboutClick,
             shape = MaterialTheme.shapes.extraLarge,
@@ -1262,7 +1380,7 @@ private fun LanternFooter(
                     Icon(
                         imageVector = Icons.Rounded.Shield,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -1279,19 +1397,69 @@ private fun LanternFooter(
                         )
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
                                 text = "v1.0",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
                     }
                     Text(
                         text = "About, architecture, privacy & source code",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        Surface(
+            onClick = onCheckUpdatesClick,
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+            )
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Refresh,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = "Check for Updates",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Query GitHub Releases for new Lantern builds",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1336,7 +1504,7 @@ private fun AboutLanternSheet(
                 Icon(
                     imageVector = Icons.Rounded.Shield,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(24.dp)
                 )
             }

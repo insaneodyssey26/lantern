@@ -11,6 +11,8 @@ Lantern is an on-device DNS firewall and network monitor for Android. It lets yo
 
 ## Key Highlights
 
+- **Animated Gate Splash & Brand Identity**: Custom hardware-accelerated animated vector drawable (AVD) splash screen with gate glyph dynamics, brand typography reveal, and adaptive launcher icons.
+- **Dual Build Variant Architecture**: Parallel side-by-side installations for development (`.debug` suffix with isolated IPC/notification intents) and release builds without cross-package collision.
 - **Active Blocking & Passive Audit Modes**: Switch seamlessly between proactive DNS-sinkholing (`NXDOMAIN` or `0.0.0.0`) to neutralize trackers, or passive audit mode to observe background telemetry without dropping queries.
 - **Custom Domain Rules & App Whitelisting**: Granular per-domain custom whitelist/blocklist and per-application kernel VPN bypass (`VpnService.Builder.addDisallowedApplication` allowing banking and VoIP apps to communicate directly through the physical network interface).
 - **Encrypted DNS Transports (DoH & DoT)**:

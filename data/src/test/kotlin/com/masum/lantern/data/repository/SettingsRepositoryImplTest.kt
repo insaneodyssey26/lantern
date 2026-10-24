@@ -21,7 +21,7 @@ class SettingsRepositoryImplTest {
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
-        context.getSharedPreferences("vigil_settings", Context.MODE_PRIVATE).edit().clear().commit()
+        context.getSharedPreferences("lantern_settings", Context.MODE_PRIVATE).edit().clear().commit()
         repository = SettingsRepositoryImpl(context)
     }
 
@@ -34,6 +34,7 @@ class SettingsRepositoryImplTest {
         assertFalse(repository.isUseSystemFontSync())
         assertFalse(repository.isOnboardingCompletedSync())
         assertFalse(repository.isFeatureGuideCompletedSync())
+        assertEquals(0, repository.getLastSeenVersionCodeSync())
         assertTrue(repository.getUserAllowedDomainsSync().isEmpty())
         assertTrue(repository.getUserBlockedDomainsSync().isEmpty())
     }
@@ -150,5 +151,15 @@ class SettingsRepositoryImplTest {
             assertTrue(awaitItem())
         }
         assertTrue(repository.isFeatureGuideCompletedSync())
+    }
+
+    @Test
+    fun `lastSeenVersionCode updates correctly`() = runTest {
+        repository.getLastSeenVersionCode().test {
+            assertEquals(0, awaitItem())
+            repository.setLastSeenVersionCode(2)
+            assertEquals(2, awaitItem())
+        }
+        assertEquals(2, repository.getLastSeenVersionCodeSync())
     }
 }
