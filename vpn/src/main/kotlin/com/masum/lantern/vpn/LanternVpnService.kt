@@ -37,6 +37,8 @@ class LanternVpnService : VpnService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val queryCount = AtomicInteger(0)
     private val blockedCount = AtomicInteger(0)
+    private var lastNotifiedQueryCount = -1
+    private var lastNotifiedBlockedCount = -1
     @Volatile private var isBlocking = true
     @Volatile private var activeProtocol = "UDP"
 
@@ -140,11 +142,19 @@ class LanternVpnService : VpnService() {
     private suspend fun refreshNotificationPeriodically() {
         while (true) {
             delay(NOTIFICATION_REFRESH_MS)
-            updateNotificationImmediately()
+            val currentQueries = queryCount.get()
+            val currentBlocked = blockedCount.get()
+            if (currentQueries != lastNotifiedQueryCount || currentBlocked != lastNotifiedBlockedCount) {
+                lastNotifiedQueryCount = currentQueries
+                lastNotifiedBlockedCount = currentBlocked
+                updateNotificationImmediately()
+            }
         }
     }
 
     private fun updateNotificationImmediately() {
+        lastNotifiedQueryCount = queryCount.get()
+        lastNotifiedBlockedCount = blockedCount.get()
         runCatching {
             getSystemService(NotificationManager::class.java)
                 .notify(NOTIFICATION_ID, buildNotification())
