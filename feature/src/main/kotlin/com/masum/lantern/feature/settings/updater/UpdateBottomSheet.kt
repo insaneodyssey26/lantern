@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -80,9 +81,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
@@ -260,6 +265,7 @@ private fun UpdateErrorView(
     onDismiss: () -> Unit
 ) {
     val haptics = rememberLanternHaptics()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -301,6 +307,35 @@ private fun UpdateErrorView(
             )
         }
 
+        Button(
+            onClick = {
+                haptics.tap()
+                val intent = android.content.Intent(
+                    android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://github.com/insaneodyssey26/lantern/releases")
+                ).apply {
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+            },
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.OpenInNew,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Open GitHub Releases", fontWeight = FontWeight.SemiBold)
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -315,7 +350,7 @@ private fun UpdateErrorView(
                     .weight(1f)
                     .height(48.dp)
             ) {
-                Text("Cancel")
+                Text("Dismiss")
             }
 
             Button(
@@ -346,11 +381,9 @@ private fun UpdateAvailableView(
     val scrollState = rememberScrollState()
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(scrollState),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -410,7 +443,9 @@ private fun UpdateAvailableView(
 
         if (update.releaseNotes.isNotBlank()) {
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 280.dp),
                 shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
@@ -421,12 +456,14 @@ private fun UpdateAvailableView(
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.padding(bottom = 12.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.AutoAwesome,
@@ -435,18 +472,21 @@ private fun UpdateAvailableView(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Changelog",
+                            text = "Release Notes",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    Text(
-                        text = update.releaseNotes.trim(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
-                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(scrollState),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        FormattedReleaseNotes(markdown = update.releaseNotes)
+                    }
                 }
             }
         }
@@ -535,6 +575,119 @@ private fun UpdateAvailableView(
                     )
                 ) {
                     Text("Retry Download", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FormattedReleaseNotes(markdown: String) {
+    val lines = remember(markdown) { markdown.lines() }
+
+    lines.forEach { rawLine ->
+        val line = rawLine.trim()
+        when {
+            line.isBlank() -> {
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+            line.startsWith("### ") -> {
+                Text(
+                    text = line.removePrefix("### ").trim(),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 6.dp)
+                )
+            }
+            line.startsWith("## ") -> {
+                Text(
+                    text = line.removePrefix("## ").trim(),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+            line.startsWith("- ") || line.startsWith("* ") -> {
+                val bulletContent = line.substring(2).trim()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 6.dp)
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                    )
+                    Text(
+                        text = parseInlineMarkdown(bulletContent),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 19.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            else -> {
+                Text(
+                    text = parseInlineMarkdown(line),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 19.sp
+                )
+            }
+        }
+    }
+}
+
+private fun parseInlineMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
+    return buildAnnotatedString {
+        var cursor = 0
+        while (cursor < text.length) {
+            val boldStart = text.indexOf("**", cursor)
+            val codeStart = text.indexOf('`', cursor)
+
+            val nextSpecial = when {
+                boldStart != -1 && codeStart != -1 -> minOf(boldStart, codeStart)
+                boldStart != -1 -> boldStart
+                codeStart != -1 -> codeStart
+                else -> -1
+            }
+
+            if (nextSpecial == -1) {
+                append(text.substring(cursor))
+                break
+            }
+
+            if (nextSpecial > cursor) {
+                append(text.substring(cursor, nextSpecial))
+            }
+
+            if (nextSpecial == boldStart) {
+                val boldEnd = text.indexOf("**", boldStart + 2)
+                if (boldEnd != -1) {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(text.substring(boldStart + 2, boldEnd))
+                    }
+                    cursor = boldEnd + 2
+                } else {
+                    append(text.substring(boldStart))
+                    break
+                }
+            } else {
+                val codeEnd = text.indexOf('`', codeStart + 1)
+                if (codeEnd != -1) {
+                    withStyle(SpanStyle(fontFamily = FontFamily.Monospace)) {
+                        append(text.substring(codeStart + 1, codeEnd))
+                    }
+                    cursor = codeEnd + 1
+                } else {
+                    append(text.substring(codeStart))
+                    break
                 }
             }
         }

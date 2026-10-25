@@ -899,11 +899,7 @@ fun SettingsScreen(
                     },
                     onCheckUpdatesClick = {
                         haptics.tap()
-                        updaterViewModel.checkForUpdates(
-                            currentVersionCode = 2,
-                            currentVersionName = "2.0",
-                            showSheetOnResult = true
-                        )
+                        updaterViewModel.checkForUpdates(showSheetOnResult = true)
                     }
                 )
             }
@@ -995,11 +991,7 @@ fun SettingsScreen(
             onStartDownload = { update -> updaterViewModel.startDownload(update) },
             onInstallUpdate = { filePath -> updaterViewModel.installDownloadedUpdate(filePath) },
             onRetryCheck = {
-                updaterViewModel.checkForUpdates(
-                    currentVersionCode = 2,
-                    currentVersionName = "2.0",
-                    showSheetOnResult = true
-                )
+                updaterViewModel.checkForUpdates(showSheetOnResult = true)
             }
         )
     }

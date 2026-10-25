@@ -33,11 +33,19 @@ class UpdateRepositoryImpl @Inject constructor(
         .followSslRedirects(true)
         .build()
 
-    override suspend fun checkForUpdate(
-        currentVersionCode: Int,
-        currentVersionName: String,
-    ): Result<AppUpdate?> = withContext(Dispatchers.IO) {
+    override suspend fun checkForUpdate(): Result<AppUpdate?> = withContext(Dispatchers.IO) {
         runCatching {
+            val packageInfo = runCatching {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    context.packageManager.getPackageInfo(context.packageName, android.content.pm.PackageManager.PackageInfoFlags.of(0))
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.packageManager.getPackageInfo(context.packageName, 0)
+                }
+            }.getOrNull()
+
+            val currentVersionName = packageInfo?.versionName?.removeSuffix("-debug") ?: "2.0"
+
             val req = Request.Builder()
                 .url("https://api.github.com/repos/insaneodyssey26/lantern/releases/latest")
                 .header("Accept", "application/vnd.github+json")
@@ -57,7 +65,6 @@ class UpdateRepositoryImpl @Inject constructor(
             val publishedAt = root.optString("published_at", "")
 
             val cleanTagVersion = tagName.removePrefix("v").removePrefix("Vigil-").removePrefix("Lantern-").trim()
-            val remoteVersionCode = parseVersionCode(cleanTagVersion)
 
             val assets = root.optJSONArray("assets") ?: return@runCatching null
             var apkDownloadUrl: String? = null
@@ -79,11 +86,7 @@ class UpdateRepositoryImpl @Inject constructor(
                 return@runCatching null
             }
 
-            val isNewer = if (remoteVersionCode > 0 && currentVersionCode > 0) {
-                remoteVersionCode > currentVersionCode
-            } else {
-                isVersionNewer(cleanTagVersion, currentVersionName)
-            }
+            val isNewer = isVersionNewer(cleanTagVersion, currentVersionName)
 
             if (!isNewer) {
                 return@runCatching null
@@ -91,7 +94,7 @@ class UpdateRepositoryImpl @Inject constructor(
 
             AppUpdate(
                 versionName = cleanTagVersion.ifBlank { tagName },
-                versionCode = remoteVersionCode,
+                versionCode = 0,
                 releaseTitle = releaseTitle,
                 releaseNotes = releaseNotes,
                 apkDownloadUrl = apkDownloadUrl,
@@ -189,14 +192,13 @@ class UpdateRepositoryImpl @Inject constructor(
         context.startActivity(intent)
     }
 
-    private fun parseVersionCode(version: String): Int {
-        val digits = version.filter { it.isDigit() }
-        return digits.toIntOrNull() ?: 0
-    }
-
     private fun isVersionNewer(remote: String, current: String): Boolean {
-        val remoteParts = remote.split('.').mapNotNull { it.filter { ch -> ch.isDigit() }.toIntOrNull() }
-        val currentParts = current.split('.').mapNotNull { it.filter { ch -> ch.isDigit() }.toIntOrNull() }
+        val cleanRemote = remote.substringBefore('-').substringBefore('+')
+        val cleanCurrent = current.substringBefore('-').substringBefore('+')
+
+        val remoteParts = cleanRemote.split('.').mapNotNull { it.toIntOrNull() }
+        val currentParts = cleanCurrent.split('.').mapNotNull { it.toIntOrNull() }
+
         val maxLen = maxOf(remoteParts.size, currentParts.size)
         for (i in 0 until maxLen) {
             val r = remoteParts.getOrElse(i) { 0 }

@@ -38,12 +38,12 @@ class UpdaterViewModel @Inject constructor(
 
     private var downloadJob: Job? = null
 
-    fun checkForUpdates(currentVersionCode: Int, currentVersionName: String, showSheetOnResult: Boolean = true) {
+    fun checkForUpdates(showSheetOnResult: Boolean = true) {
         if (_uiState.value.status is UpdateCheckStatus.Checking) return
 
         _uiState.update { it.copy(status = UpdateCheckStatus.Checking) }
         viewModelScope.launch {
-            val result = updateRepository.checkForUpdate(currentVersionCode, currentVersionName)
+            val result = updateRepository.checkForUpdate()
             result.fold(
                 onSuccess = { update ->
                     if (update != null) {
