@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class DnsResponseCache(
     private val maxEntries: Int = 2048,
     private val defaultTtlSeconds: Long = 300L,
-    private val minTtlSeconds: Long = 10L,
+    private val minTtlSeconds: Long = 60L,
     private val maxTtlSeconds: Long = 86400L,
 ) {
     private data class CacheEntry(
