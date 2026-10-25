@@ -360,9 +360,19 @@ private fun SessionHeroCard(
                     value = uiState.totalQueries.toString(),
                     modifier = Modifier.weight(1f)
                 )
+                val (metricTitle, metricValue) = when {
+                    uiState.blockedQueries > 0 && uiState.auditedQueries == 0 ->
+                        "Blocked" to "${uiState.blockedQueries} (${uiState.trackerPercentage}%)"
+                    uiState.blockedQueries == 0 && uiState.auditedQueries > 0 ->
+                        "Audited" to "${uiState.auditedQueries} (${uiState.trackerPercentage}%)"
+                    uiState.blockedQueries > 0 && uiState.auditedQueries > 0 ->
+                        "Filtered" to "${uiState.blockedQueries} blk · ${uiState.auditedQueries} aud"
+                    else ->
+                        "Threats" to "0 (0%)"
+                }
                 SessionMetricPill(
-                    title = "Blocked",
-                    value = "${uiState.trackerQueries} (${uiState.trackerPercentage}%)",
+                    title = metricTitle,
+                    value = metricValue,
                     valueColor = if (uiState.trackerQueries > 0) VerdictTracker else VerdictSafe,
                     modifier = Modifier.weight(1.2f)
                 )
@@ -531,14 +541,28 @@ private fun SessionAppsList(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Spacer(modifier = Modifier.height(2.dp))
+                            val detailText = when {
+                                app.blockedQueries > 0 && app.auditedQueries == 0 ->
+                                    "${app.totalQueries} calls · ${app.blockedQueries} blocked (${app.trackerPercentage}%)"
+                                app.blockedQueries == 0 && app.auditedQueries > 0 ->
+                                    "${app.totalQueries} calls · ${app.auditedQueries} audited (${app.trackerPercentage}%)"
+                                app.blockedQueries > 0 && app.auditedQueries > 0 ->
+                                    "${app.totalQueries} calls · ${app.blockedQueries} blk, ${app.auditedQueries} aud"
+                                else ->
+                                    "${app.totalQueries} calls · 0 trackers"
+                            }
                             Text(
-                                text = "${app.totalQueries} calls · ${app.trackerQueries} trackers (${app.trackerPercentage}%)",
+                                text = detailText,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
-                        val verdict = if (app.trackerQueries > 0) ExpressiveVerdict.BLOCKED else ExpressiveVerdict.SAFE
+                        val verdict = when {
+                            app.blockedQueries > 0 -> ExpressiveVerdict.BLOCKED
+                            app.trackerQueries > 0 -> ExpressiveVerdict.AUDITED
+                            else -> ExpressiveVerdict.SAFE
+                        }
                         ExpressiveVerdictBadge(verdict = verdict)
                     }
                 }

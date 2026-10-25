@@ -7,6 +7,7 @@ data class ControlUiState(
     val monitoringState: MonitoringState = MonitoringState.Idle,
     val totalQueries: Int = 0,
     val trackerQueries: Int = 0,
+    val blockedQueries: Int = 0,
     val isPrivateDnsActive: Boolean = false,
     val pendingConsentIntent: Intent? = null,
     val blocklistCount: Int = 0,

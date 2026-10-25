@@ -263,6 +263,7 @@ fun ControlScreen(
                 ExpressiveSegmentedMetrics(
                     totalQueries = uiState.totalQueries,
                     trackerQueries = uiState.trackerQueries,
+                    blockedQueries = uiState.blockedQueries,
                     blocklistCount = uiState.blocklistCount,
                     isBlockingEnabled = uiState.isBlockingEnabled,
                     onBlockedClick = {
@@ -409,6 +410,7 @@ private fun ExpressiveLivePulseStrip(
 private fun ExpressiveSegmentedMetrics(
     totalQueries: Int,
     trackerQueries: Int,
+    blockedQueries: Int,
     blocklistCount: Int,
     isBlockingEnabled: Boolean,
     onBlockedClick: () -> Unit = {},
@@ -417,6 +419,45 @@ private fun ExpressiveSegmentedMetrics(
     onRulesetClick: () -> Unit = {}
 ) {
     val cleanQueries = (totalQueries - trackerQueries).coerceAtLeast(0)
+    val auditedQueries = (trackerQueries - blockedQueries).coerceAtLeast(0)
+
+    val (tileTitle, tileCount, tileLabel, tileIcon, showSplitPills) = when {
+        blockedQueries > 0 && auditedQueries == 0 -> Quintuple(
+            "Blocked Trackers",
+            blockedQueries.toString(),
+            "Threats silenced",
+            Icons.Rounded.Block,
+            false
+        )
+        blockedQueries == 0 && auditedQueries > 0 -> Quintuple(
+            "Trackers Detected",
+            auditedQueries.toString(),
+            "Audited passively",
+            Icons.Rounded.Shield,
+            false
+        )
+        blockedQueries > 0 && auditedQueries > 0 -> Quintuple(
+            "Trackers Handled",
+            trackerQueries.toString(),
+            "",
+            Icons.Rounded.Block,
+            true
+        )
+        isBlockingEnabled -> Quintuple(
+            "Blocked Trackers",
+            "0",
+            "Threats silenced",
+            Icons.Rounded.Block,
+            false
+        )
+        else -> Quintuple(
+            "Trackers Detected",
+            "0",
+            "Audited passively",
+            Icons.Rounded.Shield,
+            false
+        )
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -427,14 +468,33 @@ private fun ExpressiveSegmentedMetrics(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             MetricTile(
-                title = if (isBlockingEnabled) "Blocked Trackers" else "Trackers Detected",
-                count = trackerQueries.toString(),
-                label = if (isBlockingEnabled) "Threats silenced" else "Audited passively",
-                icon = if (isBlockingEnabled) Icons.Rounded.Block else Icons.Rounded.Shield,
+                title = tileTitle,
+                count = tileCount,
+                label = tileLabel,
+                icon = tileIcon,
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.onErrorContainer,
                 onClick = onBlockedClick,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                customBottomContent = if (showSplitPills) {
+                    {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            ExpressiveSubPill(
+                                label = "$blockedQueries blocked",
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                            )
+                            ExpressiveSubPill(
+                                label = "$auditedQueries audited",
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                            )
+                        }
+                    }
+                } else null
             )
 
             MetricTile(
@@ -487,7 +547,8 @@ private fun MetricTile(
     containerColor: Color,
     contentColor: Color,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    customBottomContent: (@Composable () -> Unit)? = null
 ) {
     Card(
         onClick = onClick,
@@ -538,12 +599,37 @@ private fun MetricTile(
                 color = contentColor
             )
 
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = contentColor.copy(alpha = 0.7f)
-            )
+            if (customBottomContent != null) {
+                customBottomContent()
+            } else {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor.copy(alpha = 0.7f)
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun ExpressiveSubPill(
+    label: String,
+    contentColor: Color,
+    containerColor: Color
+) {
+    Box(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.extraSmall)
+            .background(containerColor)
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = contentColor
+        )
     }
 }
 
@@ -867,6 +953,14 @@ private fun PrivateDnsExpressiveWarning(
         }
     }
 }
+
+private data class Quintuple<A, B, C, D, E>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D,
+    val fifth: E
+)
 
 private fun Int.formatCount(): String = when {
     this >= 1_000_000 -> "${this / 1_000_000}M"

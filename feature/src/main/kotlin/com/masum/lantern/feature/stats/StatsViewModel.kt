@@ -42,8 +42,16 @@ class StatsViewModel @Inject constructor(
         StatsUiState(
             totalQueries = summary.totalQueries,
             trackerQueries = summary.trackerQueries,
+            blockedQueries = summary.blockedQueries,
             trackerPercentage = (summary.trackerPercentage * 100).toInt(),
-            topDomains = summary.topDomains.map { DomainStatUiModel(it.domain, it.count, it.isTracker) },
+            topDomains = summary.topDomains.map {
+                DomainStatUiModel(
+                    domain = it.domain,
+                    count = it.count,
+                    isTracker = it.isTracker,
+                    isBlocked = it.isBlocked,
+                )
+            },
             blocklistCount = blocklistRepository.domainCount(),
             apps = apps.map { it.toUiModel() },
             sessions = sessions.map { it.toUiModel(now) }
@@ -68,6 +76,7 @@ class StatsViewModel @Inject constructor(
         packageName = appInfo.packageName,
         totalQueries = totalQueries,
         trackerQueries = trackerQueries,
+        blockedQueries = blockedQueries,
         trackerPercentage = (trackerPercentage * 100).toInt(),
     )
 
@@ -77,6 +86,7 @@ class StatsViewModel @Inject constructor(
         duration = if (isActive) "Active" else formatDuration(startedAt, endedAt ?: now),
         totalQueries = totalQueries,
         trackerQueries = trackerQueries,
+        blockedQueries = blockedQueries,
         trackerPercentage = (trackerPercentage * 100).toInt(),
         isActive = isActive,
     )

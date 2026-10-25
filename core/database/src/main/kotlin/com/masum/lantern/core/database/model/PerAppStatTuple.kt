@@ -6,4 +6,5 @@ data class PerAppStatTuple(
     val appUid: Int,
     val totalQueries: Int,
     val trackerQueries: Int,
+    val blockedQueries: Int = 0,
 )

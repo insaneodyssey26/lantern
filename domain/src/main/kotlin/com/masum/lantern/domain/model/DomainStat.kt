@@ -4,4 +4,5 @@ data class DomainStat(
     val domain: String,
     val count: Int,
     val isTracker: Boolean,
+    val isBlocked: Boolean = false,
 )

@@ -255,6 +255,7 @@ private fun OverviewTabContent(uiState: StatsUiState) {
                 trackerPercentage = uiState.trackerPercentage,
                 totalQueries = uiState.totalQueries,
                 trackerQueries = uiState.trackerQueries,
+                blockedQueries = uiState.blockedQueries,
                 cleanQueries = uiState.cleanQueries,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -308,15 +309,27 @@ private fun OverviewTabContent(uiState: StatsUiState) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.weight(1f)
                     ) {
+                        val countText = when {
+                            uiState.blockedQueries > 0 && uiState.auditedQueries == 0 -> uiState.blockedQueries.formatCount()
+                            uiState.blockedQueries == 0 && uiState.auditedQueries > 0 -> uiState.auditedQueries.formatCount()
+                            uiState.blockedQueries > 0 && uiState.auditedQueries > 0 -> "${uiState.blockedQueries.formatCount()}/${uiState.auditedQueries.formatCount()}"
+                            else -> "0"
+                        }
+                        val labelText = when {
+                            uiState.blockedQueries > 0 && uiState.auditedQueries == 0 -> "Threats Blocked"
+                            uiState.blockedQueries == 0 && uiState.auditedQueries > 0 -> "Trackers Audited"
+                            uiState.blockedQueries > 0 && uiState.auditedQueries > 0 -> "Blocked / Audited"
+                            else -> "Threats Detected"
+                        }
                         Text(
-                            text = uiState.trackerQueries.formatCount(),
+                            text = countText,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = VerdictTracker
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Threats Blocked",
+                            text = labelText,
                             style = MaterialTheme.typography.labelSmall,
                             color = VerdictTracker.copy(alpha = 0.85f),
                             fontWeight = FontWeight.Medium
@@ -460,14 +473,28 @@ private fun AppsTabContent(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Spacer(modifier = Modifier.height(2.dp))
+                            val detailText = when {
+                                app.blockedQueries > 0 && app.auditedQueries == 0 ->
+                                    "${app.totalQueries} calls · ${app.blockedQueries} blocked (${app.trackerPercentage}%)"
+                                app.blockedQueries == 0 && app.auditedQueries > 0 ->
+                                    "${app.totalQueries} calls · ${app.auditedQueries} audited (${app.trackerPercentage}%)"
+                                app.blockedQueries > 0 && app.auditedQueries > 0 ->
+                                    "${app.totalQueries} calls · ${app.blockedQueries} blk, ${app.auditedQueries} aud"
+                                else ->
+                                    "${app.totalQueries} calls · 0 trackers"
+                            }
                             Text(
-                                text = "${app.totalQueries} calls · ${app.trackerQueries} trackers (${app.trackerPercentage}%)",
+                                text = detailText,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
-                        val verdict = if (app.trackerQueries > 0) ExpressiveVerdict.BLOCKED else ExpressiveVerdict.SAFE
+                        val verdict = when {
+                            app.blockedQueries > 0 -> ExpressiveVerdict.BLOCKED
+                            app.trackerQueries > 0 -> ExpressiveVerdict.AUDITED
+                            else -> ExpressiveVerdict.SAFE
+                        }
                         ExpressiveVerdictBadge(verdict = verdict)
                     }
                 }
@@ -561,9 +588,17 @@ private fun SessionsTabContent(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            val trackerSummaryText = when {
+                                session.blockedQueries > 0 && session.auditedQueries == 0 ->
+                                    "${session.blockedQueries} Blocked (${session.trackerPercentage}%)"
+                                session.blockedQueries == 0 && session.auditedQueries > 0 ->
+                                    "${session.auditedQueries} Audited (${session.trackerPercentage}%)"
+                                session.blockedQueries > 0 && session.auditedQueries > 0 ->
+                                    "${session.blockedQueries} Blk · ${session.auditedQueries} Aud"
+                                else -> "100% Clean"
+                            }
                             Text(
-                                text = if (session.trackerQueries > 0) "${session.trackerQueries} Blocked (${session.trackerPercentage}%)"
-                                else "100% Clean",
+                                text = trackerSummaryText,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = if (session.trackerQueries > 0) VerdictTracker else VerdictSafe,
                                 fontWeight = FontWeight.SemiBold
@@ -716,6 +751,7 @@ private fun PixelTelemetryRadialGauge(
     trackerPercentage: Int,
     totalQueries: Int,
     trackerQueries: Int,
+    blockedQueries: Int,
     cleanQueries: Int,
     modifier: Modifier = Modifier
 ) {
@@ -732,6 +768,7 @@ private fun PixelTelemetryRadialGauge(
 
     val totalArc = 200f
     val startAngle = 170f
+    val auditedQueries = (trackerQueries - blockedQueries).coerceAtLeast(0)
 
     Box(
         modifier = modifier
@@ -832,8 +869,18 @@ private fun PixelTelemetryRadialGauge(
                         .clip(CircleShape)
                         .background(if (trackerPercentage > 0) error else primary)
                 )
+                val statusBadgeText = when {
+                    blockedQueries > 0 && auditedQueries == 0 ->
+                        "${blockedQueries.formatCount()} blocked · ${cleanQueries.formatCount()} clean"
+                    blockedQueries == 0 && auditedQueries > 0 ->
+                        "${auditedQueries.formatCount()} audited · ${cleanQueries.formatCount()} clean"
+                    blockedQueries > 0 && auditedQueries > 0 ->
+                        "${blockedQueries.formatCount()} blk · ${auditedQueries.formatCount()} aud · ${cleanQueries.formatCount()} clean"
+                    else ->
+                        "0 threats · ${cleanQueries.formatCount()} clean"
+                }
                 Text(
-                    text = "${trackerQueries.formatCount()} blocked · ${cleanQueries.formatCount()} clean",
+                    text = statusBadgeText,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold
@@ -883,8 +930,13 @@ private fun ExpressiveDomainBar(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
                 )
+                val domainVerdict = when {
+                    domain.isTracker && domain.isBlocked -> ExpressiveVerdict.BLOCKED
+                    domain.isTracker -> ExpressiveVerdict.AUDITED
+                    else -> ExpressiveVerdict.SAFE
+                }
                 ExpressiveVerdictBadge(
-                    verdict = if (domain.isTracker) ExpressiveVerdict.BLOCKED else ExpressiveVerdict.SAFE
+                    verdict = domainVerdict
                 )
             }
         }

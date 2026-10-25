@@ -51,6 +51,7 @@ class SessionDetailViewModel @Inject constructor(
                 isActive = session.isActive,
                 totalQueries = session.totalQueries,
                 trackerQueries = session.trackerQueries,
+                blockedQueries = session.blockedQueries,
                 trackerPercentage = (session.trackerPercentage * 100).toInt(),
                 apps = apps.map { it.toUiModel() },
                 queries = queries.map { it.toUiModel() },
@@ -80,6 +81,7 @@ class SessionDetailViewModel @Inject constructor(
         packageName = appInfo.packageName,
         totalQueries = totalQueries,
         trackerQueries = trackerQueries,
+        blockedQueries = blockedQueries,
         trackerPercentage = (trackerPercentage * 100).toInt()
     )
 

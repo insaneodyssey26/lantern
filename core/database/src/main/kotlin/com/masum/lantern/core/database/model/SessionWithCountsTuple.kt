@@ -6,4 +6,5 @@ data class SessionWithCountsTuple(
     val endedAt: Long?,
     val totalQueries: Int,
     val trackerQueries: Int,
+    val blockedQueries: Int = 0,
 )

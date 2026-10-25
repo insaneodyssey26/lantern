@@ -52,16 +52,26 @@ fun SessionWithCountsTuple.toSessionSummary(): SessionSummary = SessionSummary(
     endedAt = endedAt,
     totalQueries = totalQueries,
     trackerQueries = trackerQueries,
+    blockedQueries = blockedQueries,
 )
 
 fun PerAppStatTuple.toPerAppStat(): PerAppStat = PerAppStat(
     appInfo = AppInfo(uid = appUid, packageName = appPackageName, appName = appName),
     totalQueries = totalQueries,
     trackerQueries = trackerQueries,
+    blockedQueries = blockedQueries,
 )
 
 fun SummaryTotals.toSummaryStats(topDomains: List<DomainStatTuple>): SummaryStats = SummaryStats(
     totalQueries = totalQueries,
     trackerQueries = trackerQueries,
-    topDomains = topDomains.map { DomainStat(domain = it.domain, count = it.count, isTracker = it.isTracker != 0) },
+    blockedQueries = blockedQueries,
+    topDomains = topDomains.map {
+        DomainStat(
+            domain = it.domain,
+            count = it.count,
+            isTracker = it.isTracker != 0,
+            isBlocked = it.isBlocked != 0,
+        )
+    },
 )

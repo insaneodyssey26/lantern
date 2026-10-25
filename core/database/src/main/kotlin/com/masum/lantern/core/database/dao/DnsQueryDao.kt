@@ -24,7 +24,8 @@ interface DnsQueryDao {
     @Query("""
         SELECT appPackageName, appName, appUid,
                COUNT(*) AS totalQueries,
-               SUM(CASE WHEN verdictType = 1 THEN 1 ELSE 0 END) AS trackerQueries
+               SUM(CASE WHEN verdictType = 1 THEN 1 ELSE 0 END) AS trackerQueries,
+               SUM(CASE WHEN isBlocked = 1 THEN 1 ELSE 0 END) AS blockedQueries
         FROM dns_queries
         WHERE (:sessionId IS NULL OR sessionId = :sessionId)
         GROUP BY appPackageName
@@ -34,14 +35,16 @@ interface DnsQueryDao {
 
     @Query("""
         SELECT COUNT(*) AS totalQueries,
-               SUM(CASE WHEN verdictType = 1 THEN 1 ELSE 0 END) AS trackerQueries
+               SUM(CASE WHEN verdictType = 1 THEN 1 ELSE 0 END) AS trackerQueries,
+               SUM(CASE WHEN isBlocked = 1 THEN 1 ELSE 0 END) AS blockedQueries
         FROM dns_queries
     """)
     fun observeSummaryTotals(): Flow<SummaryTotals>
 
     @Query("""
         SELECT domain, COUNT(*) AS count,
-               MAX(CASE WHEN verdictType = 1 THEN 1 ELSE 0 END) AS isTracker
+               MAX(CASE WHEN verdictType = 1 THEN 1 ELSE 0 END) AS isTracker,
+               MAX(CASE WHEN isBlocked = 1 THEN 1 ELSE 0 END) AS isBlocked
         FROM dns_queries
         GROUP BY domain
         ORDER BY count DESC

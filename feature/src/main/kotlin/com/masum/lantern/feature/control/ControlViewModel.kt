@@ -43,7 +43,13 @@ class ControlViewModel @Inject constructor(
         }
         viewModelScope.launch {
             getSummaryStats().collect { stats ->
-                _uiState.update { it.copy(totalQueries = stats.totalQueries, trackerQueries = stats.trackerQueries) }
+                _uiState.update {
+                    it.copy(
+                        totalQueries = stats.totalQueries,
+                        trackerQueries = stats.trackerQueries,
+                        blockedQueries = stats.blockedQueries,
+                    )
+                }
             }
         }
         viewModelScope.launch {

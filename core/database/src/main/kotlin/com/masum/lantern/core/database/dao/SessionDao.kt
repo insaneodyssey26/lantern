@@ -25,7 +25,8 @@ interface SessionDao {
     @Query("""
         SELECT s.id AS sessionId, s.startedAt, s.endedAt,
                COUNT(q.id) AS totalQueries,
-               SUM(CASE WHEN q.verdictType = 1 THEN 1 ELSE 0 END) AS trackerQueries
+               SUM(CASE WHEN q.verdictType = 1 THEN 1 ELSE 0 END) AS trackerQueries,
+               SUM(CASE WHEN q.isBlocked = 1 THEN 1 ELSE 0 END) AS blockedQueries
         FROM sessions s
         LEFT JOIN dns_queries q ON q.sessionId = s.id
         WHERE s.id = :sessionId
@@ -36,7 +37,8 @@ interface SessionDao {
     @Query("""
         SELECT s.id AS sessionId, s.startedAt, s.endedAt,
                COUNT(q.id) AS totalQueries,
-               SUM(CASE WHEN q.verdictType = 1 THEN 1 ELSE 0 END) AS trackerQueries
+               SUM(CASE WHEN q.verdictType = 1 THEN 1 ELSE 0 END) AS trackerQueries,
+               SUM(CASE WHEN q.isBlocked = 1 THEN 1 ELSE 0 END) AS blockedQueries
         FROM sessions s
         LEFT JOIN dns_queries q ON q.sessionId = s.id
         GROUP BY s.id

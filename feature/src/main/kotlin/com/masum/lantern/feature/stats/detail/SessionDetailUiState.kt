@@ -7,12 +7,16 @@ data class SessionDetailUiState(
     val isActive: Boolean = false,
     val totalQueries: Int = 0,
     val trackerQueries: Int = 0,
+    val blockedQueries: Int = 0,
     val trackerPercentage: Int = 0,
     val apps: List<SessionAppStatUiModel> = emptyList(),
     val queries: List<SessionQueryUiModel> = emptyList(),
     val selectedTab: SessionDetailTab = SessionDetailTab.QUERIES,
     val isLoading: Boolean = true
-)
+) {
+    val auditedQueries: Int get() = (trackerQueries - blockedQueries).coerceAtLeast(0)
+    val cleanQueries: Int get() = (totalQueries - trackerQueries).coerceAtLeast(0)
+}
 
 enum class SessionDetailTab {
     QUERIES,
@@ -24,8 +28,11 @@ data class SessionAppStatUiModel(
     val packageName: String,
     val totalQueries: Int,
     val trackerQueries: Int,
+    val blockedQueries: Int = 0,
     val trackerPercentage: Int
-)
+) {
+    val auditedQueries: Int get() = (trackerQueries - blockedQueries).coerceAtLeast(0)
+}
 
 data class SessionQueryUiModel(
     val id: Long,
