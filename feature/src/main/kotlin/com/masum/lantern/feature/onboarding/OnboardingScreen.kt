@@ -1,5 +1,10 @@
 package com.masum.lantern.feature.onboarding
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
@@ -25,8 +30,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +41,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,10 +51,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
@@ -60,9 +70,17 @@ fun OnboardingScreen(
     onFinished: () -> Unit,
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
     val isCompleted by viewModel.isCompleted.collectAsStateWithLifecycle()
     val haptics = rememberLanternHaptics()
     var isVisible by remember { mutableStateOf(false) }
+    var showNotificationRationaleDialog by remember { mutableStateOf(false) }
+
+    val notificationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+        viewModel.completeOnboarding()
+    }
 
     LaunchedEffect(Unit) {
         delay(40)
@@ -143,7 +161,7 @@ fun OnboardingScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
             AnimatedVisibility(
                 visible = isVisible,
@@ -152,7 +170,7 @@ fun OnboardingScreen(
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(28.dp)
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     FeatureRow(
                         icon = Icons.Rounded.Block,
@@ -164,6 +182,12 @@ fun OnboardingScreen(
                         icon = Icons.Rounded.Visibility,
                         title = "Per-app transparency",
                         subtitle = "Attributes every lookup to the exact originating application so you always know who is calling out."
+                    )
+
+                    FeatureRow(
+                        icon = Icons.Rounded.Notifications,
+                        title = "Live status & quick controls",
+                        subtitle = "Displays active firewall stats and pause or stop actions directly in your notification drawer without reopening the app."
                     )
 
                     FeatureRow(
@@ -186,7 +210,19 @@ fun OnboardingScreen(
                 Button(
                     onClick = {
                         haptics.heavy()
-                        viewModel.completeOnboarding()
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            val permissionCheck = ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            )
+                            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                                showNotificationRationaleDialog = true
+                            } else {
+                                viewModel.completeOnboarding()
+                            }
+                        } else {
+                            viewModel.completeOnboarding()
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -223,6 +259,69 @@ fun OnboardingScreen(
                 )
             }
         }
+    }
+
+    if (showNotificationRationaleDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showNotificationRationaleDialog = false
+                viewModel.completeOnboarding()
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Rounded.Notifications,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "Firewall Status & Controls",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp
+                    ),
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Text(
+                    text = "Lantern uses an ongoing notification to show real-time query counts and quick pause or stop buttons in your notification shade while protection is running.\n\nNo marketing, ads, or spam ever.",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 20.sp
+                    )
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        haptics.tap()
+                        showNotificationRationaleDialog = false
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            viewModel.completeOnboarding()
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Continue")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        haptics.tap()
+                        showNotificationRationaleDialog = false
+                        viewModel.completeOnboarding()
+                    }
+                ) {
+                    Text("Not Now")
+                }
+            }
+        )
     }
 }
 
