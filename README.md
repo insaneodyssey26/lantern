@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/banner.png" alt="Lantern Launch Banner" width="100%">
+</p>
+
 # Lantern (formerly Vigil)
 
 > **Quick heads-up:**  
@@ -6,6 +10,20 @@
 > As part of this revamp, I'm renaming the app to **Lantern** and changing the application package name. Because of the package name change, it won't be an in-place upgrade from older Vigil builds; it's practically a fresh, rebuilt app.
 
 Lantern is an on-device DNS firewall and network monitor for Android. It lets you see and block trackers, ads, and background telemetry from apps directly on your phone without sending your traffic through remote servers.
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/images/screen-home-active.png" width="23%" alt="Home - Active Audit / Block" />
+  &nbsp;
+  <img src="docs/images/screen-insights.png" width="23%" alt="Insights & Telemetry Distribution" />
+  &nbsp;
+  <img src="docs/images/screen-traffic-stream.png" width="23%" alt="Real-time Traffic Stream & Domain Inspector" />
+  &nbsp;
+  <img src="docs/images/screen-settings.png" width="23%" alt="Settings, DNS Upstreams & Appearance" />
+</p>
 
 ---
 
