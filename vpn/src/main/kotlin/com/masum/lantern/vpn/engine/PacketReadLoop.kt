@@ -18,7 +18,7 @@ class PacketReadLoop(
 
     private fun loop() {
         val input = FileInputStream(pfd.fileDescriptor)
-        val buffer = ByteArray(32_767)
+        val buffer = ByteArray(4_096)
         try {
             while (!Thread.currentThread().isInterrupted) {
                 val n = input.read(buffer)
