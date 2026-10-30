@@ -23,6 +23,32 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            val envKeystore = System.getenv("KEYSTORE_PATH")
+            val defaultKey = file("/mnt/windows/Repositories/Android-APK-Keys/Lantern-Main.jks")
+            val fallbackKey = file("${System.getProperty("user.home")}/lantern-release.jks")
+            val keystoreFile = when {
+                !envKeystore.isNullOrBlank() -> file(envKeystore)
+                defaultKey.exists() -> defaultKey
+                else -> fallbackKey
+            }
+
+            if (keystoreFile.exists()) {
+                val storePass = System.getenv("KEYSTORE_PASSWORD") ?: System.getProperty("KEYSTORE_PASSWORD") ?: ""
+                val keyPass = System.getenv("KEY_PASSWORD") ?: System.getProperty("KEY_PASSWORD") ?: storePass
+                val alias = System.getenv("KEY_ALIAS") ?: System.getProperty("KEY_ALIAS") ?: "key0"
+
+                if (storePass.isNotBlank()) {
+                    storeFile = keystoreFile
+                    storePassword = storePass
+                    keyAlias = alias
+                    keyPassword = keyPass
+                }
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -33,6 +59,7 @@ android {
             manifestPlaceholders["appName"] = "Lantern"
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
