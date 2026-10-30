@@ -59,7 +59,7 @@ Lantern **does not** request location, contacts, camera, microphone, or external
 ## 6. Open Source Transparency
 
 Lantern is 100% open-source software licensed under the **GNU General Public License v3.0 (GPLv3)**. Its complete source code is publicly inspectable and auditable on GitHub:
-- Repository: [https://github.com/](https://github.com/)
+- Repository: [https://github.com/insaneodyssey26/lantern](https://github.com/insaneodyssey26/lantern)
 
 ---
 
@@ -72,5 +72,5 @@ Because Lantern collects no data, updates to this policy are rare. If changes oc
 ## 8. Contact
 
 For technical questions, vulnerability disclosures, or privacy inquiries:
-- Open an issue on GitHub
+- Open an issue on GitHub: [https://github.com/insaneodyssey26/lantern/issues](https://github.com/insaneodyssey26/lantern/issues)
 - Contact the developer: Masum

@@ -181,6 +181,17 @@ class UpdateRepositoryImpl @Inject constructor(
             error("Update package file does not exist at $filePath")
         }
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (!context.packageManager.canRequestPackageInstalls()) {
+                val settingsIntent = Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                    data = android.net.Uri.parse("package:${context.packageName}")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(settingsIntent)
+                return@runCatching
+            }
+        }
+
         val authority = "${context.packageName}.fileprovider"
         val contentUri = FileProvider.getUriForFile(context, authority, file)
 

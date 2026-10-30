@@ -17,8 +17,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.masum.lantern.domain.repository.SettingsRepository
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import com.masum.lantern.navigation.LanternNavHost
 import com.masum.lantern.ui.theme.LanternTheme
+import com.masum.lantern.updates.PlayUpdateManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -39,6 +51,11 @@ class MainActivity : ComponentActivity() {
         val initialPureBlack = settingsRepository.isPureBlackSync()
         val initialUseSystemFont = settingsRepository.isUseSystemFontSync()
         val isOnboardingCompleted = settingsRepository.isOnboardingCompletedSync()
+
+        var isPlayUpdateReady by mutableStateOf(false)
+        PlayUpdateManager.checkForPlayUpdates(this) {
+            isPlayUpdateReady = true
+        }
 
         setContent {
             val themeMode by settingsRepository.getThemeMode().collectAsStateWithLifecycle(initialValue = initialThemeMode)
@@ -85,7 +102,30 @@ class MainActivity : ComponentActivity() {
                     } else {
                         "onboarding"
                     }
-                    LanternNavHost(startDestination = startDestination)
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        LanternNavHost(startDestination = startDestination)
+
+                        if (isPlayUpdateReady) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.BottomCenter
+                            ) {
+                                Snackbar(
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .navigationBarsPadding(),
+                                    action = {
+                                        TextButton(onClick = { PlayUpdateManager.completeUpdate(this@MainActivity) }) {
+                                            Text("RESTART", color = MaterialTheme.colorScheme.primary)
+                                        }
+                                    }
+                                ) {
+                                    Text("An update is ready to install.")
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
