@@ -1,22 +1,19 @@
-*.iml
-.gradle
-local.properties
-.idea/
-.kotlin/
+# Gradle
 .gradle/
 build/
 app/build/
 captures/
 .externalNativeBuild/
 .cxx/
+local.properties
+
+# IDE
+.idea/
+.kotlin/
 *.iml
 .DS_Store
 
-gradlew
-gradlew.bat
-gradle/wrapper/
-
-*.jks
+# Signing & Releases
 *.keystore
 keystore.properties
 
