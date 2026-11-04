@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0-beta2] - 2026-11-05
+
+### Added
+- **Multi-List Protection Feeds**: Ability to enable and combine multiple curated blocklists simultaneously:
+  - **StevenBlack Unified** (Adware + Malware)
+  - **OISD Small** (High-compatibility ad and telemetry protection)
+  - **HaGeZi Threat Intelligence (TIF Mini)** (Malware and zero-day protection)
+  - **AdGuard DNS Filter** (Official mobile tracking & analytics filter)
+  - **AdAway OEM Feeds** (Device tracking & diagnostics suppression)
+- **Custom Community Feeds**: Add any custom remote hosts or AdGuard-format filter URL with streaming download, validation, and dynamic in-memory hot-swapping.
+- **One-Tap Safe Baseline**: Quick action to apply an optimal privacy baseline without breaking common websites.
+- **Upstream Maintainer Attribution**: Direct repository source links and maintainer credits for all bundled feeds.
+- **Smart Background Sync**: WorkManager periodic sync scheduled to automatically refresh active filter feeds on unmetered Wi-Fi and safe battery levels.
+- **Grouped What's New Changelog**: Version history viewer preserving milestones and feature additions across releases.
+
+---
+
 ## Lantern 2.0 - (Rebranded from Vigil-1.0)
 
 ### In-App GitHub Updater & What's New

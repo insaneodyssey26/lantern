@@ -321,8 +321,7 @@ fun ControlScreen(
                         whatsNewSheetState.hide()
                         viewModel.dismissWhatsNew()
                     }
-                },
-                versionName = "2.0"
+                }
             )
         }
     }
