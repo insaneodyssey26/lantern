@@ -3,6 +3,7 @@ package com.masum.lantern.data.di
 import android.content.Context
 import androidx.room.Room
 import com.masum.lantern.core.database.LanternDatabase
+import com.masum.lantern.core.database.dao.BlocklistDao
 import com.masum.lantern.core.database.dao.DnsQueryDao
 import com.masum.lantern.core.database.dao.SessionDao
 import dagger.Module
@@ -28,4 +29,7 @@ object DatabaseModule {
 
     @Provides
     fun provideSessionDao(db: LanternDatabase): SessionDao = db.sessionDao()
+
+    @Provides
+    fun provideBlocklistDao(db: LanternDatabase): BlocklistDao = db.blocklistDao()
 }

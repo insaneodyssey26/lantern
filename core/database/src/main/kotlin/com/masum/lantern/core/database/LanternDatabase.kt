@@ -2,17 +2,20 @@ package com.masum.lantern.core.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.masum.lantern.core.database.dao.BlocklistDao
 import com.masum.lantern.core.database.dao.DnsQueryDao
 import com.masum.lantern.core.database.dao.SessionDao
+import com.masum.lantern.core.database.entity.BlocklistEntity
 import com.masum.lantern.core.database.entity.DnsQueryEntity
 import com.masum.lantern.core.database.entity.SessionEntity
 
 @Database(
-    entities = [SessionEntity::class, DnsQueryEntity::class],
-    version = 2,
+    entities = [SessionEntity::class, DnsQueryEntity::class, BlocklistEntity::class],
+    version = 3,
     exportSchema = false,
 )
 abstract class LanternDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
     abstract fun dnsQueryDao(): DnsQueryDao
+    abstract fun blocklistDao(): BlocklistDao
 }

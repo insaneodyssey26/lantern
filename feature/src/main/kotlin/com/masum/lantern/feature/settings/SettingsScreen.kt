@@ -121,6 +121,7 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     onNavigateToWhitelist: () -> Unit = {},
     onNavigateToDomainRules: () -> Unit = {},
+    onNavigateToBlocklists: () -> Unit = {},
     onNavigateToWhatsNew: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
     updaterViewModel: UpdaterViewModel = hiltViewModel(),
@@ -534,21 +535,21 @@ fun SettingsScreen(
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     Text(
-                                        text = "StevenBlack/hosts",
+                                        text = "Protection Filter Lists",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     IconButton(
                                         onClick = {
-                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/StevenBlack/hosts"))
-                                            context.startActivity(intent)
+                                            haptics.tap()
+                                            onNavigateToBlocklists()
                                         },
                                         modifier = Modifier.size(20.dp)
                                     ) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Rounded.OpenInNew,
-                                            contentDescription = "Open Repository",
+                                            contentDescription = "Protection Filter Lists",
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(16.dp)
                                         )
@@ -556,7 +557,7 @@ fun SettingsScreen(
                                 }
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "${uiState.blocklistCount.formatRules()} active threat rules enforced",
+                                    text = "${uiState.blocklistCount.formatRules()} active threat rules enforced across curated lists",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -564,7 +565,7 @@ fun SettingsScreen(
                         }
 
                         Text(
-                            text = "Unified telemetry, tracking, and malware database continuously compiled and curated by Steven Black and the open source community.",
+                            text = "Unified telemetry, tracking, and malware databases curated by Steven Black, OISD, HaGeZi, and open-source contributors.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -590,10 +591,9 @@ fun SettingsScreen(
 
                             FilledTonalButton(
                                 onClick = {
-                                    haptics.heavy()
-                                    viewModel.updateBlocklist()
+                                    haptics.tap()
+                                    onNavigateToBlocklists()
                                 },
-                                enabled = !uiState.isUpdatingBlocklist,
                                 modifier = Modifier.height(40.dp),
                                 contentPadding = PaddingValues(horizontal = 16.dp),
                                 colors = ButtonDefaults.filledTonalButtonColors(
@@ -605,29 +605,16 @@ fun SettingsScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.Center
                                 ) {
-                                    if (uiState.isUpdatingBlocklist) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(16.dp),
-                                            strokeWidth = 2.dp,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "Updating…",
-                                            maxLines = 1
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Rounded.Refresh,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = "Update Rules",
-                                            maxLines = 1
-                                        )
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Rounded.Security,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Filter Lists",
+                                        maxLines = 1
+                                    )
                                 }
                             }
                         }

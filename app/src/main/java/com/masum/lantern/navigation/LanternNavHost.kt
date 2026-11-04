@@ -60,6 +60,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.masum.lantern.core.ui.haptics.rememberLanternHaptics
+import com.masum.lantern.feature.blocklists.BlocklistScreen
 import com.masum.lantern.feature.control.ControlScreen
 import com.masum.lantern.feature.domainrules.DomainRulesScreen
 import com.masum.lantern.feature.livefeed.FeedFilter
@@ -79,7 +80,7 @@ private const val TAB_TRANSITION_DURATION = 320
 private const val TAB_SLIDE_FRACTION = 0.15f
 
 private fun isSubScreenRoute(route: String?): Boolean =
-    route in listOf("settings", "app_whitelist", "domain_rules", "onboarding", "whats_new") || route?.startsWith("session_detail/") == true
+    route in listOf("settings", "app_whitelist", "domain_rules", "blocklists", "onboarding", "whats_new") || route?.startsWith("session_detail/") == true
 
 private fun destinationOrder(route: String?): Int = when (route) {
     LanternDestination.Home.route -> 0
@@ -314,7 +315,13 @@ fun LanternNavHost(
                     onBackClick = { navController.popBackStack() },
                     onNavigateToWhitelist = { navController.navigate("app_whitelist") },
                     onNavigateToDomainRules = { navController.navigate("domain_rules") },
+                    onNavigateToBlocklists = { navController.navigate("blocklists") },
                     onNavigateToWhatsNew = { navController.navigate("whats_new") }
+                )
+            }
+            composable("blocklists") {
+                BlocklistScreen(
+                    onBackClick = { navController.popBackStack() }
                 )
             }
             composable("app_whitelist") {
