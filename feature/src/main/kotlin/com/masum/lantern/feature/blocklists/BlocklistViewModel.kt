@@ -52,6 +52,13 @@ class BlocklistViewModel @Inject constructor(
         initialValue = BlocklistUiState()
     )
 
+    fun applyRecommendedBaseline() {
+        viewModelScope.launch {
+            blocklistRepository.applyRecommendedPreset()
+            _userMessage.value = "Safe baseline applied (StevenBlack + HaGeZi Threat)"
+        }
+    }
+
     fun toggleBlocklist(id: String, enabled: Boolean) {
         viewModelScope.launch {
             blocklistRepository.toggleBlocklist(id, enabled)

@@ -15,6 +15,7 @@ interface BlocklistRepository {
     fun observeBlocklists(): Flow<List<Blocklist>>
     fun observeTotalRuleCount(): StateFlow<Int>
     suspend fun toggleBlocklist(id: String, isEnabled: Boolean)
+    suspend fun applyRecommendedPreset()
     suspend fun addCustomBlocklist(name: String, url: String): Result<Unit>
     suspend fun deleteCustomBlocklist(id: String): Result<Unit>
     suspend fun syncAllBlocklists(): Result<Int>

@@ -11,7 +11,7 @@ import com.masum.lantern.core.database.entity.SessionEntity
 
 @Database(
     entities = [SessionEntity::class, DnsQueryEntity::class, BlocklistEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class LanternDatabase : RoomDatabase() {

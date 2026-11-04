@@ -28,8 +28,11 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.FileDownload
+import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Speed
+import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -112,52 +115,52 @@ fun WhatsNewContent(
     val features = remember {
         listOf(
             WhatsNewFeature(
+                icon = Icons.Rounded.FilterList,
+                iconContainerColor = Color(0xFFD1C4E9),
+                iconContentColor = Color(0xFF4527A0),
+                tag = "New Engine",
+                title = "Multi-List Protection Feeds",
+                description = "Enable curated community feeds including StevenBlack, OISD Small, HaGeZi Threat Intelligence, and official AdGuard DNS Filter."
+            ),
+            WhatsNewFeature(
+                icon = Icons.Rounded.Security,
+                iconContainerColor = Color(0xFFFFCDD2),
+                iconContentColor = Color(0xFFB71C1C),
+                tag = "Customization",
+                title = "Custom Community Feeds",
+                description = "Add any custom remote hosts or AdGuard format domain list with instant in-memory hot-swapping and zero dropped queries."
+            ),
+            WhatsNewFeature(
+                icon = Icons.Rounded.Sync,
+                iconContainerColor = Color(0xFFC8E6C9),
+                iconContentColor = Color(0xFF1B5E20),
+                tag = "Battery-Saver",
+                title = "Smart Background Sync",
+                description = "Periodic automatic updates scheduled via WorkManager, running strictly on unmetered Wi-Fi and safe battery levels."
+            ),
+            WhatsNewFeature(
                 icon = Icons.Rounded.AutoAwesome,
                 iconContainerColor = Color(0xFFFFE082),
                 iconContentColor = Color(0xFF5D4037),
                 tag = "Redesign",
                 title = "Material 3 Expressive System",
-                description = "Modern floating capsule dock navigation, Google Sans Flex variable typography, and seamless edge-to-edge support."
+                description = "Floating capsule dock navigation, Google Sans Flex variable typography, and seamless edge-to-edge support."
             ),
             WhatsNewFeature(
                 icon = Icons.Rounded.Block,
-                iconContainerColor = Color(0xFFFFCDD2),
-                iconContentColor = Color(0xFFB71C1C),
+                iconContainerColor = Color(0xFFFFCCBC),
+                iconContentColor = Color(0xFFBF360C),
                 tag = "Firewall",
                 title = "Active DNS Sinkhole Engine",
                 description = "Sub-millisecond tracker neutralizing with synthetic NXDOMAIN responses and zero-overhead reverse-label suffix trie."
             ),
             WhatsNewFeature(
                 icon = Icons.Rounded.Lock,
-                iconContainerColor = Color(0xFFC8E6C9),
-                iconContentColor = Color(0xFF1B5E20),
+                iconContainerColor = Color(0xFFBBDEFB),
+                iconContentColor = Color(0xFF0D47A1),
                 tag = "Privacy",
                 title = "Encrypted DoH & DoT Upstreams",
                 description = "DNS-over-HTTPS (RFC 8484) and DNS-over-TLS (RFC 7858) protection against ISP surveillance and DNS hijacking."
-            ),
-            WhatsNewFeature(
-                icon = Icons.Rounded.Speed,
-                iconContainerColor = Color(0xFFBBDEFB),
-                iconContentColor = Color(0xFF0D47A1),
-                tag = "Performance",
-                title = "TTL Cache & Protected Sockets",
-                description = "2,048-entry in-memory DNS response cache to accelerate frequent requests and save battery life."
-            ),
-            WhatsNewFeature(
-                icon = Icons.Rounded.Tune,
-                iconContainerColor = Color(0xFFE1BEE7),
-                iconContentColor = Color(0xFF4A148C),
-                tag = "Rules",
-                title = "Custom Rules & App Whitelist",
-                description = "Per-domain custom allow/block rules and kernel-level VPN bypass for banking, streaming, and VoIP apps."
-            ),
-            WhatsNewFeature(
-                icon = Icons.Rounded.FileDownload,
-                iconContainerColor = Color(0xFFFFE0B2),
-                iconContentColor = Color(0xFFE65100),
-                tag = "Forensics",
-                title = "Forensic Log Export",
-                description = "Export complete query history to RFC 4180 CSV via secure system FileProvider share sheet."
             ),
         )
     }

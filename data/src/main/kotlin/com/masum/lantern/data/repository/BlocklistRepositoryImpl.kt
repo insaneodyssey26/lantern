@@ -72,6 +72,18 @@ class BlocklistRepositoryImpl @Inject constructor(
             sourceUrl = "https://github.com/hagezi/dns-blocklists"
         ),
         BlocklistEntity(
+            id = "adguard_dns",
+            name = "AdGuard DNS Filter",
+            description = "Official AdGuard rules optimized for mobile ad blocking, analytics, and telemetry.",
+            category = BlocklistCategory.ADS_AND_TRACKING.name,
+            url = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt",
+            isEnabled = false,
+            isCustom = false,
+            ruleCount = 188000,
+            lastUpdated = 0L,
+            sourceUrl = "https://github.com/AdguardTeam/AdguardFilters"
+        ),
+        BlocklistEntity(
             id = "adguard_telemetry",
             name = "OEM & Device Diagnostics",
             description = "Blocks aggressive analytics and background trackers from smartphone OEMs and smart appliances.",
@@ -140,6 +152,24 @@ class BlocklistRepositoryImpl @Inject constructor(
             val localFile = downloader.getLocalFile(id)
             if (!localFile.exists() || localFile.length() == 0L) {
                 runCatching { syncBlocklistInternal(entity) }
+            }
+        }
+        matcher.load()
+        _totalRuleCount.value = matcher.domainCount()
+    }
+
+    override suspend fun applyRecommendedPreset() = withContext(dispatchers.io) {
+        val all = blocklistDao.getAll()
+        for (item in all) {
+            val shouldEnable = item.id == "stevenblack_base" || item.id == "hagezi_threat"
+            if (item.isEnabled != shouldEnable) {
+                blocklistDao.updateEnabled(item.id, shouldEnable)
+                if (shouldEnable) {
+                    val localFile = downloader.getLocalFile(item.id)
+                    if (!localFile.exists() || localFile.length() == 0L) {
+                        runCatching { syncBlocklistInternal(item) }
+                    }
+                }
             }
         }
         matcher.load()
