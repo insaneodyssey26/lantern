@@ -17,5 +17,7 @@ data class SettingsUiState(
     val blocklistUpdateMessage: String? = null,
     val bypassedAppsCount: Int = 0,
     val domainRulesCount: Int = 0,
+    val isBenchmarking: Boolean = false,
+    val benchmarkResults: List<com.masum.lantern.domain.model.DnsBenchmarkItem> = emptyList(),
 )
 

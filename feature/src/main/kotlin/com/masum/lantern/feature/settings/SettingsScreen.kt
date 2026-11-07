@@ -48,6 +48,8 @@ import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Speed
+import com.masum.lantern.feature.settings.benchmark.DnsBenchmarkBottomSheet
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -134,8 +136,10 @@ fun SettingsScreen(
     var showClearConfirmDialog by remember { mutableStateOf(false) }
     var showAboutSheet by remember { mutableStateOf(false) }
     var showWhatsNewSheet by remember { mutableStateOf(false) }
+    var showBenchmarkSheet by remember { mutableStateOf(false) }
     val aboutSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val whatsNewSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
+    val benchmarkSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val haptics = rememberLanternHaptics()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -346,7 +350,42 @@ fun SettingsScreen(
             }
 
             item {
-                SectionHeader(title = "Upstream DNS Resolver")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    SectionHeader(title = "Upstream DNS Resolver")
+                    FilledTonalButton(
+                        onClick = {
+                            haptics.tap()
+                            showBenchmarkSheet = true
+                            scope.launch { benchmarkSheetState.show() }
+                        },
+                        modifier = Modifier.height(36.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Speed,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Benchmark",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(10.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     DnsProviderTile(
@@ -380,6 +419,17 @@ fun SettingsScreen(
                         onClick = {
                             if (uiState.upstreamDns != "8.8.8.8") haptics.tap()
                             viewModel.setUpstreamDns("8.8.8.8")
+                        }
+                    )
+                    DnsProviderTile(
+                        title = "AdGuard DNS",
+                        ip = "94.140.14.14",
+                        description = "Ad and tracking interception at resolver level",
+                        icon = Icons.Rounded.Security,
+                        isSelected = uiState.upstreamDns == "94.140.14.14",
+                        onClick = {
+                            if (uiState.upstreamDns != "94.140.14.14") haptics.tap()
+                            viewModel.setUpstreamDns("94.140.14.14")
                         }
                     )
                 }
@@ -585,7 +635,7 @@ fun SettingsScreen(
                             Text(
                                 text = lastUpdatedText,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.outline,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
 
@@ -969,6 +1019,24 @@ fun SettingsScreen(
                 }
             )
         }
+    }
+
+    if (showBenchmarkSheet) {
+        DnsBenchmarkBottomSheet(
+            onDismiss = {
+                scope.launch {
+                    benchmarkSheetState.hide()
+                    showBenchmarkSheet = false
+                }
+            },
+            items = uiState.benchmarkResults,
+            isBenchmarking = uiState.isBenchmarking,
+            activeDns = uiState.upstreamDns,
+            dnsProtocol = uiState.dnsProtocol,
+            onRunBenchmark = { viewModel.runBenchmark(uiState.dnsProtocol) },
+            onApplyDns = { ip -> viewModel.setUpstreamDns(ip) },
+            sheetState = benchmarkSheetState
+        )
     }
 
     if (updaterUiState.isSheetVisible) {

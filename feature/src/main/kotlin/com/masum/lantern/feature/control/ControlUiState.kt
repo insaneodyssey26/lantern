@@ -15,4 +15,7 @@ data class ControlUiState(
     val upstreamDns: String = "1.1.1.1",
     val isFeatureGuideCompleted: Boolean = true,
     val showWhatsNewSheet: Boolean = false,
+    val dnsProtocol: String = "UDP",
+    val isBenchmarking: Boolean = false,
+    val benchmarkResults: List<com.masum.lantern.domain.model.DnsBenchmarkItem> = emptyList(),
 )

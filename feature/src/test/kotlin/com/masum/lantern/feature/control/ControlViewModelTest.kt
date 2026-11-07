@@ -39,6 +39,7 @@ class ControlViewModelTest {
     private val getSummaryStats: GetSummaryStatsUseCase = mockk()
     private val blocklistRepository: BlocklistRepository = mockk()
     private val settingsRepository: SettingsRepository = mockk(relaxed = true)
+    private val dnsBenchmarkRepository: com.masum.lantern.domain.repository.DnsBenchmarkRepository = mockk(relaxed = true)
 
     private val monitoringFlow = MutableStateFlow<MonitoringState>(MonitoringState.Idle)
     private val statsFlow = MutableStateFlow(SummaryStats(totalQueries = 100, trackerQueries = 25, topDomains = emptyList()))
@@ -60,6 +61,9 @@ class ControlViewModelTest {
         every { blocklistRepository.domainCount() } returns 82000
         every { settingsRepository.isBlockingEnabled() } returns blockingEnabledFlow
         every { settingsRepository.getUpstreamDns() } returns upstreamDnsFlow
+        every { settingsRepository.getDnsProtocol() } returns MutableStateFlow("UDP")
+        every { dnsBenchmarkRepository.isBenchmarking } returns MutableStateFlow(false)
+        every { dnsBenchmarkRepository.benchmarkResults } returns MutableStateFlow(emptyList())
 
         viewModel = ControlViewModel(
             context = context,
@@ -68,7 +72,8 @@ class ControlViewModelTest {
             observeMonitoringState = observeMonitoringState,
             getSummaryStats = getSummaryStats,
             blocklistRepository = blocklistRepository,
-            settingsRepository = settingsRepository
+            settingsRepository = settingsRepository,
+            dnsBenchmarkRepository = dnsBenchmarkRepository
         )
     }
 

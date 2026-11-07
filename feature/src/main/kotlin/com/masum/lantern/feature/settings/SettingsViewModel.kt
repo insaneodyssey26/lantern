@@ -2,7 +2,9 @@ package com.masum.lantern.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.masum.lantern.domain.model.DnsBenchmarkItem
 import com.masum.lantern.domain.repository.BlocklistRepository
+import com.masum.lantern.domain.repository.DnsBenchmarkRepository
 import com.masum.lantern.domain.repository.DnsLogRepository
 import com.masum.lantern.domain.repository.SettingsRepository
 import com.masum.lantern.domain.usecase.ExportLogsUseCase
@@ -23,6 +25,7 @@ class SettingsViewModel @Inject constructor(
     private val dnsLogRepository: DnsLogRepository,
     private val blocklistRepository: BlocklistRepository,
     private val exportLogsUseCase: ExportLogsUseCase,
+    private val dnsBenchmarkRepository: DnsBenchmarkRepository,
 ) : ViewModel() {
 
     private val isClearingLogs = MutableStateFlow(false)
@@ -81,8 +84,19 @@ class SettingsViewModel @Inject constructor(
         totalLogCountFlow,
         isClearingLogs,
         blocklistStateFlow,
-        domainAndBypassedFlow
-    ) { settings, logCount, clearing, blocklistState, domainAndBypassed ->
+        domainAndBypassedFlow,
+        dnsBenchmarkRepository.isBenchmarking,
+        dnsBenchmarkRepository.benchmarkResults
+    ) { args: Array<Any> ->
+        val settings = args[0] as SettingsTuple
+        val logCount = args[1] as Long
+        val clearing = args[2] as Boolean
+        val blocklistState = args[3] as Triple<Boolean, String?, Long>
+        val domainAndBypassed = args[4] as Pair<Int, Int>
+        val benchmarking = args[5] as Boolean
+        @Suppress("UNCHECKED_CAST")
+        val benchResults = args[6] as List<DnsBenchmarkItem>
+
         SettingsUiState(
             themeMode = settings.themeMode,
             colorTheme = settings.colorTheme,
@@ -99,7 +113,9 @@ class SettingsViewModel @Inject constructor(
             isUpdatingBlocklist = blocklistState.first,
             blocklistUpdateMessage = blocklistState.second,
             bypassedAppsCount = domainAndBypassed.first,
-            domainRulesCount = domainAndBypassed.second
+            domainRulesCount = domainAndBypassed.second,
+            isBenchmarking = benchmarking,
+            benchmarkResults = benchResults
         )
     }.stateIn(
         scope = viewModelScope,
@@ -196,6 +212,16 @@ class SettingsViewModel @Inject constructor(
 
     fun clearBlocklistMessage() {
         blocklistUpdateMessage.value = null
+    }
+
+    fun runBenchmark(protocol: String) {
+        viewModelScope.launch {
+            dnsBenchmarkRepository.runBenchmark(protocol)
+        }
+    }
+
+    fun stopBenchmark() {
+        dnsBenchmarkRepository.stopBenchmark()
     }
 
     suspend fun exportAllLogsCsv(): String = exportLogsUseCase.exportToCsv(null)

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.masum.lantern.domain.model.MonitoringState
 import com.masum.lantern.domain.repository.BlocklistRepository
+import com.masum.lantern.domain.repository.DnsBenchmarkRepository
 import com.masum.lantern.domain.repository.SettingsRepository
 import com.masum.lantern.domain.usecase.GetSummaryStatsUseCase
 import com.masum.lantern.domain.usecase.ObserveMonitoringStateUseCase
@@ -30,6 +31,7 @@ class ControlViewModel @Inject constructor(
     private val getSummaryStats: GetSummaryStatsUseCase,
     private val blocklistRepository: BlocklistRepository,
     private val settingsRepository: SettingsRepository,
+    private val dnsBenchmarkRepository: DnsBenchmarkRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ControlUiState(blocklistCount = blocklistRepository.domainCount()))
@@ -60,6 +62,21 @@ class ControlViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.getUpstreamDns().collect { dns ->
                 _uiState.update { it.copy(upstreamDns = dns) }
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.getDnsProtocol().collect { proto ->
+                _uiState.update { it.copy(dnsProtocol = proto) }
+            }
+        }
+        viewModelScope.launch {
+            dnsBenchmarkRepository.isBenchmarking.collect { benchmarking ->
+                _uiState.update { it.copy(isBenchmarking = benchmarking) }
+            }
+        }
+        viewModelScope.launch {
+            dnsBenchmarkRepository.benchmarkResults.collect { results ->
+                _uiState.update { it.copy(benchmarkResults = results) }
             }
         }
         viewModelScope.launch {
@@ -129,5 +146,15 @@ class ControlViewModel @Inject constructor(
         val cm = context.getSystemService(ConnectivityManager::class.java)
         val lp = cm.getLinkProperties(cm.activeNetwork ?: return) ?: return
         _uiState.update { it.copy(isPrivateDnsActive = lp.isPrivateDnsActive) }
+    }
+
+    fun runBenchmark(protocol: String) {
+        viewModelScope.launch {
+            dnsBenchmarkRepository.runBenchmark(protocol)
+        }
+    }
+
+    fun stopBenchmark() {
+        dnsBenchmarkRepository.stopBenchmark()
     }
 }

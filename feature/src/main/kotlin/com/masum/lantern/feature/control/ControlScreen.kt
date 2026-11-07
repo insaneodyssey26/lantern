@@ -40,6 +40,7 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Storage
+import com.masum.lantern.feature.settings.benchmark.DnsBenchmarkBottomSheet
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -112,6 +113,8 @@ fun ControlScreen(
     val haptics = rememberLanternHaptics()
     val scope = rememberCoroutineScope()
     val whatsNewSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
+    var showBenchmarkSheet by remember { mutableStateOf(false) }
+    val benchmarkSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
     var shieldRect by remember { mutableStateOf<Rect?>(null) }
     var snapshotRect by remember { mutableStateOf<Rect?>(null) }
@@ -227,6 +230,10 @@ fun ControlScreen(
                         },
                         onSelectBlockingEnabled = { enabled ->
                             viewModel.setBlockingEnabled(enabled)
+                        },
+                        onOpenBenchmark = {
+                            showBenchmarkSheet = true
+                            scope.launch { benchmarkSheetState.show() }
                         }
                     )
                 }
@@ -324,6 +331,24 @@ fun ControlScreen(
                 }
             )
         }
+    }
+
+    if (showBenchmarkSheet) {
+        DnsBenchmarkBottomSheet(
+            onDismiss = {
+                scope.launch {
+                    benchmarkSheetState.hide()
+                    showBenchmarkSheet = false
+                }
+            },
+            items = uiState.benchmarkResults,
+            isBenchmarking = uiState.isBenchmarking,
+            activeDns = uiState.upstreamDns,
+            dnsProtocol = uiState.dnsProtocol,
+            onRunBenchmark = { viewModel.runBenchmark(uiState.dnsProtocol) },
+            onApplyDns = { ip -> viewModel.setUpstreamDns(ip) },
+            sheetState = benchmarkSheetState
+        )
     }
 }
 }
@@ -639,7 +664,8 @@ private fun QuickSecuritySnapshot(
     isBlockingEnabled: Boolean,
     isActive: Boolean,
     onSelectDns: (String) -> Unit = {},
-    onSelectBlockingEnabled: (Boolean) -> Unit = {}
+    onSelectBlockingEnabled: (Boolean) -> Unit = {},
+    onOpenBenchmark: () -> Unit = {}
 ) {
     val haptics = rememberLanternHaptics()
     var dnsExpanded by remember { mutableStateOf(false) }
@@ -649,6 +675,7 @@ private fun QuickSecuritySnapshot(
         "1.1.1.1" -> "Cloudflare"
         "9.9.9.9" -> "Quad9"
         "8.8.8.8" -> "Google"
+        "94.140.14.14" -> "AdGuard"
         else -> upstreamDns
     }
 
@@ -683,6 +710,12 @@ private fun QuickSecuritySnapshot(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.small)
+                        .clickable {
+                            haptics.tap()
+                            onOpenBenchmark()
+                        },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -760,7 +793,8 @@ private fun QuickSecuritySnapshot(
                         val dnsOptions = listOf(
                             Pair("Cloudflare", "1.1.1.1"),
                             Pair("Quad9", "9.9.9.9"),
-                            Pair("Google", "8.8.8.8")
+                            Pair("Google", "8.8.8.8"),
+                            Pair("AdGuard", "94.140.14.14")
                         )
 
                         dnsOptions.forEach { (name, ip) ->
@@ -802,6 +836,43 @@ private fun QuickSecuritySnapshot(
                                 }
                             )
                         }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .height(1.dp)
+                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        )
+
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = "Test Resolver Speeds...",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Rounded.Speed,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            onClick = {
+                                haptics.tap()
+                                dnsExpanded = false
+                                onOpenBenchmark()
+                            }
+                        )
                     }
                 }
             }
