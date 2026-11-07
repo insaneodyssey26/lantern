@@ -27,9 +27,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ElectricBolt
 import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.FilterList
+import androidx.compose.material.icons.rounded.HourglassBottom
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.PauseCircleFilled
+import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Sync
@@ -119,9 +124,48 @@ fun WhatsNewContent(
     val releases = remember {
         listOf(
             WhatsNewRelease(
+                versionName = "2.0-beta3",
+                title = "Speed Tester & Pause Controls",
+                isLatest = true,
+                features = listOf(
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.Speed,
+                        iconContainerColor = Color(0xFFC8E6C9),
+                        iconContentColor = Color(0xFF1B5E20),
+                        tag = "DNS Speed",
+                        title = "DNS Speed Tester",
+                        description = "Test ping across Cloudflare, Quad9, Google, and AdGuard over UDP, DoH, or DoT with a 1-tap fastest picker."
+                    ),
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.HourglassBottom,
+                        iconContainerColor = Color(0xFFFFE082),
+                        iconContentColor = Color(0xFF5D4037),
+                        tag = "Protection",
+                        title = "Pause Protection",
+                        description = "Temporarily pause blocking for 5m, 15m, or 1h without disconnecting your VPN tunnel."
+                    ),
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.PowerSettingsNew,
+                        iconContainerColor = Color(0xFFBBDEFB),
+                        iconContentColor = Color(0xFF0D47A1),
+                        tag = "Quick Settings",
+                        title = "Quick Settings Tile",
+                        description = "Toggle protection on or off directly from your notification shade."
+                    ),
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.NotificationsActive,
+                        iconContainerColor = Color(0xFFE1BEE7),
+                        iconContentColor = Color(0xFF4A148C),
+                        tag = "Notification",
+                        title = "Notification Pause Timer",
+                        description = "See remaining pause time in the notification bar and resume anytime with one tap."
+                    )
+                )
+            ),
+            WhatsNewRelease(
                 versionName = "2.0-beta2",
                 title = "Multi-List Filter Engine & Presets",
-                isLatest = true,
+                isLatest = false,
                 features = listOf(
                     WhatsNewFeature(
                         icon = Icons.Rounded.FilterList,

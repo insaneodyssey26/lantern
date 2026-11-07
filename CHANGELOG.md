@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0-beta3] - 2026-11-07
+
+### Added
+- **DNS Speed Tester**: Test real ping and latency across Cloudflare, Quad9, Google, and AdGuard over standard UDP, DoH, or DoT with a 1-tap fastest resolver picker.
+- **Pause Protection (5m / 15m / 1h)**: Temporarily pause blocking without disconnecting your VPN tunnel.
+- **Quick Settings Tile**: Toggle protection directly from your notification shade.
+- **Notification Pause Timer**: View remaining pause time in the notification bar and resume anytime with one tap.
+
+---
+
 ## [2.0-beta2] - 2026-11-05
 
 ### Added
