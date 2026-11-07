@@ -7,6 +7,8 @@ sealed class MonitoringState {
         val sessionId: Long,
         val startedAt: Long,
         val queryCount: Int = 0,
+        val isPaused: Boolean = false,
+        val pauseUntilTimestamp: Long? = null,
     ) : MonitoringState()
 
     data class Error(val message: String) : MonitoringState()

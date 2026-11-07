@@ -11,6 +11,8 @@ import com.masum.lantern.domain.repository.DnsBenchmarkRepository
 import com.masum.lantern.domain.repository.SettingsRepository
 import com.masum.lantern.domain.usecase.GetSummaryStatsUseCase
 import com.masum.lantern.domain.usecase.ObserveMonitoringStateUseCase
+import com.masum.lantern.domain.usecase.PauseMonitoringUseCase
+import com.masum.lantern.domain.usecase.ResumeMonitoringUseCase
 import com.masum.lantern.domain.usecase.StartMonitoringUseCase
 import com.masum.lantern.domain.usecase.StopMonitoringUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +29,8 @@ class ControlViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val startMonitoring: StartMonitoringUseCase,
     private val stopMonitoring: StopMonitoringUseCase,
+    private val pauseMonitoringUseCase: PauseMonitoringUseCase,
+    private val resumeMonitoringUseCase: ResumeMonitoringUseCase,
     private val observeMonitoringState: ObserveMonitoringStateUseCase,
     private val getSummaryStats: GetSummaryStatsUseCase,
     private val blocklistRepository: BlocklistRepository,
@@ -146,6 +150,18 @@ class ControlViewModel @Inject constructor(
         val cm = context.getSystemService(ConnectivityManager::class.java)
         val lp = cm.getLinkProperties(cm.activeNetwork ?: return) ?: return
         _uiState.update { it.copy(isPrivateDnsActive = lp.isPrivateDnsActive) }
+    }
+
+    fun pauseProtection(durationMs: Long) {
+        viewModelScope.launch {
+            pauseMonitoringUseCase(durationMs)
+        }
+    }
+
+    fun resumeProtection() {
+        viewModelScope.launch {
+            resumeMonitoringUseCase()
+        }
     }
 
     fun runBenchmark(protocol: String) {

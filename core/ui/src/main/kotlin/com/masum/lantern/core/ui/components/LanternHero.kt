@@ -33,6 +33,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.HourglassBottom
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Shield
@@ -40,6 +43,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -70,6 +75,10 @@ fun LanternHero(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
     isBlockingEnabled: Boolean = true,
+    isPaused: Boolean = false,
+    remainingPauseSeconds: Long? = null,
+    onPauseClick: () -> Unit = {},
+    onResumeClick: () -> Unit = {},
     onPresetSelected: (String) -> Unit = {}
 ) {
     val haptics = rememberLanternHaptics()
@@ -83,8 +92,11 @@ fun LanternHero(
     )
 
     val cardBg by animateColorAsState(
-        targetValue = if (isActive) MaterialTheme.colorScheme.surfaceContainerHigh
-        else MaterialTheme.colorScheme.surfaceContainer,
+        targetValue = when {
+            isPaused -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.35f)
+            isActive -> MaterialTheme.colorScheme.surfaceContainerHigh
+            else -> MaterialTheme.colorScheme.surfaceContainer
+        },
         animationSpec = spring(stiffness = Spring.StiffnessLow),
         label = "heroCardBg"
     )
@@ -101,11 +113,12 @@ fun LanternHero(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(22.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             HeroGuardianVisualizer(
                 isActive = isActive,
                 isBlockingEnabled = isBlockingEnabled,
+                isPaused = isPaused,
                 onClick = {
                     haptics.heavy()
                     onToggle()
@@ -117,9 +130,16 @@ fun LanternHero(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = if (isActive) {
-                        if (isBlockingEnabled) "Active Shield Protected" else "Audit Telemetry Active"
-                    } else "Protection Offline",
+                    text = when {
+                        isPaused -> {
+                            val secs = remainingPauseSeconds ?: 0L
+                            val m = secs / 60
+                            val s = secs % 60
+                            if (secs > 0) String.format("Paused (%02d:%02d)", m, s) else "Protection Paused"
+                        }
+                        isActive -> if (isBlockingEnabled) "Active Shield Protected" else "Audit Telemetry Active"
+                        else -> "Protection Offline"
+                    },
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -127,15 +147,70 @@ fun LanternHero(
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = if (isActive) {
-                        if (isBlockingEnabled) "Filtering ads, trackers, and telemetry on-device"
+                    text = when {
+                        isPaused -> "All network traffic is passing through without blocking"
+                        isActive -> if (isBlockingEnabled) "Filtering ads, trackers, and telemetry on-device"
                         else "Auditing outbound DNS without blocking queries"
-                    } else "Tap the power button to start protection",
+                        else -> "Tap the power button to start protection"
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
+            }
+
+            if (isActive) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isPaused) {
+                        Button(
+                            onClick = {
+                                haptics.heavy()
+                                onResumeClick()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiary,
+                                contentColor = MaterialTheme.colorScheme.onTertiary
+                            ),
+                            shape = CircleShape
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Resume Protection",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = {
+                                haptics.tap()
+                                onPauseClick()
+                            },
+                            shape = CircleShape
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.HourglassBottom,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Pause Protection",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -145,13 +220,14 @@ fun LanternHero(
 private fun HeroGuardianVisualizer(
     isActive: Boolean,
     isBlockingEnabled: Boolean,
+    isPaused: Boolean = false,
     onClick: () -> Unit
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "breatheTransition")
 
     val breatheScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = if (isActive) 1.08f else 1f,
+        targetValue = if (isActive && !isPaused) 1.08f else 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(3000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -160,8 +236,8 @@ private fun HeroGuardianVisualizer(
     )
 
     val breatheAlpha by infiniteTransition.animateFloat(
-        initialValue = if (isActive) 0.25f else 0f,
-        targetValue = if (isActive) 0.08f else 0f,
+        initialValue = if (isActive) (if (isPaused) 0.15f else 0.25f) else 0f,
+        targetValue = if (isActive) (if (isPaused) 0.05f else 0.08f) else 0f,
         animationSpec = infiniteRepeatable(
             animation = tween(3000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -169,19 +245,18 @@ private fun HeroGuardianVisualizer(
         label = "breatheAlpha"
     )
 
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
-    val onPrimary = MaterialTheme.colorScheme.onPrimary
+    val activeColor = if (isPaused) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
+    val onActiveColor = if (isPaused) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onPrimary
     val outlineVariant = MaterialTheme.colorScheme.outlineVariant
 
     val coreBgColor by animateColorAsState(
-        targetValue = if (isActive) primaryColor else MaterialTheme.colorScheme.surfaceContainerHighest,
+        targetValue = if (isActive) activeColor else MaterialTheme.colorScheme.surfaceContainerHighest,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
         label = "coreBgColor"
     )
 
     val iconTint by animateColorAsState(
-        targetValue = if (isActive) onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (isActive) onActiveColor else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
         label = "iconTint"
     )
@@ -202,13 +277,13 @@ private fun HeroGuardianVisualizer(
                 val haloRadius = (size.minDimension / 2f) * breatheScale
 
                 drawCircle(
-                    color = primaryColor.copy(alpha = breatheAlpha),
+                    color = activeColor.copy(alpha = breatheAlpha),
                     radius = haloRadius,
                     center = center
                 )
 
                 drawCircle(
-                    color = primaryColor.copy(alpha = 0.22f),
+                    color = activeColor.copy(alpha = 0.22f),
                     radius = size.minDimension / 2.3f,
                     center = center,
                     style = Stroke(width = 1.5.dp.toPx())
@@ -231,7 +306,7 @@ private fun HeroGuardianVisualizer(
                 .background(
                     if (isActive) {
                         Brush.radialGradient(
-                            colors = listOf(primaryColor, primaryColor.copy(alpha = 0.9f))
+                            colors = listOf(activeColor, activeColor.copy(alpha = 0.9f))
                         )
                     } else {
                         Brush.radialGradient(
@@ -245,9 +320,11 @@ private fun HeroGuardianVisualizer(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = if (isActive) {
-                    if (isBlockingEnabled) Icons.Rounded.Shield else Icons.Rounded.Security
-                } else Icons.Rounded.PowerSettingsNew,
+                imageVector = when {
+                    isPaused -> Icons.Rounded.HourglassBottom
+                    isActive -> if (isBlockingEnabled) Icons.Rounded.Shield else Icons.Rounded.Security
+                    else -> Icons.Rounded.PowerSettingsNew
+                },
                 contentDescription = null,
                 tint = iconTint,
                 modifier = Modifier.size(52.dp)

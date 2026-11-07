@@ -35,6 +35,8 @@ class ControlViewModelTest {
     private val context: Context = mockk(relaxed = true)
     private val startMonitoring: StartMonitoringUseCase = mockk(relaxed = true)
     private val stopMonitoring: StopMonitoringUseCase = mockk(relaxed = true)
+    private val pauseMonitoringUseCase: com.masum.lantern.domain.usecase.PauseMonitoringUseCase = mockk(relaxed = true)
+    private val resumeMonitoringUseCase: com.masum.lantern.domain.usecase.ResumeMonitoringUseCase = mockk(relaxed = true)
     private val observeMonitoringState: ObserveMonitoringStateUseCase = mockk()
     private val getSummaryStats: GetSummaryStatsUseCase = mockk()
     private val blocklistRepository: BlocklistRepository = mockk()
@@ -69,6 +71,8 @@ class ControlViewModelTest {
             context = context,
             startMonitoring = startMonitoring,
             stopMonitoring = stopMonitoring,
+            pauseMonitoringUseCase = pauseMonitoringUseCase,
+            resumeMonitoringUseCase = resumeMonitoringUseCase,
             observeMonitoringState = observeMonitoringState,
             getSummaryStats = getSummaryStats,
             blocklistRepository = blocklistRepository,

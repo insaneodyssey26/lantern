@@ -18,6 +18,7 @@ import com.masum.lantern.vpn.session.MonitoringSessionBus
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -40,11 +41,15 @@ class LanternVpnService : VpnService() {
     private var lastNotifiedQueryCount = -1
     private var lastNotifiedBlockedCount = -1
     @Volatile private var isBlocking = true
+    @Volatile private var isPaused = false
+    @Volatile private var pauseUntilTimestamp: Long? = null
     @Volatile private var activeProtocol = "UDP"
+    private var pauseTimerJob: Job? = null
 
     private var pfd: ParcelFileDescriptor? = null
     private var readLoop: PacketReadLoop? = null
     private var forwarder: DnsForwarder? = null
+    private var processor: PacketProcessor? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -53,6 +58,13 @@ class LanternVpnService : VpnService() {
                 startTunnel(sessionId)
             }
             ACTION_STOP -> stopTunnel()
+            ACTION_PAUSE -> {
+                val durationMs = intent.getLongExtra(EXTRA_PAUSE_DURATION_MS, 15 * 60 * 1000L)
+                applyPause(durationMs)
+            }
+            ACTION_RESUME -> {
+                applyResume()
+            }
             ACTION_TOGGLE_SHIELD -> {
                 scope.launch {
                     val current = isBlocking
@@ -62,6 +74,27 @@ class LanternVpnService : VpnService() {
             }
         }
         return START_NOT_STICKY
+    }
+
+    private fun applyPause(durationMs: Long) {
+        pauseTimerJob?.cancel()
+        isPaused = true
+        val target = System.currentTimeMillis() + durationMs
+        pauseUntilTimestamp = target
+        updateNotificationImmediately()
+
+        pauseTimerJob = scope.launch {
+            delay(durationMs)
+            applyResume()
+        }
+    }
+
+    private fun applyResume() {
+        pauseTimerJob?.cancel()
+        pauseTimerJob = null
+        isPaused = false
+        pauseUntilTimestamp = null
+        updateNotificationImmediately()
     }
 
     private fun startTunnel(sessionId: Long) {
@@ -96,18 +129,20 @@ class LanternVpnService : VpnService() {
         val forwarderInstance = DnsForwarder(this, descriptor, scope, settingsRepository)
         forwarder = forwarderInstance
         val resolver = ConnectionOwnerResolver(this)
-        val processor = PacketProcessor(
+        val processorInstance = PacketProcessor(
             blocklistRepository = blocklistRepository,
             sessionBus = sessionBus,
             forwarder = forwarderInstance,
             resolver = resolver,
             settingsRepository = settingsRepository,
             scope = scope,
-            sessionId = sessionId
+            sessionId = sessionId,
+            isPausedProvider = { isPaused }
         )
+        processor = processorInstance
 
         readLoop = PacketReadLoop(descriptor) { packet ->
-            processor.process(packet)
+            processorInstance.process(packet)
         }.also { it.start() }
 
         scope.launch { observeSettings() }
@@ -203,8 +238,24 @@ class LanternVpnService : VpnService() {
         val blocked = blockedCount.get()
         val percentage = if (total > 0) ((blocked.toFloat() / total) * 100).toInt() else 0
 
-        val title = if (isBlocking) "Lantern Active · Blocking" else "Lantern Active · Audit Only"
-        val contentText = if (total == 0) {
+        val remainingPauseSec = pauseUntilTimestamp?.let {
+            val diff = (it - System.currentTimeMillis()) / 1000L
+            if (diff > 0) diff else 0L
+        }
+
+        val title = when {
+            isPaused -> {
+                val mins = (remainingPauseSec ?: 0L) / 60
+                val secs = (remainingPauseSec ?: 0L) % 60
+                String.format(java.util.Locale.US, "Lantern Paused (%02d:%02d)", mins, secs)
+            }
+            isBlocking -> "Lantern Active · Blocking"
+            else -> "Lantern Active · Audit Only"
+        }
+
+        val contentText = if (isPaused) {
+            "Firewall protection is paused. Traffic passing through safely."
+        } else if (total == 0) {
             "Listening for network requests ($activeProtocol)"
         } else {
             "$total queries · $blocked blocked ($percentage%) · $activeProtocol"
@@ -232,6 +283,31 @@ class LanternVpnService : VpnService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
+        val pauseResumeAction = if (isPaused) {
+            val resumeIntent = Intent("${packageName}.action.RESUME_VPN").apply {
+                setPackage(packageName)
+            }
+            val resumePendingIntent = PendingIntent.getBroadcast(
+                this,
+                3,
+                resumeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+            Notification.Action.Builder(null, "Resume Now", resumePendingIntent).build()
+        } else {
+            val pauseIntent = Intent("${packageName}.action.PAUSE_VPN").apply {
+                setPackage(packageName)
+                putExtra("duration_ms", 15 * 60 * 1000L)
+            }
+            val pausePendingIntent = PendingIntent.getBroadcast(
+                this,
+                4,
+                pauseIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+            Notification.Action.Builder(null, "Pause (15m)", pausePendingIntent).build()
+        }
+
         val toggleShieldIntent = Intent("${packageName}.action.TOGGLE_SHIELD").apply {
             setPackage(packageName)
         }
@@ -251,6 +327,7 @@ class LanternVpnService : VpnService() {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
+            .addAction(pauseResumeAction)
             .addAction(
                 Notification.Action.Builder(
                     null,
@@ -276,8 +353,11 @@ class LanternVpnService : VpnService() {
     companion object {
         const val ACTION_START = "com.masum.lantern.vpn.START"
         const val ACTION_STOP = "com.masum.lantern.vpn.STOP"
+        const val ACTION_PAUSE = "com.masum.lantern.vpn.PAUSE"
+        const val ACTION_RESUME = "com.masum.lantern.vpn.RESUME"
         const val ACTION_TOGGLE_SHIELD = "com.masum.lantern.vpn.TOGGLE_SHIELD"
         const val EXTRA_SESSION_ID = "session_id"
+        const val EXTRA_PAUSE_DURATION_MS = "pause_duration_ms"
 
         private const val TUN_ADDRESS = "10.0.0.1"
         private const val SENTINEL_DNS = "10.0.0.2"

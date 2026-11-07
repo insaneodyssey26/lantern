@@ -19,6 +19,7 @@ class PacketProcessor(
     private val settingsRepository: SettingsRepository,
     private val scope: CoroutineScope,
     private val sessionId: Long,
+    @Volatile var isPausedProvider: () -> Boolean = { false },
 ) {
     @Volatile private var isBlockingEnabled: Boolean = true
     @Volatile private var userAllowedDomains: Set<String> = emptySet()
@@ -76,7 +77,8 @@ class PacketProcessor(
         val uid = resolver.getUid(parsed)
         val appInfo = resolver.resolveAppInfo(uid)
 
-        val isBlockedNow = (isExplicitlyBlocked || (verdict is Verdict.Tracker && isBlockingEnabled)) && !isExplicitlyAllowed
+        val isPaused = isPausedProvider()
+        val isBlockedNow = !isPaused && (isExplicitlyBlocked || (verdict is Verdict.Tracker && isBlockingEnabled)) && !isExplicitlyAllowed
 
         val query = DnsQuery(
             sessionId = sessionId,

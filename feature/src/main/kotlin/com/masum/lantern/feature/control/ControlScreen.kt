@@ -35,11 +35,14 @@ import androidx.compose.material.icons.rounded.Dns
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Public
+import androidx.compose.material.icons.rounded.PauseCircleFilled
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Storage
+import com.masum.lantern.feature.control.pause.PauseProtectionBottomSheet
 import com.masum.lantern.feature.settings.benchmark.DnsBenchmarkBottomSheet
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
@@ -70,10 +73,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
@@ -115,6 +120,18 @@ fun ControlScreen(
     val whatsNewSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     var showBenchmarkSheet by remember { mutableStateOf(false) }
     val benchmarkSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
+    var showPauseSheet by remember { mutableStateOf(false) }
+    val pauseSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
+    var currentTimeMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
+    LaunchedEffect(activeSession?.isPaused) {
+        if (activeSession?.isPaused == true) {
+            while (true) {
+                currentTimeMs = System.currentTimeMillis()
+                delay(1000)
+            }
+        }
+    }
 
     var shieldRect by remember { mutableStateOf<Rect?>(null) }
     var snapshotRect by remember { mutableStateOf<Rect?>(null) }
@@ -203,10 +220,23 @@ fun ControlScreen(
                 Box(modifier = Modifier.onGloballyPositioned { coordinates ->
                     shieldRect = coordinates.boundsInRoot()
                 }) {
+                    val isPaused = activeSession?.isPaused == true
+                    val pauseUntil = activeSession?.pauseUntilTimestamp
+                    val remainingSecs = if (isPaused && pauseUntil != null) {
+                        ((pauseUntil - currentTimeMs) / 1000).coerceAtLeast(0)
+                    } else null
+
                     LanternHero(
                         isActive = isActive,
                         onToggle = { viewModel.onToggleClick() },
                         isBlockingEnabled = uiState.isBlockingEnabled,
+                        isPaused = isPaused,
+                        remainingPauseSeconds = remainingSecs,
+                        onPauseClick = {
+                            showPauseSheet = true
+                            scope.launch { pauseSheetState.show() }
+                        },
+                        onResumeClick = { viewModel.resumeProtection() },
                         onPresetSelected = { preset ->
                             when (preset) {
                                 "blocking" -> viewModel.setBlockingEnabled(true)
@@ -243,7 +273,10 @@ fun ControlScreen(
                 item {
                     ExpressiveLivePulseStrip(
                         startedAt = activeSession.startedAt,
-                        totalQueries = uiState.totalQueries
+                        totalQueries = uiState.totalQueries,
+                        isPaused = activeSession.isPaused,
+                        pauseUntil = activeSession.pauseUntilTimestamp,
+                        currentTimeMs = currentTimeMs
                     )
                 }
             }
@@ -350,6 +383,21 @@ fun ControlScreen(
             sheetState = benchmarkSheetState
         )
     }
+
+    if (showPauseSheet) {
+        PauseProtectionBottomSheet(
+            onDismiss = {
+                scope.launch {
+                    pauseSheetState.hide()
+                    showPauseSheet = false
+                }
+            },
+            onSelectDuration = { durationMs ->
+                viewModel.pauseProtection(durationMs)
+            },
+            sheetState = pauseSheetState
+        )
+    }
 }
 }
 
@@ -357,8 +405,13 @@ fun ControlScreen(
 @Composable
 private fun ExpressiveLivePulseStrip(
     startedAt: Long,
-    totalQueries: Int
+    totalQueries: Int,
+    isPaused: Boolean = false,
+    pauseUntil: Long? = null,
+    currentTimeMs: Long = System.currentTimeMillis()
 ) {
+    val activeColor = if (isPaused) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -385,17 +438,24 @@ private fun ExpressiveLivePulseStrip(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+                            .background(activeColor)
                     )
                     Text(
-                        text = "Live Protection Active",
+                        text = if (isPaused) "Protection Paused" else "Live Protection Active",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = activeColor
                     )
                 }
                 Text(
-                    text = formatDuration(startedAt, System.currentTimeMillis()),
+                    text = if (isPaused && pauseUntil != null) {
+                        val remainingSecs = ((pauseUntil - currentTimeMs) / 1000).coerceAtLeast(0)
+                        val m = remainingSecs / 60
+                        val s = remainingSecs % 60
+                        String.format("%02d:%02d remaining", m, s)
+                    } else {
+                        formatDuration(startedAt, currentTimeMs)
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -406,7 +466,7 @@ private fun ExpressiveLivePulseStrip(
                     .fillMaxWidth()
                     .height(3.dp)
                     .clip(CircleShape),
-                color = MaterialTheme.colorScheme.primary,
+                color = activeColor,
                 trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
             )
 
@@ -415,7 +475,7 @@ private fun ExpressiveLivePulseStrip(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Inspecting on-device traffic",
+                    text = if (isPaused) "Transparent pass-through active" else "Inspecting on-device traffic",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

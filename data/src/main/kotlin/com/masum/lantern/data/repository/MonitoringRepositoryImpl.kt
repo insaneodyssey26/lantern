@@ -72,5 +72,31 @@ class MonitoringRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun pauseMonitoring(durationMs: Long): Unit = withContext(dispatchers.io) {
+        val currentState = _state.value
+        if (currentState is MonitoringState.Active) {
+            val pauseUntil = System.currentTimeMillis() + durationMs
+            context.startService(
+                Intent(context, LanternVpnService::class.java).apply {
+                    action = LanternVpnService.ACTION_PAUSE
+                    putExtra(LanternVpnService.EXTRA_PAUSE_DURATION_MS, durationMs)
+                }
+            )
+            _state.value = currentState.copy(isPaused = true, pauseUntilTimestamp = pauseUntil)
+        }
+    }
+
+    override suspend fun resumeMonitoring(): Unit = withContext(dispatchers.io) {
+        val currentState = _state.value
+        if (currentState is MonitoringState.Active) {
+            context.startService(
+                Intent(context, LanternVpnService::class.java).apply {
+                    action = LanternVpnService.ACTION_RESUME
+                }
+            )
+            _state.value = currentState.copy(isPaused = false, pauseUntilTimestamp = null)
+        }
+    }
+
     override fun observeMonitoringState(): Flow<MonitoringState> = _state.asStateFlow()
 }

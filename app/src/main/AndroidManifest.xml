@@ -53,12 +53,25 @@
                 android:value="Lantern uses a local-only VPN tunnel to monitor DNS queries on-device. No traffic is routed externally." />
         </service>
 
+        <service
+            android:name=".tile.LanternTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_lantern"
+            android:label="${appName}"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <receiver
             android:name=".receiver.LanternNotificationReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="${applicationId}.action.STOP_VPN" />
                 <action android:name="${applicationId}.action.TOGGLE_SHIELD" />
+                <action android:name="${applicationId}.action.PAUSE_VPN" />
+                <action android:name="${applicationId}.action.RESUME_VPN" />
             </intent-filter>
         </receiver>
 
