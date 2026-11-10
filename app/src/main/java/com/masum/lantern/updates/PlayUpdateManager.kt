@@ -24,11 +24,13 @@ object PlayUpdateManager {
         }.getOrDefault(false)
     }
 
-    fun checkForPlayUpdates(activity: Activity, onUpdateDownloaded: (() -> Unit)? = null) {
-        if (!isInstalledFromPlayStore(activity)) {
-            return
-        }
-
+    fun checkForPlayUpdates(
+        activity: Activity,
+        onUpdateDownloaded: (() -> Unit)? = null,
+        onNoUpdateAvailable: (() -> Unit)? = null,
+        onUpdateAvailable: (() -> Unit)? = null,
+        onError: (() -> Unit)? = null
+    ) {
         val appUpdateManager = AppUpdateManagerFactory.create(activity)
         val appUpdateInfoTask = appUpdateManager.appUpdateInfo
 
@@ -48,19 +50,26 @@ object PlayUpdateManager {
             } else if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
                 && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
             ) {
-                runCatching {
+                onUpdateAvailable?.invoke()
+                val flowStarted = runCatching {
                     appUpdateManager.startUpdateFlowForResult(
                         appUpdateInfo,
                         activity,
                         com.google.android.play.core.appupdate.AppUpdateOptions.defaultOptions(AppUpdateType.FLEXIBLE),
                         UPDATE_REQUEST_CODE
                     )
+                }.isSuccess
+                if (!flowStarted) {
+                    appUpdateManager.unregisterListener(listener)
+                    onError?.invoke()
                 }
             } else {
                 appUpdateManager.unregisterListener(listener)
+                onNoUpdateAvailable?.invoke()
             }
         }.addOnFailureListener {
             appUpdateManager.unregisterListener(listener)
+            onError?.invoke()
         }
     }
 

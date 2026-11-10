@@ -1,5 +1,7 @@
 package com.masum.lantern.navigation
 
+import android.app.Activity
+import com.masum.lantern.updates.PlayUpdateManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
@@ -311,12 +313,66 @@ fun LanternNavHost(
                 )
             }
             composable("settings") {
+                val context = androidx.compose.ui.platform.LocalContext.current
                 SettingsScreen(
                     onBackClick = { navController.popBackStack() },
                     onNavigateToWhitelist = { navController.navigate("app_whitelist") },
                     onNavigateToDomainRules = { navController.navigate("domain_rules") },
                     onNavigateToBlocklists = { navController.navigate("blocklists") },
-                    onNavigateToWhatsNew = { navController.navigate("whats_new") }
+                    onNavigateToWhatsNew = { navController.navigate("whats_new") },
+                    onCheckPlayUpdates = { onResult ->
+                        val activity = context as? Activity
+                        if (activity != null) {
+                            PlayUpdateManager.checkForPlayUpdates(
+                                activity = activity,
+                                onUpdateAvailable = { onResult("Starting Play Store update...") },
+                                onNoUpdateAvailable = { onResult("Lantern is up to date on Google Play") },
+                                onError = {
+                                    val playIntent = android.content.Intent(
+                                        android.content.Intent.ACTION_VIEW,
+                                        android.net.Uri.parse("market://details?id=${context.packageName}")
+                                    ).apply {
+                                        setPackage("com.android.vending")
+                                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    if (playIntent.resolveActivity(context.packageManager) != null) {
+                                        context.startActivity(playIntent)
+                                        onResult("Opening Google Play...")
+                                    } else {
+                                        val webIntent = android.content.Intent(
+                                            android.content.Intent.ACTION_VIEW,
+                                            android.net.Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
+                                        ).apply {
+                                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        context.startActivity(webIntent)
+                                        onResult("Opening Google Play...")
+                                    }
+                                }
+                            )
+                        } else {
+                            val playIntent = android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse("market://details?id=${context.packageName}")
+                            ).apply {
+                                setPackage("com.android.vending")
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            if (playIntent.resolveActivity(context.packageManager) != null) {
+                                context.startActivity(playIntent)
+                                onResult("Opening Google Play...")
+                            } else {
+                                val webIntent = android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    android.net.Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
+                                ).apply {
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(webIntent)
+                                onResult("Opening Google Play...")
+                            }
+                        }
+                    }
                 )
             }
             composable("blocklists") {

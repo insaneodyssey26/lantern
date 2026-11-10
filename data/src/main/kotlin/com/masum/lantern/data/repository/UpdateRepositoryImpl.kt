@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -47,7 +48,7 @@ class UpdateRepositoryImpl @Inject constructor(
             val currentVersionName = packageInfo?.versionName?.removeSuffix("-debug") ?: "2.0"
 
             val req = Request.Builder()
-                .url("https://api.github.com/repos/insaneodyssey26/lantern/releases/latest")
+                .url("https://api.github.com/repos/insaneodyssey26/lantern/releases?per_page=5")
                 .header("Accept", "application/vnd.github+json")
                 .header("User-Agent", "Lantern-Android")
                 .build()
@@ -56,7 +57,38 @@ class UpdateRepositoryImpl @Inject constructor(
                 if (resp.isSuccessful) resp.body.string() else null
             } ?: return@runCatching null
 
-            val root = JSONObject(responseBody)
+            val releases = JSONArray(responseBody)
+            if (releases.length() == 0) return@runCatching null
+
+            var selectedRelease: JSONObject? = null
+            var apkDownloadUrl: String? = null
+            var apkFileName = "lantern-update.apk"
+            var apkSizeBytes = 0L
+
+            for (rIndex in 0 until releases.length()) {
+                val candidate = releases.getJSONObject(rIndex)
+                if (candidate.optBoolean("draft", false)) continue
+
+                val assets = candidate.optJSONArray("assets") ?: continue
+                var foundApk = false
+                for (aIndex in 0 until assets.length()) {
+                    val asset = assets.getJSONObject(aIndex)
+                    val name = asset.optString("name", "")
+                    if (name.endsWith(".apk", ignoreCase = true)) {
+                        apkDownloadUrl = asset.optString("browser_download_url")
+                        apkFileName = name
+                        apkSizeBytes = asset.optLong("size", 0L)
+                        foundApk = true
+                        break
+                    }
+                }
+                if (foundApk) {
+                    selectedRelease = candidate
+                    break
+                }
+            }
+
+            val root = selectedRelease ?: return@runCatching null
 
             val tagName = root.optString("tag_name", "").trim()
             val releaseTitle = root.optString("name", tagName)
@@ -65,22 +97,6 @@ class UpdateRepositoryImpl @Inject constructor(
             val publishedAt = root.optString("published_at", "")
 
             val cleanTagVersion = tagName.removePrefix("v").removePrefix("Vigil-").removePrefix("Lantern-").trim()
-
-            val assets = root.optJSONArray("assets") ?: return@runCatching null
-            var apkDownloadUrl: String? = null
-            var apkFileName = "lantern-update.apk"
-            var apkSizeBytes = 0L
-
-            for (i in 0 until assets.length()) {
-                val asset = assets.getJSONObject(i)
-                val name = asset.optString("name", "")
-                if (name.endsWith(".apk", ignoreCase = true)) {
-                    apkDownloadUrl = asset.optString("browser_download_url")
-                    apkFileName = name
-                    apkSizeBytes = asset.optLong("size", 0L)
-                    break
-                }
-            }
 
             if (apkDownloadUrl == null) {
                 return@runCatching null
@@ -204,19 +220,42 @@ class UpdateRepositoryImpl @Inject constructor(
     }
 
     private fun isVersionNewer(remote: String, current: String): Boolean {
-        val cleanRemote = remote.substringBefore('-').substringBefore('+')
-        val cleanCurrent = current.substringBefore('-').substringBefore('+')
+        val (remoteBase, remotePre, remotePreNum) = parseSemVer(remote)
+        val (currentBase, currentPre, currentPreNum) = parseSemVer(current)
 
-        val remoteParts = cleanRemote.split('.').mapNotNull { it.toIntOrNull() }
-        val currentParts = cleanCurrent.split('.').mapNotNull { it.toIntOrNull() }
-
-        val maxLen = maxOf(remoteParts.size, currentParts.size)
+        val maxLen = maxOf(remoteBase.size, currentBase.size)
         for (i in 0 until maxLen) {
-            val r = remoteParts.getOrElse(i) { 0 }
-            val c = currentParts.getOrElse(i) { 0 }
+            val r = remoteBase.getOrElse(i) { 0 }
+            val c = currentBase.getOrElse(i) { 0 }
             if (r > c) return true
             if (r < c) return false
         }
+
+        if (remotePre.isNotEmpty() != currentPre.isNotEmpty()) {
+            return remotePre.isEmpty()
+        }
+
+        if (remotePre.isNotEmpty() && currentPre.isNotEmpty()) {
+            return remotePreNum > currentPreNum
+        }
+
         return false
+    }
+
+    private fun parseSemVer(version: String): Triple<List<Int>, String, Int> {
+        val cleaned = version.trim()
+            .removePrefix("v")
+            .removePrefix("V")
+            .removePrefix("Lantern-")
+            .removePrefix("Vigil-")
+            .trim()
+
+        val basePart = cleaned.substringBefore('-').substringBefore('+')
+        val prePart = if (cleaned.contains('-')) cleaned.substringAfter('-').substringBefore('+').trim() else ""
+
+        val baseNumbers = basePart.split('.').mapNotNull { it.toIntOrNull() }
+        val preNumber = Regex("""\d+""").find(prePart)?.value?.toIntOrNull() ?: 0
+
+        return Triple(baseNumbers, prePart, preNumber)
     }
 }
