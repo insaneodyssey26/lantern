@@ -103,6 +103,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -133,6 +135,8 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     var showClearConfirmDialog by remember { mutableStateOf(false) }
     var showAboutSheet by remember { mutableStateOf(false) }
     var showWhatsNewSheet by remember { mutableStateOf(false) }
@@ -989,13 +993,19 @@ fun SettingsScreen(
 
     if (showAboutSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showAboutSheet = false },
+            onDismissRequest = {
+                keyboardController?.hide()
+                focusManager.clearFocus()
+                showAboutSheet = false
+            },
             sheetState = aboutSheetState,
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             AboutLanternSheet(
                 onDismiss = {
                     scope.launch {
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
                         aboutSheetState.hide()
                         showAboutSheet = false
                     }
@@ -1006,13 +1016,19 @@ fun SettingsScreen(
 
     if (showWhatsNewSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showWhatsNewSheet = false },
+            onDismissRequest = {
+                keyboardController?.hide()
+                focusManager.clearFocus()
+                showWhatsNewSheet = false
+            },
             sheetState = whatsNewSheetState,
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             WhatsNewContent(
                 onDismiss = {
                     scope.launch {
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
                         whatsNewSheetState.hide()
                         showWhatsNewSheet = false
                     }
@@ -1025,6 +1041,8 @@ fun SettingsScreen(
         DnsBenchmarkBottomSheet(
             onDismiss = {
                 scope.launch {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
                     benchmarkSheetState.hide()
                     showBenchmarkSheet = false
                 }
@@ -1457,7 +1475,7 @@ private fun LanternFooter(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = "v2.0-beta3",
+                                text = "v2.0-beta4",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,

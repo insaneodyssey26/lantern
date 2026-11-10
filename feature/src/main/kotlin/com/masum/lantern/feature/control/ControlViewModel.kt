@@ -90,7 +90,7 @@ class ControlViewModel @Inject constructor(
         }
         viewModelScope.launch {
             val lastSeen = settingsRepository.getLastSeenVersionCodeSync()
-            if (lastSeen < 4) {
+            if (lastSeen < 5) {
                 _uiState.update { it.copy(showWhatsNewSheet = true) }
             }
         }
@@ -100,7 +100,7 @@ class ControlViewModel @Inject constructor(
     fun dismissWhatsNew() {
         _uiState.update { it.copy(showWhatsNewSheet = false) }
         viewModelScope.launch {
-            settingsRepository.setLastSeenVersionCode(4)
+            settingsRepository.setLastSeenVersionCode(5)
         }
     }
 

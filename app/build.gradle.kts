@@ -13,8 +13,8 @@ android {
         applicationId = "com.masum.lantern"
         minSdk = 29
         targetSdk = 36
-        versionCode = 4
-        versionName = "2.0-beta3"
+        versionCode = 5
+        versionName = "2.0-beta4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

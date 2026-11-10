@@ -32,7 +32,7 @@
             android:exported="true"
             android:label="${appName}"
             android:theme="@style/Theme.Lantern.Splash"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

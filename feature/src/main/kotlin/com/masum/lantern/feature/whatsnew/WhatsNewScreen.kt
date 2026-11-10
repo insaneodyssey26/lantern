@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Block
+import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ElectricBolt
 import androidx.compose.material.icons.rounded.FileDownload
@@ -62,6 +63,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -96,9 +99,15 @@ fun WhatsNewBottomSheet(
     sheetState: SheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden),
 ) {
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            keyboardController?.hide()
+            focusManager.clearFocus()
+            onDismiss()
+        },
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = modifier
@@ -106,6 +115,8 @@ fun WhatsNewBottomSheet(
         WhatsNewContent(
             onDismiss = {
                 scope.launch {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
                     sheetState.hide()
                     onDismiss()
                 }
@@ -124,9 +135,24 @@ fun WhatsNewContent(
     val releases = remember {
         listOf(
             WhatsNewRelease(
+                versionName = "2.0-beta4",
+                title = "Keyboard & Focus Fixes",
+                isLatest = true,
+                features = listOf(
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.BugReport,
+                        iconContainerColor = Color(0xFFC8E6C9),
+                        iconContentColor = Color(0xFF1B5E20),
+                        tag = "Fix",
+                        title = "Keyboard Dismissal Fix",
+                        description = "Fixed an issue where the keyboard would briefly flash when closing menus or bottom sheets."
+                    )
+                )
+            ),
+            WhatsNewRelease(
                 versionName = "2.0-beta3",
                 title = "Speed Tester & Pause Controls",
-                isLatest = true,
+                isLatest = false,
                 features = listOf(
                     WhatsNewFeature(
                         icon = Icons.Rounded.Speed,
