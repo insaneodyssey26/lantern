@@ -136,7 +136,7 @@ fun WhatsNewContent(
         listOf(
             WhatsNewRelease(
                 versionName = "2.0-beta4",
-                title = "Keyboard & Focus Fixes",
+                title = "Updates & Stability",
                 isLatest = true,
                 features = listOf(
                     WhatsNewFeature(
@@ -146,6 +146,14 @@ fun WhatsNewContent(
                         tag = "Fix",
                         title = "Keyboard Dismissal Fix",
                         description = "Fixed an issue where the keyboard would briefly flash when closing menus or bottom sheets."
+                    ),
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.Sync,
+                        iconContainerColor = Color(0xFFBBDEFB),
+                        iconContentColor = Color(0xFF0D47A1),
+                        tag = "Updates",
+                        title = "Dual Update Channels",
+                        description = "Check for updates from Google Play Store or directly from GitHub releases with expandable controls."
                     )
                 )
             ),

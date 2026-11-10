@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0-beta4] - 2026-11-11
 
+### Added
+- **Dual Update Channels**: Added expandable update options in Settings to check updates from either Google Play Store or GitHub Releases.
+
 ### Fixed
 - Fixed an issue where the keyboard would briefly flash when closing menus or bottom sheets.
 
