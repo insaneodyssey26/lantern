@@ -107,7 +107,7 @@ fun OnboardingScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(28.dp))
 
             AnimatedVisibility(
                 visible = isVisible,
@@ -198,7 +198,7 @@ fun OnboardingScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1.2f))
+            Spacer(modifier = Modifier.height(36.dp))
 
             Column(
                 modifier = Modifier
