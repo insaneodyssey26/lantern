@@ -4,9 +4,14 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.rotate
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.foundation.background
@@ -85,6 +90,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.FilledTonalToggleButtonDefaults
 import androidx.compose.material3.FilledTonalToggleButton
 import androidx.compose.material3.TopAppBar
@@ -640,6 +646,16 @@ fun SettingsScreen(
                             "Built-in release version"
                         }
 
+                        val refreshTransition = rememberInfiniteTransition(label = "blocklist_refresh")
+                        val refreshRotation by refreshTransition.animateFloat(
+                            initialValue = 0f,
+                            targetValue = 360f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(durationMillis = 1000, easing = LinearEasing)
+                            ),
+                            label = "blocklist_refresh_spin"
+                        )
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -649,35 +665,67 @@ fun SettingsScreen(
                                 text = lastUpdatedText,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
 
-                            FilledTonalButton(
-                                onClick = {
-                                    haptics.tap()
-                                    onNavigateToBlocklists()
-                                },
-                                modifier = Modifier.height(40.dp),
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
+                                FilledTonalIconButton(
+                                    onClick = {
+                                        haptics.heavy()
+                                        viewModel.updateBlocklist()
+                                    },
+                                    enabled = !uiState.isUpdatingBlocklist,
+                                    modifier = Modifier.size(40.dp),
+                                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Rounded.Security,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
+                                        imageVector = Icons.Rounded.Refresh,
+                                        contentDescription = "Refresh Active Filter Lists",
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .then(
+                                                if (uiState.isUpdatingBlocklist) Modifier.rotate(refreshRotation) else Modifier
+                                            )
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "Filter Lists",
-                                        maxLines = 1
+                                }
+
+                                FilledTonalButton(
+                                    onClick = {
+                                        haptics.tap()
+                                        onNavigateToBlocklists()
+                                    },
+                                    modifier = Modifier.height(40.dp),
+                                    contentPadding = PaddingValues(horizontal = 14.dp),
+                                    colors = ButtonDefaults.filledTonalButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Security,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "Filter Lists",
+                                            maxLines = 1
+                                        )
+                                    }
                                 }
                             }
                         }
