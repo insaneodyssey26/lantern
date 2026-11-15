@@ -3,6 +3,7 @@ package com.masum.lantern.feature.control
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.VpnService
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.masum.lantern.domain.model.MonitoringState
@@ -90,17 +91,27 @@ class ControlViewModel @Inject constructor(
         }
         viewModelScope.launch {
             val lastSeen = settingsRepository.getLastSeenVersionCodeSync()
-            if (lastSeen < 5) {
+            val currentVersion = getCurrentVersionCode()
+            if (lastSeen < currentVersion) {
                 _uiState.update { it.copy(showWhatsNewSheet = true) }
             }
         }
         refreshPrivateDnsStatus()
     }
 
+    private fun getCurrentVersionCode(): Int {
+        return try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            PackageInfoCompat.getLongVersionCode(packageInfo).toInt()
+        } catch (_: Exception) {
+            0
+        }
+    }
+
     fun dismissWhatsNew() {
         _uiState.update { it.copy(showWhatsNewSheet = false) }
         viewModelScope.launch {
-            settingsRepository.setLastSeenVersionCode(5)
+            settingsRepository.setLastSeenVersionCode(getCurrentVersionCode())
         }
     }
 

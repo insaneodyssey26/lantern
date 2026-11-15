@@ -7,7 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0-beta4] - 2026-11-11
+## [2.0-beta5]
+
+> Final testing build before the stable release.
+
+### Added
+- **App Bypass Toggle in Query Sheets**: Easily exclude or include an app directly from its query details bottom sheet without opening Settings.
+- **App Search and Filter in Insights**: Search apps by name or package, and filter by all apps, apps with trackers, or clean apps.
+- **Unified About Card in Settings**: Single expandable section with links to GitHub repository, issue tracker, developer contact, and update checks.
+- **One-Tap Filter Refresh**: Quick button to reload active filter lists in Settings.
+- **Block Mode Information**: Informational dialog explaining blocking behavior and zero-rule filter warnings.
+- **Splash Screen Haptic**: Subtle haptic feedback when entering the home screen after splash screen.
+
+### Fixed
+- Fixed layout clipping and text wrapping issues on small screen phones.
+- Improved update dialog exit animation and added loading indicator when checking GitHub releases.
+- Fixed outside-tap dismiss behavior on filter dropdown menus.
+
+---
+
+## [2.0-beta4]
 
 ### Added
 - **Dual Update Channels**: Added expandable update options in Settings to check updates from either Google Play Store or GitHub Releases.
@@ -17,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0-beta3] - 2026-11-07
+## [2.0-beta3]
 
 ### Added
 - **DNS Speed Tester**: Test real ping and latency across Cloudflare, Quad9, Google, and AdGuard over standard UDP, DoH, or DoT with a 1-tap fastest resolver picker.
@@ -27,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0-beta2] - 2026-11-05
+## [2.0-beta2]
 
 ### Added
 - **Multi-List Protection Feeds**: Ability to enable and combine multiple curated blocklists simultaneously:

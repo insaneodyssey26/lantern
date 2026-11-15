@@ -32,11 +32,14 @@ import androidx.compose.material.icons.rounded.ElectricBolt
 import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.HourglassBottom
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.PauseCircleFilled
 import androidx.compose.material.icons.rounded.PowerSettingsNew
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.Tune
@@ -135,9 +138,40 @@ fun WhatsNewContent(
     val releases = remember {
         listOf(
             WhatsNewRelease(
+                versionName = "2.0-beta5",
+                title = "App Bypass & Search",
+                isLatest = true,
+                features = listOf(
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.Shield,
+                        iconContainerColor = Color(0xFFC8E6C9),
+                        iconContentColor = Color(0xFF1B5E20),
+                        tag = "Firewall",
+                        title = "App Bypass Toggle",
+                        description = "Exclude or include any app directly from its query sheet without opening Settings."
+                    ),
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.Search,
+                        iconContainerColor = Color(0xFFBBDEFB),
+                        iconContentColor = Color(0xFF0D47A1),
+                        tag = "Insights",
+                        title = "App Search & Filters",
+                        description = "Quickly search apps and filter by trackers or clean activity in the Insights tab."
+                    ),
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.Info,
+                        iconContainerColor = Color(0xFFFFE082),
+                        iconContentColor = Color(0xFF5D4037),
+                        tag = "About",
+                        title = "Unified About Section",
+                        description = "Direct links to GitHub repository, issues, developer contact, and update checks in one place."
+                    )
+                )
+            ),
+            WhatsNewRelease(
                 versionName = "2.0-beta4",
                 title = "Updates & Stability",
-                isLatest = true,
+                isLatest = false,
                 features = listOf(
                     WhatsNewFeature(
                         icon = Icons.Rounded.BugReport,
