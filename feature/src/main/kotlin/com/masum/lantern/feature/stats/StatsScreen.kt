@@ -33,14 +33,22 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.PieChart
 import androidx.compose.material.icons.rounded.QueryStats
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,8 +64,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SplitButtonDefaults
+import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.WavyProgressIndicatorDefaults
@@ -77,8 +89,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -418,11 +434,55 @@ private fun OverviewTabContent(uiState: StatsUiState) {
     }
 }
 
+enum class AppFilter {
+    All,
+    Trackers,
+    Clean
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AppsTabContent(
     apps: List<AppStatUiModel>,
     onAppClick: (AppStatUiModel) -> Unit
 ) {
+    val haptics = rememberLanternHaptics()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedFilter by remember { mutableStateOf(AppFilter.All) }
+    var filterDropdownExpanded by remember { mutableStateOf(false) }
+
+    val filterArrowRotation by animateFloatAsState(
+        targetValue = if (filterDropdownExpanded) 180f else 0f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "filterArrowRotation"
+    )
+
+    val trackerAppsCount = remember(apps) { apps.count { it.trackerQueries > 0 } }
+    val cleanAppsCount = remember(apps) { apps.count { it.trackerQueries == 0 } }
+
+    val filterLabel = when (selectedFilter) {
+        AppFilter.All -> "All (${apps.size})"
+        AppFilter.Trackers -> "Trackers ($trackerAppsCount)"
+        AppFilter.Clean -> "Clean ($cleanAppsCount)"
+    }
+
+    val filteredApps = remember(apps, searchQuery, selectedFilter) {
+        apps.filter { app ->
+            val matchesSearch = searchQuery.isBlank() ||
+                app.appName.contains(searchQuery, ignoreCase = true) ||
+                app.packageName.contains(searchQuery, ignoreCase = true)
+            val matchesFilter = when (selectedFilter) {
+                AppFilter.All -> true
+                AppFilter.Trackers -> app.trackerQueries > 0
+                AppFilter.Clean -> app.trackerQueries == 0
+            }
+            matchesSearch && matchesFilter
+        }
+    }
+
     if (apps.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -434,68 +494,240 @@ private fun AppsTabContent(
             )
         }
     } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(items = apps, key = { it.packageName }) { app ->
-                ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.large)
-                        .clickable { onAppClick(app) },
-                    shape = MaterialTheme.shapes.large,
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 10.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                TextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = {
+                        Text(
+                            text = "Search apps…",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingIcon = if (searchQuery.isNotEmpty()) {
+                        {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Clear,
+                                    contentDescription = "Clear search",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else null,
+                    singleLine = true,
+                    shape = CircleShape,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                        }
                     ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                )
+
+                Box {
+                    SplitButtonLayout(
+                        leadingButton = {
+                            SplitButtonDefaults.TonalLeadingButton(
+                                onClick = {
+                                    haptics.tap()
+                                    filterDropdownExpanded = !filterDropdownExpanded
+                                }
+                            ) {
+                                Text(
+                                    text = filterLabel,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        },
+                        trailingButton = {
+                            SplitButtonDefaults.TonalTrailingButton(
+                                checked = filterDropdownExpanded,
+                                onCheckedChange = {
+                                    haptics.tap()
+                                    filterDropdownExpanded = it
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                                    contentDescription = "Filter Options",
+                                    modifier = Modifier
+                                        .size(SplitButtonDefaults.TrailingIconSize)
+                                        .graphicsLayer { rotationZ = filterArrowRotation }
+                                )
+                            }
+                        }
+                    )
+
+                    DropdownMenu(
+                        expanded = filterDropdownExpanded,
+                        onDismissRequest = { filterDropdownExpanded = false },
+                        shape = MaterialTheme.shapes.large,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
-                        AppIconImage(
-                            packageName = app.packageName,
-                            appName = app.appName,
-                            size = 46.dp
+                        val filterOptions = listOf(
+                            Triple(AppFilter.All, "All Apps", apps.size),
+                            Triple(AppFilter.Trackers, "Trackers", trackerAppsCount),
+                            Triple(AppFilter.Clean, "Clean", cleanAppsCount)
                         )
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = app.appName,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            val detailText = when {
-                                app.blockedQueries > 0 && app.auditedQueries == 0 ->
-                                    "${app.totalQueries} calls · ${app.blockedQueries} blocked (${app.trackerPercentage}%)"
-                                app.blockedQueries == 0 && app.auditedQueries > 0 ->
-                                    "${app.totalQueries} calls · ${app.auditedQueries} audited (${app.trackerPercentage}%)"
-                                app.blockedQueries > 0 && app.auditedQueries > 0 ->
-                                    "${app.totalQueries} calls · ${app.blockedQueries} blk, ${app.auditedQueries} aud"
-                                else ->
-                                    "${app.totalQueries} calls · 0 trackers"
-                            }
-                            Text(
-                                text = detailText,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        filterOptions.forEach { (filter, title, count) ->
+                            val isSelected = selectedFilter == filter
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = title,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "($count)",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                },
+                                trailingIcon = if (isSelected) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                } else null,
+                                onClick = {
+                                    haptics.tap()
+                                    selectedFilter = filter
+                                    filterDropdownExpanded = false
+                                }
                             )
                         }
+                    }
+                }
+            }
 
-                        val verdict = when {
-                            app.blockedQueries > 0 -> ExpressiveVerdict.BLOCKED
-                            app.trackerQueries > 0 -> ExpressiveVerdict.AUDITED
-                            else -> ExpressiveVerdict.SAFE
+            if (filteredApps.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EmptyState(
+                        title = if (searchQuery.isNotEmpty()) "No Matching Apps" else "No Apps in Filter",
+                        subtitle = if (searchQuery.isNotEmpty()) "Try adjusting your app name or package query." else "No captured apps match this filter criteria."
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 96.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(items = filteredApps, key = { it.packageName }) { app ->
+                        ElevatedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.large)
+                                .clickable {
+                                    focusManager.clearFocus()
+                                    keyboardController?.hide()
+                                    onAppClick(app)
+                                },
+                            shape = MaterialTheme.shapes.large,
+                            colors = CardDefaults.elevatedCardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                            ),
+                            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                            ) {
+                                AppIconImage(
+                                    packageName = app.packageName,
+                                    appName = app.appName,
+                                    size = 46.dp
+                                )
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = app.appName,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    val detailText = when {
+                                        app.blockedQueries > 0 && app.auditedQueries == 0 ->
+                                            "${app.totalQueries} calls · ${app.blockedQueries} blocked (${app.trackerPercentage}%)"
+                                        app.blockedQueries == 0 && app.auditedQueries > 0 ->
+                                            "${app.totalQueries} calls · ${app.auditedQueries} audited (${app.trackerPercentage}%)"
+                                        app.blockedQueries > 0 && app.auditedQueries > 0 ->
+                                            "${app.totalQueries} calls · ${app.blockedQueries} blk, ${app.auditedQueries} aud"
+                                        else ->
+                                            "${app.totalQueries} calls · 0 trackers"
+                                    }
+                                    Text(
+                                        text = detailText,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                val verdict = when {
+                                    app.blockedQueries > 0 -> ExpressiveVerdict.BLOCKED
+                                    app.trackerQueries > 0 -> ExpressiveVerdict.AUDITED
+                                    else -> ExpressiveVerdict.SAFE
+                                }
+                                ExpressiveVerdictBadge(verdict = verdict)
+                            }
                         }
-                        ExpressiveVerdictBadge(verdict = verdict)
                     }
                 }
             }

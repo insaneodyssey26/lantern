@@ -98,7 +98,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.PopupProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.geometry.Rect
@@ -871,7 +870,6 @@ private fun QuickSecuritySnapshot(
                     DropdownMenu(
                         expanded = dnsExpanded,
                         onDismissRequest = { dnsExpanded = false },
-                        properties = PopupProperties(focusable = false),
                         shape = MaterialTheme.shapes.large,
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
