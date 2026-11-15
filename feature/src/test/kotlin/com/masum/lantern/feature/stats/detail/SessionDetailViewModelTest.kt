@@ -8,6 +8,7 @@ import com.masum.lantern.domain.model.PerAppStat
 import com.masum.lantern.domain.model.SessionSummary
 import com.masum.lantern.domain.model.Verdict
 import com.masum.lantern.domain.repository.DnsLogRepository
+import com.masum.lantern.domain.repository.SettingsRepository
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -28,11 +29,13 @@ class SessionDetailViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private val dnsLogRepository: DnsLogRepository = mockk()
+    private val settingsRepository: SettingsRepository = mockk()
     private val exportLogsUseCase: com.masum.lantern.domain.usecase.ExportLogsUseCase = mockk(relaxed = true)
 
     private val sessionFlow = MutableStateFlow<SessionSummary?>(null)
     private val perAppFlow = MutableStateFlow<List<PerAppStat>>(emptyList())
     private val queriesFlow = MutableStateFlow<List<DnsQuery>>(emptyList())
+    private val bypassedAppsFlow = MutableStateFlow<Set<String>>(emptySet())
 
     private val sampleSession = SessionSummary(
         sessionId = 42L,
@@ -64,6 +67,7 @@ class SessionDetailViewModelTest {
         every { dnsLogRepository.observeSession(42L) } returns sessionFlow
         every { dnsLogRepository.observePerAppStats(42L) } returns perAppFlow
         every { dnsLogRepository.observeSessionQueries(42L) } returns queriesFlow
+        every { settingsRepository.getBypassedApps() } returns bypassedAppsFlow
     }
 
     @After
@@ -73,7 +77,7 @@ class SessionDetailViewModelTest {
 
     private fun createViewModel(sessionId: Long = 42L): SessionDetailViewModel {
         val savedStateHandle = SavedStateHandle(mapOf("sessionId" to sessionId))
-        return SessionDetailViewModel(savedStateHandle, dnsLogRepository, exportLogsUseCase)
+        return SessionDetailViewModel(savedStateHandle, dnsLogRepository, exportLogsUseCase, settingsRepository)
     }
 
     @Test
@@ -142,5 +146,29 @@ class SessionDetailViewModelTest {
 
         assertEquals("header\nrow", viewModel.exportCsv())
         assertEquals("[{}]", viewModel.exportJson())
+    }
+
+    @Test
+    fun `bypassed packages are reflected in uiState`() = runTest {
+        val viewModel = createViewModel()
+        viewModel.uiState.test {
+            awaitItem()
+            bypassedAppsFlow.value = setOf("com.browser")
+            val state = awaitItem()
+            assertEquals(setOf("com.browser"), state.bypassedPackages)
+        }
+    }
+
+    @Test
+    fun `toggleAppBypass delegates to settingsRepository`() = runTest {
+        val viewModel = createViewModel()
+        io.mockk.coEvery { settingsRepository.setAppBypassed("com.test", true) } returns Unit
+        io.mockk.coEvery { settingsRepository.setAppBypassed("com.test", false) } returns Unit
+
+        viewModel.toggleAppBypass("com.test", true)
+        io.mockk.coVerify(exactly = 1) { settingsRepository.setAppBypassed("com.test", true) }
+
+        viewModel.toggleAppBypass("com.test", false)
+        io.mockk.coVerify(exactly = 1) { settingsRepository.setAppBypassed("com.test", false) }
     }
 }

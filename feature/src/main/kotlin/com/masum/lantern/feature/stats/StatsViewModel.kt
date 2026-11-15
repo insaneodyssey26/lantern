@@ -8,6 +8,7 @@ import com.masum.lantern.domain.model.SessionSummary
 import com.masum.lantern.domain.model.SummaryStats
 import com.masum.lantern.domain.repository.BlocklistRepository
 import com.masum.lantern.domain.repository.DnsLogRepository
+import com.masum.lantern.domain.repository.SettingsRepository
 import com.masum.lantern.domain.usecase.ClearHistoryUseCase
 import com.masum.lantern.domain.usecase.GetPerAppStatsUseCase
 import com.masum.lantern.domain.usecase.GetSessionHistoryUseCase
@@ -31,13 +32,15 @@ class StatsViewModel @Inject constructor(
     private val blocklistRepository: BlocklistRepository,
     private val dnsLogRepository: DnsLogRepository,
     private val clearHistoryUseCase: ClearHistoryUseCase,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<StatsUiState> = combine(
         getSummaryStats(),
         getPerAppStats(),
-        getSessionHistory()
-    ) { summary, apps, sessions ->
+        getSessionHistory(),
+        settingsRepository.getBypassedApps()
+    ) { summary, apps, sessions, bypassed ->
         val now = System.currentTimeMillis()
         StatsUiState(
             totalQueries = summary.totalQueries,
@@ -54,7 +57,8 @@ class StatsViewModel @Inject constructor(
             },
             blocklistCount = blocklistRepository.domainCount(),
             apps = apps.map { it.toUiModel() },
-            sessions = sessions.map { it.toUiModel(now) }
+            sessions = sessions.map { it.toUiModel(now) },
+            bypassedPackages = bypassed
         )
     }.stateIn(
         scope = viewModelScope,
@@ -64,6 +68,12 @@ class StatsViewModel @Inject constructor(
 
     fun getAppQueries(packageName: String): Flow<List<DnsQuery>> =
         dnsLogRepository.observeAppQueries(packageName)
+
+    fun toggleAppBypass(packageName: String, isBypassed: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setAppBypassed(packageName, isBypassed)
+        }
+    }
 
     fun onClearHistory() {
         viewModelScope.launch {

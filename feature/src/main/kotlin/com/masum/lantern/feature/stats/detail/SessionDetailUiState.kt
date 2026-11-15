@@ -12,7 +12,8 @@ data class SessionDetailUiState(
     val apps: List<SessionAppStatUiModel> = emptyList(),
     val queries: List<SessionQueryUiModel> = emptyList(),
     val selectedTab: SessionDetailTab = SessionDetailTab.QUERIES,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val bypassedPackages: Set<String> = emptySet()
 ) {
     val auditedQueries: Int get() = (trackerQueries - blockedQueries).coerceAtLeast(0)
     val cleanQueries: Int get() = (totalQueries - trackerQueries).coerceAtLeast(0)

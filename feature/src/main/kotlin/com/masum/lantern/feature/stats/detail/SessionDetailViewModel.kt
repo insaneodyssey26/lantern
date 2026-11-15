@@ -8,6 +8,7 @@ import com.masum.lantern.domain.model.PerAppStat
 import com.masum.lantern.domain.model.SessionSummary
 import com.masum.lantern.domain.model.Verdict
 import com.masum.lantern.domain.repository.DnsLogRepository
+import com.masum.lantern.domain.repository.SettingsRepository
 import com.masum.lantern.domain.usecase.ExportLogsUseCase
 import com.masum.lantern.feature.util.formatDate
 import com.masum.lantern.feature.util.formatDuration
@@ -18,13 +19,15 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SessionDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val dnsLogRepository: DnsLogRepository,
-    private val exportLogsUseCase: ExportLogsUseCase
+    private val exportLogsUseCase: ExportLogsUseCase,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     private val sessionId: Long = checkNotNull(savedStateHandle.get<Long>("sessionId") ?: savedStateHandle.get<String>("sessionId")?.toLongOrNull() ?: 0L)
@@ -34,14 +37,16 @@ class SessionDetailViewModel @Inject constructor(
         dnsLogRepository.observeSession(sessionId),
         dnsLogRepository.observePerAppStats(sessionId),
         dnsLogRepository.observeSessionQueries(sessionId),
+        settingsRepository.getBypassedApps(),
         selectedTab
-    ) { session, apps, queries, tab ->
+    ) { session, apps, queries, bypassed, tab ->
         val now = System.currentTimeMillis()
         if (session == null) {
             SessionDetailUiState(
                 sessionId = sessionId,
                 isLoading = false,
-                selectedTab = tab
+                selectedTab = tab,
+                bypassedPackages = bypassed
             )
         } else {
             SessionDetailUiState(
@@ -56,7 +61,8 @@ class SessionDetailViewModel @Inject constructor(
                 apps = apps.map { it.toUiModel() },
                 queries = queries.map { it.toUiModel() },
                 selectedTab = tab,
-                isLoading = false
+                isLoading = false,
+                bypassedPackages = bypassed
             )
         }
     }.stateIn(
@@ -75,6 +81,12 @@ class SessionDetailViewModel @Inject constructor(
 
     fun getSessionAppQueries(packageName: String): kotlinx.coroutines.flow.Flow<List<DnsQuery>> =
         dnsLogRepository.observeSessionAppQueries(sessionId, packageName)
+
+    fun toggleAppBypass(packageName: String, isBypassed: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setAppBypassed(packageName, isBypassed)
+        }
+    }
 
     private fun PerAppStat.toUiModel() = SessionAppStatUiModel(
         appName = appInfo.appName,

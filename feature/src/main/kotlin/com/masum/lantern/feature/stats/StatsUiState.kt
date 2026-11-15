@@ -9,6 +9,7 @@ data class StatsUiState(
     val blocklistCount: Int = 0,
     val apps: List<AppStatUiModel> = emptyList(),
     val sessions: List<SessionUiModel> = emptyList(),
+    val bypassedPackages: Set<String> = emptySet(),
 ) {
     val cleanQueries: Int get() = (totalQueries - trackerQueries).coerceAtLeast(0)
     val auditedQueries: Int get() = (trackerQueries - blockedQueries).coerceAtLeast(0)

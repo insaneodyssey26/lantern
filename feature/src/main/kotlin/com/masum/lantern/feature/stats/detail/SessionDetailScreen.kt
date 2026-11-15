@@ -41,6 +41,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -292,6 +295,8 @@ fun SessionDetailScreen(
     selectedAppForInspection?.let { app ->
         SessionAppQueriesBottomSheet(
             app = app,
+            isBypassed = uiState.bypassedPackages.contains(app.packageName),
+            onToggleBypass = { bypassed -> viewModel.toggleAppBypass(app.packageName, bypassed) },
             viewModel = viewModel,
             onDismiss = { selectedAppForInspection = null },
             onQueryClick = { queryUi ->
@@ -575,6 +580,8 @@ private fun SessionAppsList(
 @Composable
 private fun SessionAppQueriesBottomSheet(
     app: SessionAppStatUiModel,
+    isBypassed: Boolean,
+    onToggleBypass: (Boolean) -> Unit,
     viewModel: SessionDetailViewModel,
     onDismiss: () -> Unit,
     onQueryClick: (DnsQueryUiModel) -> Unit
@@ -620,11 +627,69 @@ private fun SessionAppQueriesBottomSheet(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                val verdict = if (app.trackerQueries > 0) ExpressiveVerdict.BLOCKED else ExpressiveVerdict.SAFE
+                val verdict = when {
+                    isBypassed -> ExpressiveVerdict.BYPASSED
+                    app.blockedQueries > 0 -> ExpressiveVerdict.BLOCKED
+                    app.trackerQueries > 0 -> ExpressiveVerdict.AUDITED
+                    else -> ExpressiveVerdict.SAFE
+                }
                 ExpressiveVerdictBadge(verdict = verdict)
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Surface(
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f, fill = false),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Text(
+                            text = "Bypass Protection",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = if (isBypassed) "Excluded from DNS filtering" else "DNS requests are filtered",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Switch(
+                        checked = isBypassed,
+                        onCheckedChange = { checked ->
+                            haptics.toggle()
+                            onToggleBypass(checked)
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.primary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             if (queries.isEmpty()) {
                 EmptyState(

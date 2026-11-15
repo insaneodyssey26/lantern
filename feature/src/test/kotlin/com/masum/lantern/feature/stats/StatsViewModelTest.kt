@@ -8,6 +8,7 @@ import com.masum.lantern.domain.model.SessionSummary
 import com.masum.lantern.domain.model.SummaryStats
 import com.masum.lantern.domain.repository.BlocklistRepository
 import com.masum.lantern.domain.repository.DnsLogRepository
+import com.masum.lantern.domain.repository.SettingsRepository
 import com.masum.lantern.domain.usecase.ClearHistoryUseCase
 import com.masum.lantern.domain.usecase.GetPerAppStatsUseCase
 import com.masum.lantern.domain.usecase.GetSessionHistoryUseCase
@@ -39,7 +40,10 @@ class StatsViewModelTest {
     private val getSessionHistory: GetSessionHistoryUseCase = mockk()
     private val blocklistRepository: BlocklistRepository = mockk()
     private val dnsLogRepository: DnsLogRepository = mockk()
+    private val settingsRepository: SettingsRepository = mockk()
     private val clearHistoryUseCase: ClearHistoryUseCase = mockk(relaxed = true)
+
+    private val bypassedAppsFlow = MutableStateFlow(emptySet<String>())
 
     private lateinit var viewModel: StatsViewModel
 
@@ -50,6 +54,7 @@ class StatsViewModelTest {
         every { getPerAppStats() } returns perAppFlow
         every { getSessionHistory() } returns sessionFlow
         every { blocklistRepository.domainCount() } returns 150_000
+        every { settingsRepository.getBypassedApps() } returns bypassedAppsFlow
 
         viewModel = StatsViewModel(
             getSummaryStats = getSummaryStats,
@@ -57,7 +62,8 @@ class StatsViewModelTest {
             getSessionHistory = getSessionHistory,
             blocklistRepository = blocklistRepository,
             dnsLogRepository = dnsLogRepository,
-            clearHistoryUseCase = clearHistoryUseCase
+            clearHistoryUseCase = clearHistoryUseCase,
+            settingsRepository = settingsRepository
         )
     }
 
@@ -149,5 +155,27 @@ class StatsViewModelTest {
     fun `clear history invokes clearHistoryUseCase`() = runTest {
         viewModel.onClearHistory()
         coVerify(exactly = 1) { clearHistoryUseCase() }
+    }
+
+    @Test
+    fun `bypassed packages are reflected in uiState`() = runTest {
+        viewModel.uiState.test {
+            awaitItem()
+            bypassedAppsFlow.value = setOf("com.android.camera")
+            val state = awaitItem()
+            assertEquals(setOf("com.android.camera"), state.bypassedPackages)
+        }
+    }
+
+    @Test
+    fun `toggleAppBypass delegates to settingsRepository`() = runTest {
+        io.mockk.coEvery { settingsRepository.setAppBypassed("com.test", true) } returns Unit
+        io.mockk.coEvery { settingsRepository.setAppBypassed("com.test", false) } returns Unit
+
+        viewModel.toggleAppBypass("com.test", true)
+        coVerify(exactly = 1) { settingsRepository.setAppBypassed("com.test", true) }
+
+        viewModel.toggleAppBypass("com.test", false)
+        coVerify(exactly = 1) { settingsRepository.setAppBypassed("com.test", false) }
     }
 }
