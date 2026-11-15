@@ -3,6 +3,7 @@ package com.masum.lantern
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import android.view.HapticFeedbackConstants
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -44,6 +45,17 @@ class MainActivity : ComponentActivity() {
         val splashStartTime = SystemClock.uptimeMillis()
         splashScreen.setKeepOnScreenCondition {
             SystemClock.uptimeMillis() - splashStartTime < 1700L
+        }
+        splashScreen.setOnExitAnimationListener { splashScreenViewProvider ->
+            val root = window.decorView
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                root.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                root.performHapticFeedback(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE)
+            } else {
+                root.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            }
+            splashScreenViewProvider.remove()
         }
         super.onCreate(savedInstanceState)
         val initialThemeMode = settingsRepository.getThemeModeSync()

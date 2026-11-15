@@ -64,11 +64,14 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -106,10 +109,20 @@ fun UpdateBottomSheet(
     onInstallUpdate: (String) -> Unit,
     onRetryCheck: () -> Unit,
     modifier: Modifier = Modifier,
+    sheetState: SheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden),
 ) {
-    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Expanded)
+    val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val animateDismiss: () -> Unit = {
+        scope.launch {
+            keyboardController?.hide()
+            focusManager.clearFocus()
+            sheetState.hide()
+            onDismiss()
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -134,13 +147,13 @@ fun UpdateBottomSheet(
                     CheckingUpdatesView()
                 }
                 is UpdateCheckStatus.UpToDate -> {
-                    UpToDateView(onDismiss = onDismiss)
+                    UpToDateView(onDismiss = animateDismiss)
                 }
                 is UpdateCheckStatus.Error -> {
                     UpdateErrorView(
                         errorMessage = status.message,
                         onRetry = onRetryCheck,
-                        onDismiss = onDismiss
+                        onDismiss = animateDismiss
                     )
                 }
                 is UpdateCheckStatus.UpdateAvailable -> {
@@ -149,7 +162,7 @@ fun UpdateBottomSheet(
                         downloadState = uiState.downloadState,
                         onStartDownload = { onStartDownload(status.update) },
                         onInstallUpdate = onInstallUpdate,
-                        onDismiss = onDismiss
+                        onDismiss = animateDismiss
                     )
                 }
                 is UpdateCheckStatus.Idle -> {
@@ -212,13 +225,13 @@ private fun UpToDateView(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 24.dp),
+            .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(76.dp)
+                .size(64.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
@@ -227,41 +240,41 @@ private fun UpToDateView(
                 imageVector = Icons.Rounded.CheckCircle,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(34.dp)
             )
         }
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = "You're All Up to Date",
-                style = MaterialTheme.typography.headlineSmall,
+                text = "You're up to date",
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Lantern is currently running the latest available build.",
+                text = "Lantern is running the latest available build.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Button(
             onClick = {
                 haptics.tap()
                 onDismiss()
             },
-            shape = RoundedCornerShape(16.dp),
+            shape = MaterialTheme.shapes.large,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(48.dp)
         ) {
-            Text("Got It")
+            Text("Got it")
         }
     }
 }
