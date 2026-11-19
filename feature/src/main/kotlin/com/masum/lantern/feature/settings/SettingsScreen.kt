@@ -15,6 +15,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.rotate
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -1236,11 +1238,14 @@ private fun ExpressivePaletteSelector(
             if (supportsDynamic) {
                 add(Triple("system", "Dynamic", Color(0xFF6750A4)))
             }
-            add(Triple("amber", "Yellow", Color(0xFF8B5000)))
-            add(Triple("ember", "Red", Color(0xFFB81D00)))
-            add(Triple("ocean", "Blue", Color(0xFF00639A)))
-            add(Triple("emerald", "Green", Color(0xFF006C4C)))
-            add(Triple("orchid", "Purple", Color(0xFF6750A4)))
+            add(Triple("amber", "Amber", Color(0xFF8B5000)))
+            add(Triple("ember", "Ember", Color(0xFFB81D00)))
+            add(Triple("ocean", "Ocean", Color(0xFF00639A)))
+            add(Triple("emerald", "Emerald", Color(0xFF006C4C)))
+            add(Triple("orchid", "Orchid", Color(0xFF6750A4)))
+            add(Triple("sakura", "Sakura", Color(0xFF984061)))
+            add(Triple("cyan", "Cyan", Color(0xFF006874)))
+            add(Triple("citrus", "Citrus", Color(0xFF5B6400)))
         }
     }
 
@@ -1279,8 +1284,10 @@ private fun ExpressivePaletteSelector(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 palettes.forEach { (key, label, accentColor) ->

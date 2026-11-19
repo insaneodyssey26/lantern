@@ -194,6 +194,69 @@ private val OrchidLight = LanternLight.copy(
     onPrimaryContainer = OrchidLightOnPrimaryContainer
 )
 
+private val SakuraDark = LanternDark.copy(
+    primary = SakuraDarkPrimary,
+    onPrimary = SakuraDarkOnPrimary,
+    primaryContainer = SakuraDarkPrimaryContainer,
+    onPrimaryContainer = SakuraDarkOnPrimaryContainer
+)
+
+private val SakuraAmoled = LanternAmoled.copy(
+    primary = SakuraDarkPrimary,
+    onPrimary = SakuraDarkOnPrimary,
+    primaryContainer = SakuraDarkPrimaryContainer,
+    onPrimaryContainer = SakuraDarkOnPrimaryContainer
+)
+
+private val SakuraLight = LanternLight.copy(
+    primary = SakuraLightPrimary,
+    onPrimary = SakuraLightOnPrimary,
+    primaryContainer = SakuraLightPrimaryContainer,
+    onPrimaryContainer = SakuraLightOnPrimaryContainer
+)
+
+private val CyanDark = LanternDark.copy(
+    primary = CyanDarkPrimary,
+    onPrimary = CyanDarkOnPrimary,
+    primaryContainer = CyanDarkPrimaryContainer,
+    onPrimaryContainer = CyanDarkOnPrimaryContainer
+)
+
+private val CyanAmoled = LanternAmoled.copy(
+    primary = CyanDarkPrimary,
+    onPrimary = CyanDarkOnPrimary,
+    primaryContainer = CyanDarkPrimaryContainer,
+    onPrimaryContainer = CyanDarkOnPrimaryContainer
+)
+
+private val CyanLight = LanternLight.copy(
+    primary = CyanLightPrimary,
+    onPrimary = CyanLightOnPrimary,
+    primaryContainer = CyanLightPrimaryContainer,
+    onPrimaryContainer = CyanLightOnPrimaryContainer
+)
+
+private val CitrusDark = LanternDark.copy(
+    primary = CitrusDarkPrimary,
+    onPrimary = CitrusDarkOnPrimary,
+    primaryContainer = CitrusDarkPrimaryContainer,
+    onPrimaryContainer = CitrusDarkOnPrimaryContainer
+)
+
+private val CitrusAmoled = LanternAmoled.copy(
+    primary = CitrusDarkPrimary,
+    onPrimary = CitrusDarkOnPrimary,
+    primaryContainer = CitrusDarkPrimaryContainer,
+    onPrimaryContainer = CitrusDarkOnPrimaryContainer
+)
+
+private val CitrusLight = LanternLight.copy(
+    primary = CitrusLightPrimary,
+    onPrimary = CitrusLightOnPrimary,
+    primaryContainer = CitrusLightPrimaryContainer,
+    onPrimaryContainer = CitrusLightOnPrimaryContainer
+)
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LanternTheme(
@@ -226,6 +289,21 @@ fun LanternTheme(
             darkTheme && pureBlack -> OrchidAmoled
             darkTheme -> OrchidDark
             else -> OrchidLight
+        }
+        "sakura" -> when {
+            darkTheme && pureBlack -> SakuraAmoled
+            darkTheme -> SakuraDark
+            else -> SakuraLight
+        }
+        "cyan" -> when {
+            darkTheme && pureBlack -> CyanAmoled
+            darkTheme -> CyanDark
+            else -> CyanLight
+        }
+        "citrus" -> when {
+            darkTheme && pureBlack -> CitrusAmoled
+            darkTheme -> CitrusDark
+            else -> CitrusLight
         }
         "amber" -> when {
             darkTheme && pureBlack -> LanternAmoled
