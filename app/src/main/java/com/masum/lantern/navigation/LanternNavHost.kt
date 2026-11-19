@@ -69,6 +69,7 @@ import com.masum.lantern.feature.livefeed.FeedFilter
 import com.masum.lantern.feature.livefeed.LiveFeedScreen
 import com.masum.lantern.feature.onboarding.OnboardingScreen
 import com.masum.lantern.feature.settings.SettingsScreen
+import com.masum.lantern.feature.settings.about.AboutScreen
 import com.masum.lantern.feature.stats.StatsScreen
 import com.masum.lantern.feature.stats.detail.SessionDetailScreen
 import com.masum.lantern.feature.whitelist.AppWhitelistScreen
@@ -82,7 +83,7 @@ private const val TAB_TRANSITION_DURATION = 320
 private const val TAB_SLIDE_FRACTION = 0.15f
 
 private fun isSubScreenRoute(route: String?): Boolean =
-    route in listOf("settings", "app_whitelist", "domain_rules", "blocklists", "onboarding", "whats_new") || route?.startsWith("session_detail/") == true
+    route in listOf("settings", "about", "app_whitelist", "domain_rules", "blocklists", "onboarding", "whats_new") || route?.startsWith("session_detail/") == true
 
 private fun destinationOrder(route: String?): Int = when (route) {
     LanternDestination.Home.route -> 0
@@ -320,6 +321,7 @@ fun LanternNavHost(
                     onNavigateToDomainRules = { navController.navigate("domain_rules") },
                     onNavigateToBlocklists = { navController.navigate("blocklists") },
                     onNavigateToWhatsNew = { navController.navigate("whats_new") },
+                    onNavigateToAbout = { navController.navigate("about") },
                     onCheckPlayUpdates = { onResult ->
                         val activity = context as? Activity
                         if (activity != null) {
@@ -371,6 +373,44 @@ fun LanternNavHost(
                                 context.startActivity(webIntent)
                                 onResult("Opening Google Play...")
                             }
+                        }
+                    }
+                )
+            }
+            composable("about") {
+                AboutScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onCheckPlayUpdates = { onResult ->
+                        val context = navController.context
+                        val activity = context as? Activity
+                        if (activity != null) {
+                            PlayUpdateManager.checkForPlayUpdates(
+                                activity = activity,
+                                onUpdateAvailable = { onResult("Starting Play Store update...") },
+                                onNoUpdateAvailable = { onResult("Lantern is up to date on Google Play") },
+                                onError = {
+                                    val playIntent = android.content.Intent(
+                                        android.content.Intent.ACTION_VIEW,
+                                        android.net.Uri.parse("market://details?id=${context.packageName}")
+                                    ).apply {
+                                        setPackage("com.android.vending")
+                                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    if (playIntent.resolveActivity(context.packageManager) != null) {
+                                        context.startActivity(playIntent)
+                                        onResult("Opening Google Play...")
+                                    } else {
+                                        val webIntent = android.content.Intent(
+                                            android.content.Intent.ACTION_VIEW,
+                                            android.net.Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
+                                        ).apply {
+                                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        context.startActivity(webIntent)
+                                        onResult("Opening Google Play...")
+                                    }
+                                }
+                            )
                         }
                     }
                 )
