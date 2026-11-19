@@ -19,5 +19,6 @@ data class SettingsUiState(
     val domainRulesCount: Int = 0,
     val isBenchmarking: Boolean = false,
     val benchmarkResults: List<com.masum.lantern.domain.model.DnsBenchmarkItem> = emptyList(),
+    val crashLog: com.masum.lantern.domain.model.CrashLog? = null,
 )
 

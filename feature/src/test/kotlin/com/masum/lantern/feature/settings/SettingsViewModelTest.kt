@@ -30,6 +30,7 @@ class SettingsViewModelTest {
     private val blocklistRepository: BlocklistRepository = mockk(relaxed = true)
     private val exportLogsUseCase: com.masum.lantern.domain.usecase.ExportLogsUseCase = mockk(relaxed = true)
     private val dnsBenchmarkRepository: com.masum.lantern.domain.repository.DnsBenchmarkRepository = mockk(relaxed = true)
+    private val crashLogRepository: com.masum.lantern.domain.repository.CrashLogRepository = mockk(relaxed = true)
 
     private val themeModeFlow = MutableStateFlow("dark")
     private val colorThemeFlow = MutableStateFlow("amber")
@@ -65,13 +66,15 @@ class SettingsViewModelTest {
 
         every { dnsBenchmarkRepository.benchmarkResults } returns MutableStateFlow(emptyList())
         every { dnsBenchmarkRepository.isBenchmarking } returns MutableStateFlow(false)
+        every { crashLogRepository.getCrashLog() } returns MutableStateFlow(null)
 
         viewModel = SettingsViewModel(
             settingsRepository,
             dnsLogRepository,
             blocklistRepository,
             exportLogsUseCase,
-            dnsBenchmarkRepository
+            dnsBenchmarkRepository,
+            crashLogRepository
         )
     }
 
@@ -188,5 +191,11 @@ class SettingsViewModelTest {
 
         assertEquals("csv-data", viewModel.exportAllLogsCsv())
         assertEquals("json-data", viewModel.exportAllLogsJson())
+    }
+
+    @Test
+    fun `clearCrashLog delegates to crashLogRepository`() = runTest {
+        viewModel.clearCrashLog()
+        io.mockk.verify(exactly = 1) { crashLogRepository.clearCrashLog() }
     }
 }

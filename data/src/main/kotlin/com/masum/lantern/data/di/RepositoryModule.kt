@@ -1,12 +1,14 @@
 package com.masum.lantern.data.di
 
 import com.masum.lantern.data.repository.AppInfoRepositoryImpl
+import com.masum.lantern.data.repository.CrashLogRepositoryImpl
 import com.masum.lantern.data.repository.DnsBenchmarkRepositoryImpl
 import com.masum.lantern.data.repository.DnsLogRepositoryImpl
 import com.masum.lantern.data.repository.MonitoringRepositoryImpl
 import com.masum.lantern.data.repository.SettingsRepositoryImpl
 import com.masum.lantern.data.repository.UpdateRepositoryImpl
 import com.masum.lantern.domain.repository.AppInfoRepository
+import com.masum.lantern.domain.repository.CrashLogRepository
 import com.masum.lantern.domain.repository.DnsBenchmarkRepository
 import com.masum.lantern.domain.repository.DnsLogRepository
 import com.masum.lantern.domain.repository.MonitoringRepository
@@ -45,4 +47,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDnsBenchmarkRepository(impl: DnsBenchmarkRepositoryImpl): DnsBenchmarkRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCrashLogRepository(impl: CrashLogRepositoryImpl): CrashLogRepository
 }

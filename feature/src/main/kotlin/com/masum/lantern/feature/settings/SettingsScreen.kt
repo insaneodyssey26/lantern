@@ -64,6 +64,7 @@ import androidx.compose.ui.res.painterResource
 import com.masum.lantern.core.ui.R as UiR
 import androidx.compose.material.icons.rounded.Speed
 import com.masum.lantern.feature.settings.benchmark.DnsBenchmarkBottomSheet
+import com.masum.lantern.feature.settings.crash.CrashLogBottomSheet
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -157,8 +158,10 @@ fun SettingsScreen(
     var showClearConfirmDialog by remember { mutableStateOf(false) }
     var showWhatsNewSheet by remember { mutableStateOf(false) }
     var showBenchmarkSheet by remember { mutableStateOf(false) }
+    var showCrashLogSheet by remember { mutableStateOf(false) }
     val whatsNewSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val benchmarkSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
+    val crashLogSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val haptics = rememberLanternHaptics()
 
     val listState = rememberLazyListState()
@@ -990,6 +993,11 @@ fun SettingsScreen(
             item {
                 LanternAboutCard(
                     isCheckingUpdates = updaterUiState.status is UpdateCheckStatus.Checking,
+                    hasCrashLog = uiState.crashLog != null,
+                    onCrashLogClick = {
+                        haptics.tap()
+                        showCrashLogSheet = true
+                    },
                     onWhatsNewClick = {
                         haptics.tap()
                         showWhatsNewSheet = true
@@ -1103,6 +1111,24 @@ fun SettingsScreen(
                 }
             )
         }
+    }
+
+    if (showCrashLogSheet) {
+        CrashLogBottomSheet(
+            crashLog = uiState.crashLog,
+            onDismiss = {
+                scope.launch {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                    crashLogSheetState.hide()
+                    showCrashLogSheet = false
+                }
+            },
+            onClear = {
+                viewModel.clearCrashLog()
+            },
+            sheetState = crashLogSheetState
+        )
     }
 
     if (showBenchmarkSheet) {
@@ -1422,6 +1448,8 @@ private fun DnsProviderTile(
 @Composable
 private fun LanternAboutCard(
     isCheckingUpdates: Boolean = false,
+    hasCrashLog: Boolean = false,
+    onCrashLogClick: () -> Unit = {},
     onWhatsNewClick: () -> Unit,
     onCheckGitHubUpdatesClick: () -> Unit,
     onCheckPlayUpdatesClick: () -> Unit,
@@ -1608,6 +1636,67 @@ private fun LanternAboutCard(
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                     )
+
+                    Surface(
+                        onClick = {
+                            haptics.tap()
+                            onCrashLogClick()
+                        },
+                        shape = MaterialTheme.shapes.large,
+                        color = if (hasCrashLog) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.45f)
+                        else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (hasCrashLog) MaterialTheme.colorScheme.errorContainer
+                                        else MaterialTheme.colorScheme.primaryContainer
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.BugReport,
+                                    contentDescription = null,
+                                    tint = if (hasCrashLog) MaterialTheme.colorScheme.onErrorContainer
+                                    else MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Crash Diagnostics",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (hasCrashLog) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = if (hasCrashLog) "A previous crash was recorded. Tap to view or report."
+                                    else "No crash recorded. Tap to view status.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = if (hasCrashLog) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
 
                     Surface(
                         onClick = {

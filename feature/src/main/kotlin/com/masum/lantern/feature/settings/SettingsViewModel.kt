@@ -2,8 +2,10 @@ package com.masum.lantern.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.masum.lantern.domain.model.CrashLog
 import com.masum.lantern.domain.model.DnsBenchmarkItem
 import com.masum.lantern.domain.repository.BlocklistRepository
+import com.masum.lantern.domain.repository.CrashLogRepository
 import com.masum.lantern.domain.repository.DnsBenchmarkRepository
 import com.masum.lantern.domain.repository.DnsLogRepository
 import com.masum.lantern.domain.repository.SettingsRepository
@@ -26,6 +28,7 @@ class SettingsViewModel @Inject constructor(
     private val blocklistRepository: BlocklistRepository,
     private val exportLogsUseCase: ExportLogsUseCase,
     private val dnsBenchmarkRepository: DnsBenchmarkRepository,
+    private val crashLogRepository: CrashLogRepository,
 ) : ViewModel() {
 
     private val isClearingLogs = MutableStateFlow(false)
@@ -86,8 +89,9 @@ class SettingsViewModel @Inject constructor(
         blocklistStateFlow,
         domainAndBypassedFlow,
         dnsBenchmarkRepository.isBenchmarking,
-        dnsBenchmarkRepository.benchmarkResults
-    ) { args: Array<Any> ->
+        dnsBenchmarkRepository.benchmarkResults,
+        crashLogRepository.getCrashLog()
+    ) { args: Array<Any?> ->
         val settings = args[0] as SettingsTuple
         val logCount = args[1] as Long
         val clearing = args[2] as Boolean
@@ -96,6 +100,7 @@ class SettingsViewModel @Inject constructor(
         val benchmarking = args[5] as Boolean
         @Suppress("UNCHECKED_CAST")
         val benchResults = args[6] as List<DnsBenchmarkItem>
+        val crashLog = args[7] as? CrashLog
 
         SettingsUiState(
             themeMode = settings.themeMode,
@@ -115,7 +120,8 @@ class SettingsViewModel @Inject constructor(
             bypassedAppsCount = domainAndBypassed.first,
             domainRulesCount = domainAndBypassed.second,
             isBenchmarking = benchmarking,
-            benchmarkResults = benchResults
+            benchmarkResults = benchResults,
+            crashLog = crashLog
         )
     }.stateIn(
         scope = viewModelScope,
@@ -222,6 +228,10 @@ class SettingsViewModel @Inject constructor(
 
     fun stopBenchmark() {
         dnsBenchmarkRepository.stopBenchmark()
+    }
+
+    fun clearCrashLog() {
+        crashLogRepository.clearCrashLog()
     }
 
     suspend fun exportAllLogsCsv(): String = exportLogsUseCase.exportToCsv(null)

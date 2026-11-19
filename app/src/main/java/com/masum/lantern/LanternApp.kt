@@ -1,6 +1,7 @@
 package com.masum.lantern
 
 import android.app.Application
+import com.masum.lantern.data.crash.CrashHandler
 import com.masum.lantern.updates.AppUpdateScheduler
 import com.masum.lantern.updates.BlocklistSyncScheduler
 import dagger.hilt.android.HiltAndroidApp
@@ -10,6 +11,7 @@ class LanternApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        CrashHandler.install(this)
         AppUpdateScheduler.schedulePeriodicUpdateCheck(this)
         BlocklistSyncScheduler.schedulePeriodicBlocklistSync(this)
     }
