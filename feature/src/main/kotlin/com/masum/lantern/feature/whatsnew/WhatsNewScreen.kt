@@ -138,9 +138,48 @@ fun WhatsNewContent(
     val releases = remember {
         listOf(
             WhatsNewRelease(
+                versionName = "2.1",
+                title = "About Page & Expressive Themes",
+                isLatest = true,
+                features = listOf(
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.Info,
+                        iconContainerColor = Color(0xFFBBDEFB),
+                        iconContentColor = Color(0xFF0D47A1),
+                        tag = "About",
+                        title = "Dedicated About Page",
+                        description = "App version, update checks, crash logs, and legal policies are now neatly organized in their own subpage."
+                    ),
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.Tune,
+                        iconContainerColor = Color(0xFFFFD180),
+                        iconContentColor = Color(0xFFE65100),
+                        tag = "Theme",
+                        title = "More Color Themes",
+                        description = "Added Sakura (Pink), Cyan, and Citrus (Lime) themes to the scrollable accent palette."
+                    ),
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.BugReport,
+                        iconContainerColor = Color(0xFFFFCDD2),
+                        iconContentColor = Color(0xFFB71C1C),
+                        tag = "Diagnostics",
+                        title = "Crash Diagnostics",
+                        description = "If the app ever crashes, you can view the log, copy it, or email it directly to the developer."
+                    ),
+                    WhatsNewFeature(
+                        icon = Icons.Rounded.Shield,
+                        iconContainerColor = Color(0xFFC8E6C9),
+                        iconContentColor = Color(0xFF1B5E20),
+                        tag = "Privacy",
+                        title = "In-App Legal Info",
+                        description = "Read the offline Privacy Policy and Open Source Terms directly inside the app."
+                    )
+                )
+            ),
+            WhatsNewRelease(
                 versionName = "2.0-beta5",
                 title = "App Bypass & Search",
-                isLatest = true,
+                isLatest = false,
                 features = listOf(
                     WhatsNewFeature(
                         icon = Icons.Rounded.Shield,

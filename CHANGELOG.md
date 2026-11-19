@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1]
+
+### Added
+- **Dedicated About Page**: Moved application info, update checks, diagnostics, and legal documents to a dedicated subpage from Settings.
+- **On-Device Crash Diagnostics**: Built-in crash catcher storing uncaught crash logs locally with one-tap copy, email developer, and clear options.
+- **In-App Legal Documents**: Clean, offline-readable Privacy Policy and Terms & Conditions sheets.
+- **Expanded Expressive Color Themes**: Added Sakura (Pink), Cyan (Teal), and Citrus (Lime) Material 3 Expressive palettes with Dark, Light, and AMOLED support.
+- **Horizontal Palette Picker**: Smooth scrolling carousel for color theme selection that fits screens of all sizes.
+
+### Improved
+- Cleaned up Settings screen to keep core DNS and firewall controls easily accessible.
+- Refined button layout in crash reports to prevent text truncation on narrow screens.
+- Updated repository links and documentation.
+
 ## [2.0-beta5]
 
 > Final testing build before the stable release.
