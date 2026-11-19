@@ -6,6 +6,15 @@
 
 Lantern is an on-device DNS firewall and network monitor for Android. It lets you see and block trackers, ads, and background telemetry from apps directly on your phone without sending your traffic through remote servers.
 
+<p align="left">
+  <a href="https://play.google.com/store/apps/details?id=com.masum.lantern">
+    <img alt="Get it on Google Play" height="80" src="docs/badges/google-play-badge.svg" />
+  </a>
+  <a href="https://github.com/insaneodyssey26/lantern/releases/latest">
+    <img alt="Get it on GitHub" height="80" src="docs/badges/github.svg" />
+  </a>
+</p>
+
 ---
 
 ## Screenshots
