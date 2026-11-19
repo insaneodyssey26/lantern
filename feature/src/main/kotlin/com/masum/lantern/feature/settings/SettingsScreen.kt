@@ -120,8 +120,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -155,8 +153,6 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
     var showClearConfirmDialog by remember { mutableStateOf(false) }
     var showBenchmarkSheet by remember { mutableStateOf(false) }
     val benchmarkSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
@@ -1127,8 +1123,6 @@ fun SettingsScreen(
         DnsBenchmarkBottomSheet(
             onDismiss = {
                 scope.launch {
-                    keyboardController?.hide()
-                    focusManager.clearFocus()
                     benchmarkSheetState.hide()
                     showBenchmarkSheet = false
                 }

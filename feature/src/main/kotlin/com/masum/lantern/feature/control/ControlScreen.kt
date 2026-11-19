@@ -93,11 +93,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.PopupProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.geometry.Rect
@@ -127,8 +126,6 @@ fun ControlScreen(
     val isActive = activeSession != null
     val haptics = rememberLanternHaptics()
     val scope = rememberCoroutineScope()
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
     val whatsNewSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     var showBenchmarkSheet by remember { mutableStateOf(false) }
     val benchmarkSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
@@ -364,8 +361,6 @@ fun ControlScreen(
     if (uiState.showWhatsNewSheet) {
         ModalBottomSheet(
             onDismissRequest = {
-                keyboardController?.hide()
-                focusManager.clearFocus()
                 viewModel.dismissWhatsNew()
             },
             sheetState = whatsNewSheetState,
@@ -374,8 +369,6 @@ fun ControlScreen(
             WhatsNewContent(
                 onDismiss = {
                     scope.launch {
-                        keyboardController?.hide()
-                        focusManager.clearFocus()
                         whatsNewSheetState.hide()
                         viewModel.dismissWhatsNew()
                     }
@@ -388,8 +381,6 @@ fun ControlScreen(
         DnsBenchmarkBottomSheet(
             onDismiss = {
                 scope.launch {
-                    keyboardController?.hide()
-                    focusManager.clearFocus()
                     benchmarkSheetState.hide()
                     showBenchmarkSheet = false
                 }
@@ -408,8 +399,6 @@ fun ControlScreen(
         PauseProtectionBottomSheet(
             onDismiss = {
                 scope.launch {
-                    keyboardController?.hide()
-                    focusManager.clearFocus()
                     pauseSheetState.hide()
                     showPauseSheet = false
                 }
@@ -870,6 +859,7 @@ private fun QuickSecuritySnapshot(
                     DropdownMenu(
                         expanded = dnsExpanded,
                         onDismissRequest = { dnsExpanded = false },
+                        properties = PopupProperties(focusable = false),
                         shape = MaterialTheme.shapes.large,
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
