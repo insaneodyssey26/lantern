@@ -127,6 +127,17 @@ fun AboutScreen(
         }.getOrDefault("v2.0-beta4")
     }
 
+    val isInstalledFromPlayStore = remember(context) {
+        runCatching {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                context.packageManager.getInstallSourceInfo(context.packageName).installingPackageName == "com.android.vending"
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getInstallerPackageName(context.packageName) == "com.android.vending"
+            }
+        }.getOrDefault(false)
+    }
+
     PredictiveBackContainer(onBack = onBackClick) {
         Scaffold(
             modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -274,15 +285,66 @@ fun AboutScreen(
                             modifier = Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            AboutRowItem(
-                                icon = Icons.Rounded.Shop,
-                                title = "Check Google Play Updates",
-                                subtitle = "Fastest updates for Play Store installs",
-                                onClick = {
-                                    haptics.tap()
-                                    if (onCheckPlayUpdates != null) {
-                                        onCheckPlayUpdates {}
-                                    } else {
+                            if (isInstalledFromPlayStore) {
+                                AboutRowItem(
+                                    icon = Icons.Rounded.Shop,
+                                    title = "Check for Updates",
+                                    subtitle = "Get the latest version from Google Play",
+                                    onClick = {
+                                        haptics.tap()
+                                        if (onCheckPlayUpdates != null) {
+                                            onCheckPlayUpdates {}
+                                        } else {
+                                            val playIntent = Intent(
+                                                Intent.ACTION_VIEW,
+                                                Uri.parse("market://details?id=${context.packageName}")
+                                            ).apply {
+                                                setPackage("com.android.vending")
+                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            }
+                                            if (playIntent.resolveActivity(context.packageManager) != null) {
+                                                context.startActivity(playIntent)
+                                            } else {
+                                                val webIntent = Intent(
+                                                    Intent.ACTION_VIEW,
+                                                    Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
+                                                ).apply {
+                                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                }
+                                                context.startActivity(webIntent)
+                                            }
+                                        }
+                                    }
+                                )
+
+                                AboutRowItem(
+                                    icon = Icons.Rounded.Refresh,
+                                    iconModifier = if (isCheckingUpdates) Modifier.rotate(updateSpinRotation) else Modifier,
+                                    title = if (isCheckingUpdates) "Checking GitHub..." else "GitHub Release Changelog",
+                                    subtitle = "View release notes on GitHub",
+                                    onClick = {
+                                        haptics.tap()
+                                        updaterViewModel.checkForUpdates(showSheetOnResult = true)
+                                    }
+                                )
+                            } else {
+                                AboutRowItem(
+                                    icon = Icons.Rounded.Refresh,
+                                    iconModifier = if (isCheckingUpdates) Modifier.rotate(updateSpinRotation) else Modifier,
+                                    title = if (isCheckingUpdates) "Checking for Updates..." else "Check for Updates",
+                                    subtitle = "Download and verify latest GitHub release",
+                                    onClick = {
+                                        haptics.tap()
+                                        updaterViewModel.checkForUpdates(showSheetOnResult = true)
+                                    }
+                                )
+
+                                AboutRowItem(
+                                    icon = Icons.Rounded.Shop,
+                                    title = "Google Play Store",
+                                    subtitle = "View Lantern listing on Google Play",
+                                    onClick = {
+                                        haptics.tap()
                                         val playIntent = Intent(
                                             Intent.ACTION_VIEW,
                                             Uri.parse("market://details?id=${context.packageName}")
@@ -302,19 +364,8 @@ fun AboutScreen(
                                             context.startActivity(webIntent)
                                         }
                                     }
-                                }
-                            )
-
-                            AboutRowItem(
-                                icon = Icons.Rounded.Refresh,
-                                iconModifier = if (isCheckingUpdates) Modifier.rotate(updateSpinRotation) else Modifier,
-                                title = if (isCheckingUpdates) "Checking GitHub..." else "Check GitHub Releases",
-                                subtitle = "Direct APK releases and changelogs",
-                                onClick = {
-                                    haptics.tap()
-                                    updaterViewModel.checkForUpdates(showSheetOnResult = true)
-                                }
-                            )
+                                )
+                            }
 
                             AboutRowItem(
                                 icon = Icons.Rounded.NewReleases,
