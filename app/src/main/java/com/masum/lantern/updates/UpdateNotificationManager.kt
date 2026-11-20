@@ -36,7 +36,7 @@ object UpdateNotificationManager {
         val isFromPlayStore = PlayUpdateManager.isInstalledFromPlayStore(context)
         val targetIntent = if (isFromPlayStore) {
             val updateIntent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("market://details?id=${context.packageName}")
+                data = Uri.parse("market://details?id=${PlayUpdateManager.PLAY_STORE_PACKAGE_ID}")
                 setPackage("com.android.vending")
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
@@ -44,7 +44,7 @@ object UpdateNotificationManager {
                 updateIntent
             } else {
                 Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
+                    data = Uri.parse("https://play.google.com/store/apps/details?id=${PlayUpdateManager.PLAY_STORE_PACKAGE_ID}")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
             }

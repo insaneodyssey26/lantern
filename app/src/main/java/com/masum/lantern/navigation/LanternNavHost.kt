@@ -321,97 +321,14 @@ fun LanternNavHost(
                     onNavigateToDomainRules = { navController.navigate("domain_rules") },
                     onNavigateToBlocklists = { navController.navigate("blocklists") },
                     onNavigateToWhatsNew = { navController.navigate("whats_new") },
-                    onNavigateToAbout = { navController.navigate("about") },
-                    onCheckPlayUpdates = { onResult ->
-                        val activity = context as? Activity
-                        if (activity != null) {
-                            PlayUpdateManager.checkForPlayUpdates(
-                                activity = activity,
-                                onUpdateAvailable = { onResult("Starting Play Store update...") },
-                                onNoUpdateAvailable = { onResult("Lantern is up to date on Google Play") },
-                                onError = {
-                                    val playIntent = android.content.Intent(
-                                        android.content.Intent.ACTION_VIEW,
-                                        android.net.Uri.parse("market://details?id=${context.packageName}")
-                                    ).apply {
-                                        setPackage("com.android.vending")
-                                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    }
-                                    if (playIntent.resolveActivity(context.packageManager) != null) {
-                                        context.startActivity(playIntent)
-                                        onResult("Opening Google Play...")
-                                    } else {
-                                        val webIntent = android.content.Intent(
-                                            android.content.Intent.ACTION_VIEW,
-                                            android.net.Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
-                                        ).apply {
-                                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                        }
-                                        context.startActivity(webIntent)
-                                        onResult("Opening Google Play...")
-                                    }
-                                }
-                            )
-                        } else {
-                            val playIntent = android.content.Intent(
-                                android.content.Intent.ACTION_VIEW,
-                                android.net.Uri.parse("market://details?id=${context.packageName}")
-                            ).apply {
-                                setPackage("com.android.vending")
-                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            if (playIntent.resolveActivity(context.packageManager) != null) {
-                                context.startActivity(playIntent)
-                                onResult("Opening Google Play...")
-                            } else {
-                                val webIntent = android.content.Intent(
-                                    android.content.Intent.ACTION_VIEW,
-                                    android.net.Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
-                                ).apply {
-                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                }
-                                context.startActivity(webIntent)
-                                onResult("Opening Google Play...")
-                            }
-                        }
-                    }
+                    onNavigateToAbout = { navController.navigate("about") }
                 )
             }
             composable("about") {
                 AboutScreen(
                     onBackClick = { navController.popBackStack() },
-                    onCheckPlayUpdates = { onResult ->
-                        val context = navController.context
-                        val activity = context as? Activity
-                        if (activity != null) {
-                            PlayUpdateManager.checkForPlayUpdates(
-                                activity = activity,
-                                onUpdateAvailable = { onResult("Starting Play Store update...") },
-                                onNoUpdateAvailable = { onResult("Lantern is up to date on Google Play") },
-                                onError = {
-                                    val playIntent = android.content.Intent(
-                                        android.content.Intent.ACTION_VIEW,
-                                        android.net.Uri.parse("market://details?id=${context.packageName}")
-                                    ).apply {
-                                        setPackage("com.android.vending")
-                                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    }
-                                    if (playIntent.resolveActivity(context.packageManager) != null) {
-                                        context.startActivity(playIntent)
-                                        onResult("Opening Google Play...")
-                                    } else {
-                                        val webIntent = android.content.Intent(
-                                            android.content.Intent.ACTION_VIEW,
-                                            android.net.Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
-                                        ).apply {
-                                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                        }
-                                        context.startActivity(webIntent)
-                                        onResult("Opening Google Play...")
-                                    }
-                                }
-                            )
-                        }
+                    onOpenPlayStore = {
+                        PlayUpdateManager.openPlayStorePage(navController.context)
                     }
                 )
             }

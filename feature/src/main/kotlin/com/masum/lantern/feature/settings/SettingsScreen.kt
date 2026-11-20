@@ -144,7 +144,6 @@ fun SettingsScreen(
     onNavigateToBlocklists: () -> Unit = {},
     onNavigateToWhatsNew: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
-    onCheckPlayUpdates: ((onResult: (String) -> Unit) -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel(),
     updaterViewModel: UpdaterViewModel = hiltViewModel(),
 ) {

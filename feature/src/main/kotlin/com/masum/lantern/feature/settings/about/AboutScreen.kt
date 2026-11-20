@@ -84,7 +84,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AboutScreen(
     onBackClick: () -> Unit,
-    onCheckPlayUpdates: ((onResult: (String) -> Unit) -> Unit)? = null,
+    onOpenPlayStore: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
     updaterViewModel: UpdaterViewModel = hiltViewModel(),
@@ -136,6 +136,31 @@ fun AboutScreen(
                 context.packageManager.getInstallerPackageName(context.packageName) == "com.android.vending"
             }
         }.getOrDefault(false)
+    }
+
+    val openPlayStoreListing: () -> Unit = {
+        if (onOpenPlayStore != null) {
+            onOpenPlayStore()
+        } else {
+            val playIntent = Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=com.masum.lantern")
+            ).apply {
+                setPackage("com.android.vending")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (playIntent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(playIntent)
+            } else {
+                val webIntent = Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=com.masum.lantern")
+                ).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(webIntent)
+            }
+        }
     }
 
     PredictiveBackContainer(onBack = onBackClick) {
@@ -288,32 +313,11 @@ fun AboutScreen(
                             if (isInstalledFromPlayStore) {
                                 AboutRowItem(
                                     icon = Icons.Rounded.Shop,
-                                    title = "Check for Updates",
-                                    subtitle = "Get the latest version from Google Play",
+                                    title = "Google Play Store",
+                                    subtitle = "View Lantern listing and updates on Google Play",
                                     onClick = {
                                         haptics.tap()
-                                        if (onCheckPlayUpdates != null) {
-                                            onCheckPlayUpdates {}
-                                        } else {
-                                            val playIntent = Intent(
-                                                Intent.ACTION_VIEW,
-                                                Uri.parse("market://details?id=${context.packageName}")
-                                            ).apply {
-                                                setPackage("com.android.vending")
-                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                            }
-                                            if (playIntent.resolveActivity(context.packageManager) != null) {
-                                                context.startActivity(playIntent)
-                                            } else {
-                                                val webIntent = Intent(
-                                                    Intent.ACTION_VIEW,
-                                                    Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
-                                                ).apply {
-                                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                }
-                                                context.startActivity(webIntent)
-                                            }
-                                        }
+                                        openPlayStoreListing()
                                     }
                                 )
 
@@ -345,24 +349,7 @@ fun AboutScreen(
                                     subtitle = "View Lantern listing on Google Play",
                                     onClick = {
                                         haptics.tap()
-                                        val playIntent = Intent(
-                                            Intent.ACTION_VIEW,
-                                            Uri.parse("market://details?id=${context.packageName}")
-                                        ).apply {
-                                            setPackage("com.android.vending")
-                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                        }
-                                        if (playIntent.resolveActivity(context.packageManager) != null) {
-                                            context.startActivity(playIntent)
-                                        } else {
-                                            val webIntent = Intent(
-                                                Intent.ACTION_VIEW,
-                                                Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
-                                            ).apply {
-                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                            }
-                                            context.startActivity(webIntent)
-                                        }
+                                        openPlayStoreListing()
                                     }
                                 )
                             }

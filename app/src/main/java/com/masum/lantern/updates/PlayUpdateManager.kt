@@ -2,6 +2,8 @@ package com.masum.lantern.updates
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.InstallStateUpdatedListener
@@ -10,7 +12,29 @@ import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 
 object PlayUpdateManager {
+    const val PLAY_STORE_PACKAGE_ID = "com.masum.lantern"
     private const val UPDATE_REQUEST_CODE = 1001
+
+    fun openPlayStorePage(context: Context) {
+        val playIntent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("market://details?id=$PLAY_STORE_PACKAGE_ID")
+        ).apply {
+            setPackage("com.android.vending")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        if (playIntent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(playIntent)
+        } else {
+            val webIntent = Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("https://play.google.com/store/apps/details?id=$PLAY_STORE_PACKAGE_ID")
+            ).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(webIntent)
+        }
+    }
 
     fun isInstalledFromPlayStore(context: Context): Boolean {
         return runCatching {
