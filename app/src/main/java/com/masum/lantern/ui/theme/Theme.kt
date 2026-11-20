@@ -10,6 +10,7 @@ fun LanternTheme(
     colorTheme: String = "system",
     pureBlack: Boolean = false,
     useSystemFont: Boolean = false,
+    fontScale: Float = 1.0f,
     content: @Composable () -> Unit,
 ) {
     CoreLanternTheme(
@@ -17,6 +18,7 @@ fun LanternTheme(
         colorTheme = colorTheme,
         pureBlack = pureBlack,
         useSystemFont = useSystemFont,
+        fontScale = fontScale,
         content = content,
     )
 }

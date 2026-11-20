@@ -170,6 +170,24 @@ class SettingsRepositoryImpl @Inject constructor(
         prefs.edit().putBoolean(KEY_USE_SYSTEM_FONT, useSystem).apply()
     }
 
+    override fun getFontScale(): Flow<Float> = callbackFlow {
+        trySend(prefs.getFloat(KEY_FONT_SCALE, 1.0f))
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == KEY_FONT_SCALE) {
+                trySend(prefs.getFloat(KEY_FONT_SCALE, 1.0f))
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    override fun getFontScaleSync(): Float =
+        prefs.getFloat(KEY_FONT_SCALE, 1.0f)
+
+    override suspend fun setFontScale(scale: Float) {
+        prefs.edit().putFloat(KEY_FONT_SCALE, scale).apply()
+    }
+
     override fun getBypassedApps(): Flow<Set<String>> = callbackFlow {
         trySend(prefs.getStringSet(KEY_BYPASSED_APPS, emptySet())?.toSet() ?: emptySet())
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
@@ -314,6 +332,7 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_MAX_ROWS     = "max_rows"
         private const val KEY_BLOCKING_ENABLED = "blocking_enabled"
         private const val KEY_USE_SYSTEM_FONT  = "use_system_font"
+        private const val KEY_FONT_SCALE       = "font_scale"
         private const val KEY_PURE_BLACK       = "pure_black"
         private const val KEY_BYPASSED_APPS    = "bypassed_apps"
         private const val KEY_USER_ALLOWED_DOMAINS = "user_allowed_domains"

@@ -30,6 +30,7 @@ class SettingsRepositoryImplTest {
         assertEquals("system", repository.getThemeModeSync())
         assertEquals("system", repository.getColorThemeSync())
         assertEquals("UDP", repository.getDnsProtocolSync())
+        assertEquals(1.0f, repository.getFontScaleSync(), 0.001f)
         assertFalse(repository.isPureBlackSync())
         assertFalse(repository.isUseSystemFontSync())
         assertFalse(repository.isOnboardingCompletedSync())

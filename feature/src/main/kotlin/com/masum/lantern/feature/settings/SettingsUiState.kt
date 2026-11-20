@@ -5,6 +5,7 @@ data class SettingsUiState(
     val colorTheme: String = "system",
     val pureBlack: Boolean = false,
     val useSystemFont: Boolean = false,
+    val fontScale: Float = 1.0f,
     val upstreamDns: String = "1.1.1.1",
     val dnsProtocol: String = "UDP",
     val maxAgeDays: Int = 7,

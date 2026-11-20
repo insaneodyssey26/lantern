@@ -89,6 +89,8 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -106,6 +108,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -117,6 +120,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -363,6 +368,10 @@ fun SettingsScreen(
                             )
                         }
                     }
+                    FontSizeCard(
+                        fontScale = uiState.fontScale,
+                        onFontScaleChange = viewModel::setFontScale
+                    )
                 }
             }
 
@@ -1429,6 +1438,177 @@ private fun DnsProviderTile(
                     contentDescription = "Selected",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun FontSizeCard(
+    fontScale: Float,
+    onFontScaleChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptics = rememberLanternHaptics()
+    val fontSteps = remember { listOf(0.85f, 1.00f, 1.15f, 1.30f) }
+    val fontLabels = remember { listOf("Compact", "Default", "Comfortable", "Large") }
+
+    var dragIndex by remember { mutableFloatStateOf(-1f) }
+    val savedIndex = remember(fontScale) {
+        fontSteps.indices.minByOrNull { kotlin.math.abs(fontSteps[it] - fontScale) } ?: 1
+    }
+    val shownIndex = if (dragIndex >= 0f) dragIndex.toInt() else savedIndex
+
+    val previewScale by animateFloatAsState(
+        targetValue = fontSteps[shownIndex],
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "fontSizePreviewScale"
+    )
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Aa",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Font Size",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Scale app typography",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Text(
+                        text = "${fontLabels[shownIndex]} · ${(fontSteps[shownIndex] * 100).toInt()}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f))
+                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), MaterialTheme.shapes.medium)
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = "Lantern protects your on-device DNS queries.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = previewScale
+                        scaleY = previewScale
+                        transformOrigin = TransformOrigin(0f, 0.5f)
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "A",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Slider(
+                    value = if (dragIndex >= 0f) dragIndex else savedIndex.toFloat(),
+                    onValueChange = { value ->
+                        val snapped = value.toInt().coerceIn(0, fontSteps.lastIndex).toFloat()
+                        if (snapped != dragIndex) {
+                            if (dragIndex >= 0f) haptics.tick()
+                            dragIndex = snapped
+                        }
+                    },
+                    onValueChangeFinished = {
+                        val idx = dragIndex.toInt()
+                        dragIndex = -1f
+                        if (idx in fontSteps.indices && idx != savedIndex) {
+                            haptics.toggle()
+                            onFontScaleChange(fontSteps[idx])
+                        }
+                    },
+                    valueRange = 0f..fontSteps.lastIndex.toFloat(),
+                    steps = fontSteps.size - 2,
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        activeTickColor = MaterialTheme.colorScheme.onPrimary,
+                        inactiveTickColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 10.dp)
+                )
+                Text(
+                    text = "A",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

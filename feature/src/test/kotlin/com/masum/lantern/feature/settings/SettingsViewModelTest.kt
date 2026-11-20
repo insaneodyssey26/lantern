@@ -36,6 +36,7 @@ class SettingsViewModelTest {
     private val colorThemeFlow = MutableStateFlow("amber")
     private val pureBlackFlow = MutableStateFlow(false)
     private val useSystemFontFlow = MutableStateFlow(false)
+    private val fontScaleFlow = MutableStateFlow(1.0f)
     private val upstreamDnsFlow = MutableStateFlow("1.1.1.1")
     private val dnsProtocolFlow = MutableStateFlow("PLAIN")
     private val maxAgeDaysFlow = MutableStateFlow(30)
@@ -52,6 +53,7 @@ class SettingsViewModelTest {
         every { settingsRepository.getColorTheme() } returns colorThemeFlow
         every { settingsRepository.isPureBlack() } returns pureBlackFlow
         every { settingsRepository.isUseSystemFont() } returns useSystemFontFlow
+        every { settingsRepository.getFontScale() } returns fontScaleFlow
         every { settingsRepository.getUpstreamDns() } returns upstreamDnsFlow
         every { settingsRepository.getDnsProtocol() } returns dnsProtocolFlow
         every { settingsRepository.getMaxAgeDays() } returns maxAgeDaysFlow
@@ -126,6 +128,9 @@ class SettingsViewModelTest {
 
         viewModel.setUseSystemFont(true)
         coVerify { settingsRepository.setUseSystemFont(true) }
+
+        viewModel.setFontScale(1.15f)
+        coVerify { settingsRepository.setFontScale(1.15f) }
     }
 
     @Test

@@ -41,6 +41,7 @@ class SettingsViewModel @Inject constructor(
         settingsRepository.getColorTheme(),
         settingsRepository.isPureBlack(),
         settingsRepository.isUseSystemFont(),
+        settingsRepository.getFontScale(),
         settingsRepository.getUpstreamDns(),
         settingsRepository.getDnsProtocol(),
         settingsRepository.getMaxAgeDays(),
@@ -51,10 +52,11 @@ class SettingsViewModel @Inject constructor(
             colorTheme = args[1] as String,
             pureBlack = args[2] as Boolean,
             useSystemFont = args[3] as Boolean,
-            upstreamDns = args[4] as String,
-            dnsProtocol = args[5] as String,
-            maxAgeDays = args[6] as Int,
-            maxRows = args[7] as Int
+            fontScale = args[4] as Float,
+            upstreamDns = args[5] as String,
+            dnsProtocol = args[6] as String,
+            maxAgeDays = args[7] as Int,
+            maxRows = args[8] as Int
         )
     }
 
@@ -107,6 +109,7 @@ class SettingsViewModel @Inject constructor(
             colorTheme = settings.colorTheme,
             pureBlack = settings.pureBlack,
             useSystemFont = settings.useSystemFont,
+            fontScale = settings.fontScale,
             upstreamDns = settings.upstreamDns,
             dnsProtocol = settings.dnsProtocol,
             maxAgeDays = settings.maxAgeDays,
@@ -131,6 +134,7 @@ class SettingsViewModel @Inject constructor(
             colorTheme = settingsRepository.getColorThemeSync(),
             pureBlack = settingsRepository.isPureBlackSync(),
             useSystemFont = settingsRepository.isUseSystemFontSync(),
+            fontScale = settingsRepository.getFontScaleSync(),
             upstreamDns = settingsRepository.getUpstreamDnsSync(),
             dnsProtocol = settingsRepository.getDnsProtocolSync(),
             blocklistCount = blocklistRepository.domainCount()
@@ -182,6 +186,12 @@ class SettingsViewModel @Inject constructor(
     fun setUseSystemFont(useSystem: Boolean) {
         viewModelScope.launch {
             settingsRepository.setUseSystemFont(useSystem)
+        }
+    }
+
+    fun setFontScale(scale: Float) {
+        viewModelScope.launch {
+            settingsRepository.setFontScale(scale)
         }
     }
 
@@ -244,6 +254,7 @@ data class SettingsTuple(
     val colorTheme: String,
     val pureBlack: Boolean,
     val useSystemFont: Boolean,
+    val fontScale: Float,
     val upstreamDns: String,
     val dnsProtocol: String,
     val maxAgeDays: Int,

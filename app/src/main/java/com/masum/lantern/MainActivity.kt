@@ -62,6 +62,7 @@ class MainActivity : ComponentActivity() {
         val initialColorTheme = settingsRepository.getColorThemeSync()
         val initialPureBlack = settingsRepository.isPureBlackSync()
         val initialUseSystemFont = settingsRepository.isUseSystemFontSync()
+        val initialFontScale = settingsRepository.getFontScaleSync()
         val isOnboardingCompleted = settingsRepository.isOnboardingCompletedSync()
 
         var isPlayUpdateReady by mutableStateOf(false)
@@ -74,6 +75,7 @@ class MainActivity : ComponentActivity() {
             val colorTheme by settingsRepository.getColorTheme().collectAsStateWithLifecycle(initialValue = initialColorTheme)
             val pureBlack by settingsRepository.isPureBlack().collectAsStateWithLifecycle(initialValue = initialPureBlack)
             val useSystemFont by settingsRepository.isUseSystemFont().collectAsStateWithLifecycle(initialValue = initialUseSystemFont)
+            val fontScale by settingsRepository.getFontScale().collectAsStateWithLifecycle(initialValue = initialFontScale)
             val onboardingCompleted by settingsRepository.isOnboardingCompleted().collectAsStateWithLifecycle(initialValue = isOnboardingCompleted)
 
             val darkTheme = when (themeMode) {
@@ -103,7 +105,8 @@ class MainActivity : ComponentActivity() {
                 darkTheme = darkTheme,
                 colorTheme = colorTheme,
                 pureBlack = pureBlack,
-                useSystemFont = useSystemFont
+                useSystemFont = useSystemFont,
+                fontScale = fontScale
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),

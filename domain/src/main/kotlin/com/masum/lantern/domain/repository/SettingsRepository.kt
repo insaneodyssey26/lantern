@@ -36,6 +36,10 @@ interface SettingsRepository {
     fun isUseSystemFontSync(): Boolean
     suspend fun setUseSystemFont(useSystem: Boolean)
 
+    fun getFontScale(): Flow<Float>
+    fun getFontScaleSync(): Float
+    suspend fun setFontScale(scale: Float)
+
     fun getBypassedApps(): Flow<Set<String>>
     suspend fun setAppBypassed(packageName: String, bypassed: Boolean)
 

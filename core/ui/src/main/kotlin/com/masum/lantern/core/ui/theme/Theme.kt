@@ -10,9 +10,12 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 
 private val LanternDark = darkColorScheme(
     primary = LanternAmber,
@@ -264,6 +267,7 @@ fun LanternTheme(
     colorTheme: String = "system",
     pureBlack: Boolean = false,
     useSystemFont: Boolean = false,
+    fontScale: Float = 1.0f,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -341,12 +345,21 @@ fun LanternTheme(
     }
 
     val typography = remember(useSystemFont) { getLanternTypography(useSystemFont) }
+    val currentDensity = LocalDensity.current
+    val scaledDensity = Density(
+        density = currentDensity.density,
+        fontScale = (currentDensity.fontScale * fontScale).coerceIn(0.7f, 2.0f)
+    )
 
     MaterialExpressiveTheme(
         colorScheme = baseScheme,
         motionScheme = MotionScheme.expressive(),
         shapes = LanternShapes,
-        typography = typography,
-        content = content
-    )
+        typography = typography
+    ) {
+        CompositionLocalProvider(
+            LocalDensity provides scaledDensity,
+            content = content
+        )
+    }
 }
