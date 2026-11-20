@@ -2,7 +2,6 @@ package com.masum.lantern
 
 import android.os.Build
 import android.os.Bundle
-import android.os.SystemClock
 import android.view.HapticFeedbackConstants
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -14,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.masum.lantern.domain.repository.SettingsRepository
 import androidx.compose.foundation.layout.Box
@@ -42,21 +43,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
-        val splashStartTime = SystemClock.uptimeMillis()
-        splashScreen.setKeepOnScreenCondition {
-            SystemClock.uptimeMillis() - splashStartTime < 1700L
-        }
-        splashScreen.setOnExitAnimationListener { splashScreenViewProvider ->
-            val root = window.decorView
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                root.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                root.performHapticFeedback(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE)
-            } else {
-                root.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-            }
-            splashScreenViewProvider.remove()
-        }
+        var keepOnScreen = true
+        splashScreen.setKeepOnScreenCondition { keepOnScreen }
         super.onCreate(savedInstanceState)
         val initialThemeMode = settingsRepository.getThemeModeSync()
         val initialColorTheme = settingsRepository.getColorThemeSync()
@@ -77,6 +65,19 @@ class MainActivity : ComponentActivity() {
             val useSystemFont by settingsRepository.isUseSystemFont().collectAsStateWithLifecycle(initialValue = initialUseSystemFont)
             val fontScale by settingsRepository.getFontScale().collectAsStateWithLifecycle(initialValue = initialFontScale)
             val onboardingCompleted by settingsRepository.isOnboardingCompleted().collectAsStateWithLifecycle(initialValue = isOnboardingCompleted)
+
+            val currentView = LocalView.current
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(400L)
+                keepOnScreen = false
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    currentView.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    currentView.performHapticFeedback(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE)
+                } else {
+                    currentView.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                }
+            }
 
             val darkTheme = when (themeMode) {
                 "dark"  -> true
