@@ -73,4 +73,4 @@ Because Lantern collects no data, updates to this policy are rare. If changes oc
 
 For technical questions, vulnerability disclosures, or privacy inquiries:
 - Open an issue on GitHub: [https://github.com/insaneodyssey26/lantern/issues](https://github.com/insaneodyssey26/lantern/issues)
-- Contact the developer: Masum
+- Contact the developer: Masum ([skmasumali.dev@gmail.com](mailto:skmasumali.dev@gmail.com))
